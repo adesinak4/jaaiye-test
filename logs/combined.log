@@ -1,0 +1,213 @@
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T16:17:20.948Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T16:17:20.999Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T16:18:33.778Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T16:18:33.845Z"}
+{"environment":"development","error":"User already exists","level":"error","message":"User already exists","stack":"Error: User already exists\n    at exports.register (C:\\Code\\Jaaiye\\v1\\src\\controllers\\authController.js:24:43)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-05-08T16:18:34.108Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T16:19:19.630Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T16:19:19.696Z"}
+{"environment":"development","error":"getaddrinfo ENOTFOUND smtp.gmail.com","level":"error","message":"Error sending email","stack":"Error: getaddrinfo ENOTFOUND smtp.gmail.com\n    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26)","timestamp":"2025-05-08T16:20:47.624Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T16:21:56.069Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T16:21:56.123Z"}
+{"environment":"development","error":"User already exists","level":"error","message":"User already exists","stack":"Error: User already exists\n    at exports.register (C:\\Code\\Jaaiye\\v1\\src\\controllers\\authController.js:24:43)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-05-08T16:22:57.541Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T16:26:51.994Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T16:26:52.054Z"}
+{"environment":"development","error":"User already exists","level":"error","message":"User already exists","stack":"Error: User already exists\n    at exports.register (C:\\Code\\Jaaiye\\v1\\src\\controllers\\authController.js:24:43)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-05-08T16:26:56.705Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T16:27:39.568Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T16:27:39.629Z"}
+{"environment":"development","error":"No recipients defined","level":"error","message":"Error sending email","stack":"Error: No recipients defined\n    at SMTPConnection._formatError (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:809:19)\n    at SMTPConnection._setEnvelope (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:1047:34)\n    at SMTPConnection.send (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:631:14)\n    at sendMessage (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-transport\\index.js:228:28)\n    at C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-transport\\index.js:286:25\n    at SMTPConnection._actionAUTHComplete (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:1602:9)\n    at SMTPConnection.<anonymous> (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:556:26)\n    at SMTPConnection._processResponse (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:993:20)\n    at SMTPConnection._onData (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:774:14)\n    at SMTPConnection._onSocketData (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:195:44)","timestamp":"2025-05-08T16:28:06.299Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T16:29:20.804Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T16:29:20.862Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T16:32:58.245Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T16:32:58.297Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T16:36:26.639Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T16:36:26.700Z"}
+{"environment":"development","error":"email is not defined","level":"error","message":"Registration failed","stack":"ReferenceError: email is not defined\n    at EmailService.sendVerificationEmail (C:\\Code\\Jaaiye\\v1\\src\\services\\emailService.js:51:11)\n    at exports.register (C:\\Code\\Jaaiye\\v1\\src\\controllers\\authController.js:46:24)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-05-08T16:36:39.542Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T16:37:30.545Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T16:37:30.607Z"}
+{"environment":"development","level":"info","message":"Email sent successfully","messageId":"<0aa8011e-e6a5-e496-a8eb-a6ef753813c8@gmail.com>","timestamp":"2025-05-08T16:37:48.343Z","to":"adesinak4@gmail.com"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T16:44:10.734Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T16:44:10.785Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T16:46:24.723Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T16:46:24.786Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T16:47:36.610Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T16:47:36.666Z"}
+{"environment":"development","level":"info","message":"Email sent successfully","messageId":"<8561ffb2-2e4a-ae82-b992-751af6ff7f2f@gmail.com>","timestamp":"2025-05-08T17:27:37.994Z","to":"adesinak4@gmail.com"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:29:14.672Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:29:14.747Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:30:54.099Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:30:54.154Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:31:05.398Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:31:05.447Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:31:19.359Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:31:19.428Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:31:23.198Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:31:23.258Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:32:24.123Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:32:24.184Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:36:02.212Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:36:02.264Z"}
+{"environment":"development","level":"info","message":"Email sent successfully","messageId":"<50f8a1ed-6b2d-4206-5fb9-f28ae19f98f9@gmail.com>","timestamp":"2025-05-08T17:36:18.599Z","to":"adesinak4@gmail.com"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:37:04.970Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:37:05.032Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:41:30.997Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:41:31.053Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:46:11.968Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:46:12.023Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:47:33.405Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:47:33.458Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:48:06.456Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:48:06.522Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:48:38.424Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:48:38.494Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:49:36.277Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:49:36.336Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:50:22.245Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:50:22.306Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:51:04.616Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:51:04.680Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:51:57.810Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:51:57.867Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:52:22.463Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:52:22.538Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:52:49.421Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:52:49.545Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:53:26.341Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:53:26.405Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:54:28.711Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:54:28.761Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:55:53.491Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:55:53.536Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:58:01.578Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:58:01.648Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T17:58:34.530Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T17:58:34.585Z"}
+{"environment":"development","level":"info","message":"Email sent successfully","messageId":"<e1edbba7-022a-50f8-7b28-89c238633960@gmail.com>","timestamp":"2025-05-08T17:59:52.830Z","to":"adesinak4@gmail.com"}
+{"environment":"development","error":"error is not defined","level":"error","message":"Error deactivating account","stack":"ReferenceError: error is not defined\n    at exports.deactivateAccount (C:\\Code\\Jaaiye\\v1\\src\\controllers\\userController.js:161:62)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-05-08T17:59:52.832Z","userId":"681ceb8f02e9e0abfe52ed5c"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:00:49.565Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:00:49.621Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:03:27.839Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:03:27.904Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:04:25.018Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:04:25.091Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:11:18.729Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:11:18.794Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:12:29.999Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:12:30.061Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:13:40.975Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:13:41.022Z"}
+{"environment":"development","level":"info","message":"Email sent successfully","messageId":"<56df8ff5-2fcd-4226-57e4-c8d817a61e44@gmail.com>","timestamp":"2025-05-08T18:14:11.681Z","to":"adesinak4@gmail.com"}
+{"environment":"development","error":"Code not found or expired","level":"error","message":"Invalid verification code","stack":"Error: Code not found or expired\n    at exports.verifyEmail (C:\\Code\\Jaaiye\\v1\\src\\controllers\\authController.js:187:49)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-05-08T18:14:38.159Z"}
+{"environment":"development","error":"Code not found or expired","level":"error","message":"Invalid verification code","stack":"Error: Code not found or expired\n    at exports.verifyEmail (C:\\Code\\Jaaiye\\v1\\src\\controllers\\authController.js:187:49)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-05-08T18:14:42.381Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:15:20.751Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:15:20.805Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:15:52.038Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:15:52.095Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:18:24.719Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:18:24.772Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:18:42.257Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:18:42.321Z"}
+{"environment":"development","level":"info","message":"Email sent successfully","messageId":"<1001295b-44ba-9013-0527-85615efb6485@gmail.com>","timestamp":"2025-05-08T18:19:32.831Z","to":"adesinak4@gmail.com"}
+{"environment":"development","level":"error","message":"Account deletion failed: revokeUserTokens is not defined","timestamp":"2025-05-08T18:21:15.383Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:22:58.129Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:22:58.201Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:36:27.205Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:36:27.258Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:36:44.912Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:36:44.975Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:40:11.065Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:40:11.128Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:42:44.342Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:42:44.404Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:44:34.654Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:44:34.709Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:46:08.535Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:46:08.595Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:47:32.891Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:47:32.960Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:49:45.975Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:49:46.040Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:49:59.963Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:50:00.028Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:50:44.678Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:50:44.734Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:51:04.643Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:51:04.719Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:52:02.826Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:52:02.888Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:53:48.234Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:53:48.295Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:54:45.812Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:54:45.870Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:57:58.542Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:57:58.603Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T18:58:50.051Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T18:58:50.104Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T19:04:31.993Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T19:04:32.053Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T19:05:09.283Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T19:05:09.324Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T19:05:36.679Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T19:05:36.707Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T19:06:02.713Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T19:06:02.736Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T19:07:54.901Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T19:07:54.952Z"}
+{"environment":"development","level":"info","message":"Email sent successfully","messageId":"<bdb2f725-2470-c07d-6002-2fad95b5327a@gmail.com>","timestamp":"2025-05-08T19:11:32.979Z","to":"adesinak4@gmail.com"}
+{"environment":"development","error":"Cannot read properties of undefined (reading 'user')","level":"error","message":"Failed to logout","stack":"TypeError: Cannot read properties of undefined (reading 'user')\n    at exports.logout (C:\\Code\\Jaaiye\\v1\\src\\controllers\\userController.js:306:42)\n    at exports.deleteUser (C:\\Code\\Jaaiye\\v1\\src\\controllers\\userController.js:152:10)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-05-08T19:13:07.606Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-08T19:15:03.156Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-08T19:15:03.212Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:07:47.942Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:07:48.008Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:14:13.860Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:14:13.925Z"}
+{"environment":"development","level":"error","message":"Account deletion failed: TokenBlacklist validation failed: token: Path `token` is required.","timestamp":"2025-05-09T09:18:28.322Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:24:12.937Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:24:13.008Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:25:01.781Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:25:01.848Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:31:33.279Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:31:33.341Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:32:17.675Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:32:17.749Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:33:47.293Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:33:47.349Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:34:48.656Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:34:48.713Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:37:54.282Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:37:54.333Z"}
+{"environment":"development","level":"error","message":"Account deletion failed: TokenBlacklist validation failed: token: Path `token` is required.","timestamp":"2025-05-09T09:38:28.003Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:40:22.767Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:40:22.856Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:40:52.847Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:40:52.903Z"}
+{"environment":"development","level":"error","message":"Account deletion failed: Illegal arguments: string, undefined","timestamp":"2025-05-09T09:41:09.275Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:44:15.571Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:44:15.636Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:49:23.857Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:49:23.913Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:50:29.299Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:50:29.372Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:51:08.384Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:51:08.437Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:56:23.438Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:56:23.494Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:57:26.290Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:57:26.340Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:58:03.251Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:58:03.309Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T09:59:25.388Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T09:59:25.460Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T10:00:41.507Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T10:00:41.560Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T10:01:41.481Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T10:01:41.536Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T10:01:56.318Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T10:01:56.368Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T10:02:48.239Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T10:02:48.293Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T10:05:03.023Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T10:05:03.078Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T10:05:37.119Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T10:05:37.178Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T10:07:55.834Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T10:07:55.891Z"}
