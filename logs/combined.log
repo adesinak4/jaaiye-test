@@ -211,3 +211,5 @@
 {"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T10:05:37.178Z"}
 {"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-05-09T10:07:55.834Z"}
 {"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-05-09T10:07:55.891Z"}
+{"environment":"development","level":"info","message":"Server is running on port 4000","timestamp":"2025-06-28T08:39:28.814Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-06-28T08:39:28.905Z"}
