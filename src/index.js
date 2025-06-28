@@ -50,13 +50,13 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Health check endpoint
-// app.get('/health', (req, res, next) => {
-//   res.status(200).json({
-//     status: 'ok',
-//     timestamp: new Date().toISOString(),
-//     uptime: process.uptime()
-//   });
-// });
+app.get('/health', (req, res, next) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
 
 // Apply API key validation to all other routes
 app.use(validateMobileApiKey);
