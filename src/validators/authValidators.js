@@ -18,11 +18,11 @@ exports.registerValidator = [
   //   .isLength({ min: 2, max: 50 })
     // .withMessage('Full name must be between 2 and 50 characters'),
 
-  body('username')
-    .isLength({ min: 3 })
-    .withMessage('Username must be at least 3 characters long')
-    .matches(/^[a-zA-Z0-9_]+$/)
-    .withMessage('Username can only contain letters, numbers, and underscores'),
+  // body('username')
+  //   .isLength({ min: 3 })
+  //   .withMessage('Username must be at least 3 characters long')
+  //   .matches(/^[a-zA-Z0-9_]+$/)
+  //   .withMessage('Username can only contain letters, numbers, and underscores'),
 ];
 
 exports.loginValidator = [
