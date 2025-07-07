@@ -12,11 +12,11 @@ exports.registerValidator = [
     .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/)
     .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
 
-  body('fullName')
-    .notEmpty()
-    .withMessage('Full name is required')
-    .isLength({ min: 2, max: 50 })
-    .withMessage('Full name must be between 2 and 50 characters'),
+  // body('fullName')
+  //   .notEmpty()
+  //   .withMessage('Full name is required')
+  //   .isLength({ min: 2, max: 50 })
+    // .withMessage('Full name must be between 2 and 50 characters'),
 
   body('username')
     .isLength({ min: 3 })
