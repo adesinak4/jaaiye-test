@@ -1,56 +1,50 @@
-const admin = require('firebase-admin');
 const User = require('../models/User');
+const firebaseService = require('./firebaseService');
+const deviceTokenService = require('./deviceTokenService');
+const notificationQueue = require('../queues/notificationQueue');
+const logger = require('../utils/logger');
+
+// Shared error handler (DRY)
+const handleServiceError = (error, operation) => {
+  logger.error(`Notification service error in ${operation}:`, error);
+  throw error;
+};
+
+// Validation helpers (Fail Fast)
+const validateNotification = (notification) => {
+  if (!notification?.title || !notification?.body) {
+    throw new Error('Invalid notification: title and body are required');
+  }
+};
+
+const validateUserId = (userId) => {
+  if (!userId) {
+    throw new Error('User ID is required');
+  }
+};
 
 class NotificationService {
-  constructor() {
-    // Initialize Firebase Admin if not already initialized
-    if (!admin.apps.length) {
-      const serviceAccount = {
-        type: "service_account",
-        project_id: process.env.FIREBASE_PROJECT_ID,
-        private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-        private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-        client_email: process.env.FIREBASE_CLIENT_EMAIL,
-        client_id: process.env.FIREBASE_CLIENT_ID,
-        auth_uri: "https://accounts.google.com/o/oauth2/auth",
-        token_uri: "https://oauth2.googleapis.com/token",
-        auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-        client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
-        universe_domain: "googleapis.com"
-      };
-
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-      });
-    }
-  }
-
-  // Send push notification
-  async sendPushNotification(userId, notification) {
+  // Send push notification (background processing for faster API responses)
+  async sendPushNotification(userId, notification, data = {}) {
     try {
-      const user = await User.findById(userId);
+      validateUserId(userId);
+      validateNotification(notification);
+
+      // Check user preferences
+      const user = await User.findById(userId).select('preferences deviceTokens');
       if (!user || !user.preferences?.notifications?.push) {
-        return;
+        return { success: false, reason: 'User not found or push notifications disabled' };
       }
 
-      // Get user's device tokens (you'll need to store these when user logs in from a device)
-      const deviceTokens = user.deviceTokens || [];
+      const deviceTokens = user.deviceTokens?.map(dt => dt.token) || [];
       if (deviceTokens.length === 0) {
-        return;
+        return { success: false, reason: 'No device tokens found' };
       }
 
-      const message = {
-        notification: {
-          title: notification.title,
-          body: notification.body,
-        },
-        data: notification.data || {},
-        tokens: deviceTokens,
-      };
+      // Send via Firebase
+      const response = await firebaseService.sendMulticastMessage(deviceTokens, notification, data);
 
-      const response = await admin.messaging().sendMulticast(message);
-
-      // Handle failed tokens
+      // Handle failed tokens in background
       if (response.failureCount > 0) {
         const failedTokens = [];
         response.responses.forEach((resp, idx) => {
@@ -58,70 +52,29 @@ class NotificationService {
             failedTokens.push(deviceTokens[idx]);
           }
         });
-        // Remove failed tokens from user's device tokens
-        await User.updateOne(
-          { _id: userId },
-          { $pull: { deviceTokens: { $in: failedTokens } } }
-        );
+
+        // Remove failed tokens in background
+        setImmediate(() => {
+          deviceTokenService.removeFailedTokens(userId, failedTokens)
+            .catch(error => logger.error('Background token cleanup failed:', error));
+        });
       }
 
-      return response;
-    } catch(error) {
-      console.error('Error sending push notification:', err);
-      next(error);
-    }
-  }
-
-  // Save device token for a user
-  async saveDeviceToken(userId, token, platform) {
-    try {
-      const user = await User.findById(userId);
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      // Add token if not already present
-      if (!user.deviceTokens.includes(token, platform)) {
-        await User.updateOne(
-          { _id: userId },
-          { $addToSet: { deviceTokens: token } }
-        );
-      }
-
-      return true;
-    } catch(error) {
-      console.error('Error saving device token:', err);
-      next(error);
-    }
-  }
-
-  // Remove device token for a user
-  async removeDeviceToken(userId, token) {
-    try {
-      const user = await User.findById(userId);
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      await User.updateOne(
-        { _id: userId },
-        { $pull: { deviceTokens: token } }
-      );
-
-      return true;
-    } catch(error) {
-      console.error('Error removing device token:', err);
-      next(error);
+      return {
+        success: true,
+        successCount: response.successCount,
+        failureCount: response.failureCount
+      };
+    } catch (error) {
+      return handleServiceError(error, 'sendPushNotification');
     }
   }
 
   // Create in-app notification
   async createInAppNotification(userId, notification) {
     try {
-      const user = await User.findById(userId);
-      if (!user) {
-        throw new Error('User not found');
-      }
+      validateUserId(userId);
+      validateNotification(notification);
 
       const newNotification = {
         ...notification,
@@ -129,39 +82,113 @@ class NotificationService {
         createdAt: new Date()
       };
 
-      await User.updateOne(
+      const result = await User.updateOne(
         { _id: userId },
         { $push: { notifications: newNotification } }
       );
 
-      return newNotification;
-    } catch(error) {
-      console.error('Error creating in-app notification:', err);
-      next(error);
+      if (result.matchedCount === 0) {
+        throw new Error('User not found');
+      }
+
+      return { success: true, notification: newNotification };
+    } catch (error) {
+      return handleServiceError(error, 'createInAppNotification');
     }
+  }
+
+  // Send both push and in-app notifications (background processing)
+  async sendNotification(userId, notification, data = {}) {
+    // Add to queue for background processing (fire-and-forget)
+    notificationQueue.addToQueue({
+      type: 'both',
+      userId,
+      notification,
+      data
+    });
+
+    // Return immediately for faster API response
+    return { success: true, message: 'Notification queued for delivery' };
+  }
+
+  // Send push notification only (background processing)
+  async sendPushNotificationAsync(userId, notification, data = {}) {
+    notificationQueue.addToQueue({
+      type: 'push',
+      userId,
+      notification,
+      data
+    });
+
+    return { success: true, message: 'Push notification queued' };
+  }
+
+  // Send in-app notification only (background processing)
+  async sendInAppNotificationAsync(userId, notification) {
+    notificationQueue.addToQueue({
+      type: 'inApp',
+      userId,
+      notification
+    });
+
+    return { success: true, message: 'In-app notification queued' };
+  }
+
+  // Device token management (delegated to device token service)
+  async saveDeviceToken(userId, token, platform = 'web') {
+    return deviceTokenService.saveDeviceToken(userId, token, platform);
+  }
+
+  async removeDeviceToken(userId, token) {
+    return deviceTokenService.removeDeviceToken(userId, token);
+  }
+
+  async getUserDeviceTokens(userId) {
+    return deviceTokenService.getUserDeviceTokens(userId);
   }
 
   // Mark notification as read
   async markNotificationAsRead(userId, notificationId) {
     try {
-      const user = await User.findById(userId);
-      if (!user) {
-        throw new Error('User not found');
+      validateUserId(userId);
+      if (!notificationId) {
+        throw new Error('Notification ID is required');
       }
 
-      await User.updateOne(
+      const result = await User.updateOne(
         { _id: userId, 'notifications._id': notificationId },
         { $set: { 'notifications.$.read': true } }
       );
 
-      return true;
-    } catch(error) {
-      console.error('Error marking notification as read:', err);
-      next(error);
+      if (result.matchedCount === 0) {
+        throw new Error('User or notification not found');
+      }
+
+      return { success: true };
+    } catch (error) {
+      return handleServiceError(error, 'markNotificationAsRead');
     }
+  }
+
+  // Get notification queue status
+  getQueueStatus() {
+    return notificationQueue.getStatus();
+  }
+
+  // Clear notification queue (for testing)
+  clearQueue() {
+    notificationQueue.clearQueue();
   }
 }
 
 // Create a single instance and export it
 const notificationService = new NotificationService();
+
+// Wire up the queue to use this service
+notificationQueue.sendPushNotification = (userId, notification, data) =>
+  notificationService.sendPushNotification(userId, notification, data);
+
+notificationQueue.createInAppNotification = (userId, notification) =>
+  notificationService.createInAppNotification(userId, notification);
+
 module.exports = notificationService;

@@ -7,349 +7,333 @@ const {
   isCodeExpired,
   verifyRefreshToken
 } = require('../services/authService');
-const emailService = require('../services/emailService');
+const { emailQueue } = require('../queues');
 const logger = require('../utils/logger');
+const { asyncHandler } = require('../utils/asyncHandler');
+const {
+  successResponse
+} = require('../utils/response');
+const {
+  ConflictError,
+  AuthenticationError,
+  ValidationError,
+  NotFoundError
+} = require('../middleware/errorHandler');
+const { ERROR_MESSAGES, SUCCESS_MESSAGES, EMAIL_CONSTANTS } = require('../../constants');
+
+// Internal helper to DRY resend flows
+async function performResend(email, type) {
+  const lowerType = String(type).toLowerCase();
+  if (!['verification', 'reset'].includes(lowerType)) {
+    throw new ValidationError("type must be either 'verification' or 'reset'");
+  }
+
+  const user = await User.findOne({ email }).select('+verification +resetPassword');
+
+  if (lowerType === 'verification') {
+    if (!user) {
+      throw new NotFoundError(ERROR_MESSAGES.NOT_FOUND.USER);
+    }
+    if (user.emailVerified) {
+      return { statusCode: 200, message: 'Email already verified', data: null };
+    }
+
+    const verificationCode = generateVerificationCode();
+    user.verification = user.verification || {};
+    user.verification.code = verificationCode;
+    user.verification.expires = new Date(Date.now() + EMAIL_CONSTANTS.VERIFICATION_EXPIRY);
+    await user.save();
+
+    await emailQueue.sendVerificationEmailAsync(email, verificationCode);
+    logger.info('Verification email resent', { email });
+
+    return {
+      statusCode: 200,
+      message: SUCCESS_MESSAGES.EMAIL.VERIFICATION_SENT,
+      data: { email, expiresIn: '10 minutes' }
+    };
+  }
+
+  // type === 'reset'
+  if (!user) {
+    // Do not reveal if user exists
+    return { statusCode: 200, message: 'If an account with this email exists, a reset code has been sent', data: null };
+  }
+
+  const resetCode = generateResetCode();
+  user.resetPassword = user.resetPassword || {};
+  user.resetPassword.code = resetCode;
+  user.resetPassword.expires = new Date(Date.now() + EMAIL_CONSTANTS.PASSWORD_RESET_EXPIRY);
+  await user.save();
+
+  await emailQueue.sendPasswordResetEmailAsync(email, resetCode);
+  logger.info('Password reset code resent', { email });
+
+  return { statusCode: 200, message: 'If an account with this email exists, a reset code has been sent', data: null };
+}
 
 // @desc    Register new user
 // @route   POST /api/auth/register
 // @access  Public
-exports.register = async (req, res, next) => {
-  try {
-    const { email, password, username, fullName } = req.body;
+exports.register = asyncHandler(async (req, res) => {
+  const { email, password, username, fullName } = req.body;
 
-    // Check if user exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      logger.error('User already exists', new Error('User already exists'), 400, { email });
-      return res.status(400).json({
-        success: false,
-        error: 'User already exists with this email'
-      });
-    }
-
-    // Create user
-    const user = await User.create({
-      email,
-      password,
-      username,
-      fullName
-    });
-
-    // Generate verification code
-    const verificationCode = generateVerificationCode();
-    user.verificationCode = verificationCode;
-    user.verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-    await user.save();
-
-    // Send verification email
-    await emailService.sendVerificationEmail(email, verificationCode);
-
-    res.status(201).json({
-      success: true,
-      message: "Account created. Verification code sent to email.",
-      data: {
-        email,
-        expiresIn: "10 minutes"
-      }
-    });
-  } catch (error) {
-    logger.error('Registration failed', error, 500, { email: req.body.email });
-    next(error); // Let the error handler middleware handle it
+  // Check if user exists
+  const userExists = await User.findOne({ email });
+  if (userExists) {
+    throw new ConflictError(ERROR_MESSAGES.AUTH.USER_EXISTS || 'User already exists with this email');
   }
-};
+
+  // Create user
+  const user = await User.create({
+    email,
+    password,
+    username,
+    fullName
+  });
+
+  // Generate verification code
+  const verificationCode = generateVerificationCode();
+  user.verification = user.verification || {};
+  user.verification.code = verificationCode;
+  user.verification.expires = new Date(Date.now() + EMAIL_CONSTANTS.VERIFICATION_EXPIRY);
+  await user.save();
+
+  // Send verification email in background (faster API response)
+  await emailQueue.sendVerificationEmailAsync(email, verificationCode);
+
+  logger.info('User registered successfully', {
+    email,
+    userId: user._id
+  });
+
+  return successResponse(res, {
+    email,
+    expiresIn: "10 minutes"
+  }, 201, SUCCESS_MESSAGES.USER.REGISTERED);
+});
 
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
-exports.login = async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
+exports.login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
 
-    // Check if user exists
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      logger.error('Invalid credentials', new Error('User not found'), 401, { email });
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials'
-      });
-    }
-
-    // Check if password matches
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      logger.error('Invalid credentials', new Error('Invalid password'), 401, { email });
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials'
-      });
-    }
-
-    // Check if email is verified
-    if (!user.emailVerified) {
-      // Generate new verification code
-      const verificationCode = generateVerificationCode();
-      user.verificationCode = verificationCode;
-      user.verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-      await user.save();
-
-      // Send new verification email
-      await emailService.sendVerificationEmail(email, verificationCode);
-
-      logger.error('Email not verified', new Error('Email not verified'), 403, { email });
-      return res.status(403).json({
-        success: false,
-        error: 'Email not verified',
-        message: 'A new verification code has been sent to your email'
-      });
-    }
-
-    // Update last login
-    user.lastLogin = new Date();
-
-    // Generate tokens
-    const token = generateToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
-    user.refresh = {
-      token: refreshToken,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-    };
-    await user.save();
-
-    res.json({
-      success: true,
-      token,
-      refreshToken
-    });
-  } catch (error) {
-    logger.error('Login failed', error, 500, { email: req.body.email });
-    next(error); // Let the error handler middleware handle it
+  // Check if user exists
+  const user = await User.findOne({ email }).select('+password +verification');
+  if (!user) {
+    throw new AuthenticationError(ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS);
   }
-};
 
-// @desc    Refresh token
-// @route   POST /api/auth/refresh-token
-// @access  Public
-exports.refreshToken = async (req, res, next) => {
-  try {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(401).json({
-        success: false,
-        error: 'Refresh token is required'
-      });
-    }
-
-    // Verify refresh token
-    const decoded = await verifyRefreshToken(refreshToken);
-
-    // Get user
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid refresh token'
-      });
-    }
-
-    // Generate new tokens
-    const token = generateToken(user._id);
-
-    res.json({
-      success: true,
-      token
-    });
-  } catch (error) {
-    logger.error('Invalid refresh token', error);
-    next(error);
+  // Check if password matches
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    throw new AuthenticationError(ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS);
   }
-};
+
+  // If email is not verified, reuse resend flow for verification
+  if (!user.emailVerified) {
+    const { data } = await performResend(email, 'verification');
+    logger.info('Login attempted with unverified email', { email });
+    return successResponse(res, data || { email, expiresIn: '10 minutes' }, 403, ERROR_MESSAGES.AUTH.EMAIL_NOT_VERIFIED);
+  }
+
+  // Generate tokens
+  const accessToken = generateToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
+
+  // Save refresh token to user
+  user.refresh = {
+    token: refreshToken,
+    expiresAt: new Date(Date.now() + EMAIL_CONSTANTS.REFRESH_TOKEN_EXPIRY)
+  };
+  user.lastLogin = new Date(Date.now());
+  await user.save();
+
+  logger.info('User logged in successfully', {
+    email,
+    userId: user._id
+  });
+
+  return successResponse(res, {
+    accessToken,
+    refreshToken,
+    user: {
+      id: user._id,
+      email: user.email,
+      username: user.username,
+      fullName: user.fullName,
+      emailVerified: user.emailVerified,
+      profilePicture: user.profilePicture
+    }
+  }, 200, SUCCESS_MESSAGES.USER.LOGGED_IN);
+});
 
 // @desc    Verify email
 // @route   POST /api/auth/verify-email
 // @access  Public
-exports.verifyEmail = async (req, res, next) => {
-  try {
-    const { code } = req.body;
+exports.verifyEmail = asyncHandler(async (req, res) => {
+  const { code } = req.body;
 
-    if (!code) {
-      logger.error('Missing verification code', new Error('Code is required'), 400);
-      return res.status(400).json({
-        success: false,
-        error: 'Verification code is required'
-      });
-    }
-
-    // Find user by verification code
-    const user = await User.findOne({
-      verificationCode: code,
-      verificationCodeExpires: { $gt: new Date() }
-    });
-
-    if (!user) {
-      logger.error('Invalid verification code', new Error('Code not found or expired'), 400, { code });
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid or expired verification code'
-      });
-    }
-
-    // Update user
-    user.emailVerified = true;
-    user.verificationCode = undefined;
-    user.verificationCodeExpires = undefined;
-
-    // Generate tokens
-    const token = generateToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
-    user.refresh = {
-      token: refreshToken,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-    };
-    await user.save();
-    await emailService.sendWelcomeEmail(user.email);
-
-    res.json({
-      success: true,
-      token,
-      refreshToken
-    });
-  } catch (error) {
-    logger.error('Email verification failed', error, 500, { code: req.body.code });
-    next(error); // Let the error handler middleware handle it
+  const user = await User.findOne({ 'verification.code': code }).select('+verification.code +verification.expires');
+  if (!user) {
+    throw new NotFoundError(ERROR_MESSAGES.NOT_FOUND.USER);
   }
-};
 
-// @desc    Resend verification code
-// @route   POST /api/auth/resend-verification
-// @access  Public
-exports.resendVerification = async (req, res, next) => {
-  try {
-    const { email } = req.body;
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-    }
-
-    // Check if previous code is still valid
-    if (user.verificationCode && !isCodeExpired(user.verificationCodeExpires)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Previous verification code is still valid'
-      });
-    }
-
-    // Generate new verification code
-    const verificationCode = generateVerificationCode();
-    user.verificationCode = verificationCode;
-    user.verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-    await user.save();
-
-    // Send verification email
-    await emailService.sendVerificationEmail(email, verificationCode);
-
-    res.json({
-      success: true,
-      message: 'Verification code sent successfully'
-    });
-  } catch (error) {
-    logger.error(error);
-    next(error);
+  if (user.emailVerified) {
+    return successResponse(res, null, 200, "Email already verified");
   }
-};
+
+  if (!user.verification.code || user.verification.code !== code) {
+    throw new ValidationError('Invalid verification code');
+  }
+
+  if (isCodeExpired(user.verification.expires)) {
+    throw new ValidationError('Verification code has expired');
+  }
+
+  // Mark email as verified
+  user.emailVerified = true;
+  user.verification.code = undefined;
+  user.verification.expires = undefined;
+  // Send welcome email in background
+  await emailQueue.sendWelcomeEmailAsync(user);
+
+  // Generate tokens
+  const accessToken = generateToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
+
+  // Save refresh token to user
+  user.refresh = {
+    token: refreshToken,
+    expiresAt: new Date(Date.now() + EMAIL_CONSTANTS.REFRESH_TOKEN_EXPIRY)
+  };
+  user.lastLogin = new Date(Date.now());
+  await user.save();
+
+  logger.info('Email verified successfully', { email: user.email });
+
+  return successResponse(res, {
+    accessToken,
+    refreshToken,
+    user: {
+      id: user._id,
+      email: user.email,
+      username: user.username,
+      fullName: user.fullName,
+      emailVerified: user.emailVerified,
+      profilePicture: user.profilePicture
+    }
+  }, 200,  SUCCESS_MESSAGES.USER.EMAIL_VERIFIED);
+});
 
 // @desc    Forgot password
 // @route   POST /api/auth/forgot-password
 // @access  Public
-exports.forgotPassword = async (req, res, next) => {
-  try {
-    const { email } = req.body;
+exports.forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-    }
-
-    // Generate reset code
-    const resetCode = generateResetCode();
-    user.resetPasswordCode = resetCode;
-    user.resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-    await user.save();
-
-    // Send reset code email
-    await emailService.sendPasswordResetEmail(email, resetCode);
-
-    res.json({
-      success: true,
-      message: 'Password reset code sent to email'
-    });
-  } catch (error) {
-    logger.error(error);
-    next(error);
+  const user = await User.findOne({ email });
+  if (!user) {
+    // Don't reveal if user exists or not for security
+    return successResponse(res, null, 200, "If an account with this email exists, a reset code has been sent");
   }
-};
+
+  // Generate reset code
+  const resetCode = generateResetCode();
+  user.resetPassword = user.resetPassword || {};
+  user.resetPassword.code = resetCode;
+  user.resetPassword.expires = new Date(Date.now() + EMAIL_CONSTANTS.PASSWORD_RESET_EXPIRY);
+  await user.save();
+
+  // Send reset email in background
+  await emailQueue.sendPasswordResetEmailAsync(email, resetCode);
+
+  logger.info('Password reset requested', { email });
+
+  return successResponse(res, null, 200, "If an account with this email exists, a reset code has been sent");
+});
 
 // @desc    Reset password
 // @route   POST /api/auth/reset-password
 // @access  Public
-exports.resetPassword = async (req, res, next) => {
-  try {
-    const { code, password } = req.body;
+exports.resetPassword = asyncHandler(async (req, res) => {
+  const { code, password } = req.body;
 
-    const user = await User.findOne({
-      resetPasswordCode: code,
-      resetPasswordExpires: { $gt: Date.now() }
-    });
-
-    if (!user) {
-      logger.error('Invalid reset code', new Error('Code not found or expired'), 400, { code });
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid or expired reset code'
-      });
-    }
-
-    user.password = password;
-    user.resetPasswordCode = undefined;
-    user.resetPasswordExpires = undefined;
-    await user.save();
-
-    res.json({
-      success: true,
-      message: 'Password reset successful'
-    });
-  } catch (error) {
-    logger.error('Password reset failed', error, 500, { code: req.body.code });
-    next(error); // Let the error handler middleware handle it
+  const user = await User.findOne({ 'resetPassword.code': code }).select('+resetPassword +password');
+  if (!user) {
+    throw new NotFoundError(ERROR_MESSAGES.NOT_FOUND.USER);
   }
-};
 
-// @desc    Google OAuth callback
-// @route   GET /api/auth/google/callback
+  if (!user.resetPassword.code || user.resetPassword.code !== code) {
+    throw new ValidationError('Invalid reset code');
+  }
+
+  if (isCodeExpired(user.resetPassword.expires)) {
+    throw new ValidationError('Reset code has expired');
+  }
+
+  // Update password
+  user.password = password;
+  user.resetPassword.code = undefined;
+  user.resetPassword.expires = undefined;
+  await user.save();
+
+  logger.info('Password reset successfully', { email: user.email });
+
+  return successResponse(res, null, 200, SUCCESS_MESSAGES.USER.PASSWORD_RESET);
+});
+
+// @desc    Refresh token
+// @route   POST /api/auth/refresh
 // @access  Public
-exports.googleCallback = (req, res, next) => {
-  const token = generateToken(req.user._id);
-  const refreshToken = generateRefreshToken(req.user._id);
+exports.refreshToken = asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body;
 
-  // Redirect to frontend with tokens
-  res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&refreshToken=${refreshToken}`);
-};
+  if (!refreshToken) {
+    throw new ValidationError('Refresh token is required');
+  }
 
-// @desc    Apple OAuth callback
-// @route   GET /api/auth/apple/callback
+  const decoded = verifyRefreshToken(refreshToken);
+  const user = await User.findById(decoded.id).select('+refresh.token +refresh.expiresAt');
+
+  if (!user || !user.refresh || user.refresh.token !== refreshToken) {
+    throw new AuthenticationError('Invalid refresh token');
+  }
+
+  if (isCodeExpired(user.refresh.expiresAt)) {
+    throw new AuthenticationError(ERROR_MESSAGES.AUTH.TOKEN_EXPIRED);
+  }
+
+  // Generate new tokens
+  const newAccessToken = generateToken(user._id);
+  const newRefreshToken = generateRefreshToken(user._id);
+
+  // Update refresh token
+  user.refresh = {
+    token: newRefreshToken,
+    expiresAt: new Date(Date.now() + EMAIL_CONSTANTS.REFRESH_TOKEN_EXPIRY)
+  };
+  await user.save();
+
+  logger.info('Token refreshed successfully', { userId: user._id });
+
+  return successResponse(res, {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken
+  }, 200, "Token refreshed successfully");
+});
+
+// @desc    Resend (verification or reset)
+// @route   POST /api/auth/resend
 // @access  Public
-exports.appleCallback = (req, res, next) => {
-  const token = generateToken(req.user._id);
-  const refreshToken = generateRefreshToken(req.user._id);
+exports.resend = asyncHandler(async (req, res) => {
+  const { email, type } = req.body;
 
-  // Redirect to frontend with tokens
-  res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&refreshToken=${refreshToken}`);
-};
+  if (!email || !type) {
+    throw new ValidationError('Email and type are required');
+  }
+
+  const result = await performResend(email, type);
+  return successResponse(res, result.data, result.statusCode, result.message);
+});

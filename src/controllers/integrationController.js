@@ -3,7 +3,86 @@ const User = require('../models/User');
 const { NotFoundError, BadRequestError } = require('../utils/errors');
 const { google } = require('googleapis');
 const { outlook } = require('@microsoft/microsoft-graph-client');
-const { zoom } = require('@zoomus/websdk');
+const { verifyGoogleIdToken, generateToken, generateRefreshToken, generateRandomPassword } = require('../services/authService');
+const { successResponse, errorResponse } = require('../utils/response');
+
+// Google sign-in/up via ID token (mobile sends idToken)
+exports.googleSignInViaIdToken = async (req, res, next) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) {
+      return errorResponse(res, new Error('idToken is required'), 400);
+    }
+
+    const payload = await verifyGoogleIdToken(idToken);
+    const { sub: googleId, email, email_verified: emailVerified, name, picture } = payload;
+
+    if (!email || !googleId) {
+      return errorResponse(res, new Error('Invalid Google token: missing email or sub'), 400);
+    }
+
+    let user = await User.findOne({ $or: [{ email }, { googleId }] }).select('+password');
+
+    if (!user) {
+      // Create new user with random password (not used for Google sign-in)
+      const randomPassword = generateRandomPassword(16);
+      user = await User.create({
+        email,
+        password: randomPassword,
+        emailVerified: !!emailVerified,
+        fullName: name,
+        googleId,
+        providerLinks: { google: true },
+        providerProfiles: { google: { email, name, picture, lastSignInAt: new Date() } }
+      });
+    } else {
+      // Link googleId if missing
+      if (!user.googleId) {
+        user.googleId = googleId;
+      }
+      // Trust Google verified email
+      if (emailVerified) {
+        user.emailVerified = true;
+      }
+      user.providerLinks = user.providerLinks || {};
+      user.providerLinks.google = true;
+      user.providerProfiles = user.providerProfiles || {};
+      user.providerProfiles.google = {
+        email,
+        name,
+        picture,
+        lastSignInAt: new Date()
+      };
+      await user.save();
+    }
+
+    const accessToken = generateToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    user.refresh = {
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + (process.env.REFRESH_TTL_MS ? Number(process.env.REFRESH_TTL_MS) : 90 * 24 * 60 * 60 * 1000))
+    };
+    await user.save();
+
+    return successResponse(res, {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        fullName: user.fullName,
+        emailVerified: user.emailVerified,
+        profilePicture: user.profilePicture,
+        providerLinks: user.providerLinks,
+        providerProfiles: user.providerProfiles && user.providerProfiles.google ? { google: user.providerProfiles.google } : undefined
+      }
+    }, 200, 'Google sign-in successful');
+  } catch (err) {
+    return errorResponse(res, new Error('Invalid Google ID token'), 401);
+  }
+};
 
 // Connect to a third-party service
 exports.connectIntegration = async (req, res, next) => {
@@ -112,8 +191,6 @@ async function validateCredentials(type, credentials) {
       return validateGoogleCredentials(credentials);
     case 'outlook':
       return validateOutlookCredentials(credentials);
-    case 'zoom':
-      return validateZoomCredentials(credentials);
     default:
       throw new BadRequestError('Unsupported integration type');
   }
@@ -149,17 +226,6 @@ async function validateOutlookCredentials(credentials) {
   return credentials;
 }
 
-async function validateZoomCredentials(credentials) {
-  const client = zoom({
-    apiKey: credentials.apiKey,
-    apiSecret: credentials.apiSecret
-  });
-
-  await client.users.me(); // Test API access
-
-  return credentials;
-}
-
 function getDefaultSettings(type) {
   const baseSettings = {
     syncFrequency: 'hourly',
@@ -181,12 +247,6 @@ function getDefaultSettings(type) {
         eventTypes: ['meeting', 'appointment'],
         calendars: []
       };
-    case 'zoom':
-      return {
-        ...baseSettings,
-        autoJoin: false,
-        recordMeetings: false
-      };
     default:
       return baseSettings;
   }
@@ -204,9 +264,6 @@ async function syncIntegration(integration) {
         break;
       case 'outlook':
         itemsSynced = await syncOutlookCalendar(integration);
-        break;
-      case 'zoom':
-        itemsSynced = await syncZoomMeetings(integration);
         break;
     }
 
@@ -306,29 +363,6 @@ async function syncOutlookCalendar(integration) {
   return itemsSynced;
 }
 
-async function syncZoomMeetings(integration) {
-  const client = zoom({
-    apiKey: integration.credentials.apiKey,
-    apiSecret: integration.credentials.apiSecret
-  });
-
-  let itemsSynced = 0;
-
-  // Get upcoming meetings
-  const meetings = await client.meetings.list('me', {
-    type: 'upcoming',
-    page_size: 100
-  });
-
-  // Process meetings
-  for (const meeting of meetings.meetings) {
-    await processZoomMeeting(meeting, integration);
-    itemsSynced++;
-  }
-
-  return itemsSynced;
-}
-
 async function processGoogleEvent(event, integration) {
   // Implement event processing logic
   // This is a placeholder
@@ -339,10 +373,4 @@ async function processOutlookEvent(event, integration) {
   // Implement event processing logic
   // This is a placeholder
   console.log('Processing Outlook event:', event.id);
-}
-
-async function processZoomMeeting(meeting, integration) {
-  // Implement meeting processing logic
-  // This is a placeholder
-  console.log('Processing Zoom meeting:', meeting.id);
 }

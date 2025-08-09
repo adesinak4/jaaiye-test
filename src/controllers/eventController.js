@@ -1,9 +1,11 @@
 const Event = require('../models/Event');
 const Calendar = require('../models/Calendar');
+const User = require('../models/User');
 const logger = require('../utils/logger');
 const { NotFoundError, ForbiddenError, BadRequestError } = require('../utils/errors');
 const { sendNotification } = require('../services/notificationService');
-const { sendEmail } = require('../services/emailService');
+const { successResponse, errorResponse } = require('../utils/response');
+const googleSvc = require('../services/googleCalendarService');
 
 // @desc    Create a new event
 // @route   POST /api/events
@@ -15,24 +17,13 @@ exports.createEvent = async (req, res, next) => {
     // Check if calendar exists and user has access
     const calendar = await Calendar.findById(calendarId);
     if (!calendar) {
-      logger.error('Calendar not found', new Error('Calendar not found'), 404, { calendarId });
-      return res.status(404).json({
-        success: false,
-        error: 'Calendar not found'
-      });
+      return errorResponse(res, new Error('Calendar not found'), 404);
     }
 
     if (!calendar.isPublic &&
         calendar.owner.toString() !== req.user.id &&
         !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
-      logger.error('Access denied to calendar', new Error('Access denied'), 403, {
-        calendarId,
-        userId: req.user.id
-      });
-      return res.status(403).json({
-        success: false,
-        error: 'Access denied'
-      });
+      return errorResponse(res, new Error('Access denied'), 403);
     }
 
     const event = await Event.create({
@@ -46,6 +37,32 @@ exports.createEvent = async (req, res, next) => {
       recurrence,
       creator: req.user.id
     });
+
+    // If user has Google linked, write-through to Jaaiye Google calendar
+    try {
+      const user = req.user; // set by protect
+      // load full user for tokens
+      const dbUser = await User.findById(user.id).select('+googleCalendar.refreshToken +googleCalendar.accessToken');
+      if (dbUser && dbUser.providerLinks && dbUser.providerLinks.google && dbUser.googleCalendar && dbUser.googleCalendar.refreshToken) {
+        const googleEvent = await googleSvc.insertEvent(dbUser, {
+          summary: title,
+          description,
+          start: { dateTime: new Date(startTime).toISOString() },
+          end: { dateTime: new Date(endTime).toISOString() },
+          location
+        });
+        event.external = event.external || {};
+        event.external.google = {
+          calendarId: dbUser.googleCalendar.jaaiyeCalendarId,
+          eventId: googleEvent.id,
+          etag: googleEvent.etag
+        };
+        await event.save();
+      }
+    } catch (err) {
+      logger.warn('Google write-through failed', { error: err.message });
+      // Do not fail local creation
+    }
 
     // Send notifications to calendar participants
     if (calendar.sharedWith.length > 0) {
@@ -61,8 +78,7 @@ exports.createEvent = async (req, res, next) => {
       await Promise.all(notificationPromises);
     }
 
-    res.status(201).json({
-      success: true,
+    return successResponse(res, {
       event: {
         id: event._id,
         title: event.title,
@@ -74,15 +90,13 @@ exports.createEvent = async (req, res, next) => {
         recurrence: event.recurrence,
         calendar: event.calendar,
         creator: event.creator,
+        external: event.external,
         createdAt: event.createdAt
       }
-    });
-  } catch(error) {
-    logger.error('Failed to create event', error, 500, {
-      calendarId: req.body.calendarId,
-      userId: req.user.id
-    });
-    next(error);
+    }, 201, 'Event created');
+  } catch (error) {
+    logger.error('Failed to create event', error, { calendarId: req.body.calendarId, userId: req.user.id });
+    return errorResponse(res, error, 500);
   }
 };
 
@@ -147,11 +161,7 @@ exports.updateEvent = async (req, res, next) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) {
-      logger.error('Event not found', new Error('Event not found'), 404, { eventId: req.params.id });
-      return res.status(404).json({
-        success: false,
-        error: 'Event not found'
-      });
+      return errorResponse(res, new Error('Event not found'), 404);
     }
 
     // Check if user has access to the calendar
@@ -159,14 +169,7 @@ exports.updateEvent = async (req, res, next) => {
     if (!calendar.isPublic &&
         calendar.owner.toString() !== req.user.id &&
         !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
-      logger.error('Access denied to update event', new Error('Access denied'), 403, {
-        eventId: req.params.id,
-        userId: req.user.id
-      });
-      return res.status(403).json({
-        success: false,
-        error: 'Access denied'
-      });
+      return errorResponse(res, new Error('Access denied'), 403);
     }
 
     const { title, description, startTime, endTime, location, isAllDay, recurrence } = req.body;
@@ -180,22 +183,26 @@ exports.updateEvent = async (req, res, next) => {
 
     await event.save();
 
-    // Send notifications to participants about the update
-    if (event.participants && event.participants.length > 0) {
-      const notificationPromises = event.participants.map(participant =>
-        sendNotification({
-          userId: participant.user,
-          title: 'Event Updated',
-          message: `The event "${event.title}" has been updated`,
-          type: 'event_updated',
-          data: { eventId: event._id }
-        })
-      );
-      await Promise.all(notificationPromises);
+    // Google write-through update
+    try {
+      if (event.external && event.external.google && event.external.google.eventId) {
+        const User = require('../models/User');
+        const dbUser = await User.findById(req.user.id).select('+googleCalendar.refreshToken +googleCalendar.accessToken');
+        if (dbUser && dbUser.providerLinks?.google && dbUser.googleCalendar?.refreshToken) {
+          await googleSvc.updateEvent(dbUser, event.external.google.calendarId, event.external.google.eventId, {
+            summary: event.title,
+            description: event.description,
+            start: { dateTime: new Date(event.startTime).toISOString() },
+            end: { dateTime: new Date(event.endTime).toISOString() },
+            location: event.location
+          });
+        }
+      }
+    } catch (err) {
+      logger.warn('Google update write-through failed', { error: err.message });
     }
 
-    res.json({
-      success: true,
+    return successResponse(res, {
       event: {
         id: event._id,
         title: event.title,
@@ -207,15 +214,13 @@ exports.updateEvent = async (req, res, next) => {
         recurrence: event.recurrence,
         calendar: event.calendar,
         creator: event.creator,
+        external: event.external,
         createdAt: event.createdAt
       }
-    });
-  } catch(error) {
-    logger.error('Failed to update event', error, 500, {
-      eventId: req.params.id,
-      userId: req.user.id
-    });
-    next(error);
+    }, 200, 'Event updated');
+  } catch (error) {
+    logger.error('Failed to update event', error, { eventId: req.params.id, userId: req.user.id });
+    return errorResponse(res, error, 500);
   }
 };
 
@@ -226,11 +231,7 @@ exports.deleteEvent = async (req, res, next) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) {
-      logger.error('Event not found', new Error('Event not found'), 404, { eventId: req.params.id });
-      return res.status(404).json({
-        success: false,
-        error: 'Event not found'
-      });
+      return errorResponse(res, new Error('Event not found'), 404);
     }
 
     // Check if user has access to the calendar
@@ -238,42 +239,28 @@ exports.deleteEvent = async (req, res, next) => {
     if (!calendar.isPublic &&
         calendar.owner.toString() !== req.user.id &&
         !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
-      logger.error('Access denied to delete event', new Error('Access denied'), 403, {
-        eventId: req.params.id,
-        userId: req.user.id
-      });
-      return res.status(403).json({
-        success: false,
-        error: 'Access denied'
-      });
+      return errorResponse(res, new Error('Access denied'), 403);
+    }
+
+    // Google write-through deletion
+    try {
+      if (event.external && event.external.google && event.external.google.eventId) {
+        const User = require('../models/User');
+        const dbUser = await User.findById(req.user.id).select('+googleCalendar.refreshToken +googleCalendar.accessToken');
+        if (dbUser && dbUser.providerLinks?.google && dbUser.googleCalendar?.refreshToken) {
+          await googleSvc.deleteEvent(dbUser, event.external.google.calendarId, event.external.google.eventId);
+        }
+      }
+    } catch (err) {
+      logger.warn('Google delete write-through failed', { error: err.message });
     }
 
     await event.remove();
 
-    // Send notifications to participants about the deletion
-    if (event.participants && event.participants.length > 0) {
-      const notificationPromises = event.participants.map(participant =>
-        sendNotification({
-          userId: participant.user,
-          title: 'Event Deleted',
-          message: `The event "${event.title}" has been deleted`,
-          type: 'event_deleted',
-          data: { eventId: event._id }
-        })
-      );
-      await Promise.all(notificationPromises);
-    }
-
-    res.json({
-      success: true,
-      message: 'Event deleted successfully'
-    });
-  } catch(error) {
-    logger.error('Failed to delete event', error, 500, {
-      eventId: req.params.id,
-      userId: req.user.id
-    });
-    next(error);
+    return successResponse(res, null, 200, 'Event deleted successfully');
+  } catch (error) {
+    logger.error('Failed to delete event', error, { eventId: req.params.id, userId: req.user.id });
+    return errorResponse(res, error, 500);
   }
 };
 

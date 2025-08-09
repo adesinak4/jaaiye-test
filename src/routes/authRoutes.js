@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const passport = require('passport');
 const {
   register,
   login,
@@ -8,19 +7,18 @@ const {
   forgotPassword,
   resetPassword,
   refreshToken,
-  googleCallback,
-  appleCallback,
-  getMe
+  resend
 } = require('../controllers/authController');
+const authGoogleController = require('../controllers/integrationController');
 const {
   registerValidator,
   loginValidator,
   verifyEmailValidator,
   forgotPasswordValidator,
-  resetPasswordValidator
+  resetPasswordValidator,
+  resendVerificationValidator
 } = require('../validators/authValidators');
 const { validate } = require('../middleware/validationMiddleware');
-const { protect } = require('../middleware/authMiddleware');
 const {
   apiLimiter,
   securityHeaders,
@@ -38,12 +36,9 @@ router.post('/refresh-token', apiLimiter, refreshToken);
 router.post('/verify-email', apiLimiter, verifyEmailValidator, validate, verifyEmail);
 router.post('/forgot-password', apiLimiter, forgotPasswordValidator, validate, forgotPassword);
 router.post('/reset-password', apiLimiter, resetPasswordValidator, validate, resetPassword);
+router.post('/resend', apiLimiter, resendVerificationValidator, validate, resend);
 
-// OAuth routes
-router.get('/google', apiLimiter, passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/login' }), googleCallback);
-
-router.get('/apple', apiLimiter, passport.authenticate('apple', { scope: ['name', 'email'] }));
-router.get('/apple/callback', passport.authenticate('apple', { failureRedirect: '/login' }), appleCallback);
+// Google sign-in/up via ID token (mobile sends idToken)
+router.post('/google/signin', apiLimiter, authGoogleController.googleSignInViaIdToken);
 
 module.exports = router;

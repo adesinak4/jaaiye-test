@@ -1,6 +1,13 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const providerProfileSchema = new mongoose.Schema({
+  email: { type: String, trim: true, lowercase: true },
+  name: { type: String, trim: true },
+  picture: { type: String, trim: true },
+  lastSignInAt: { type: Date }
+}, { _id: false });
+
 const userSchema = new mongoose.Schema({
   // Basic Information
   email: {
@@ -53,6 +60,38 @@ const userSchema = new mongoose.Schema({
     sparse: true,
   },
 
+  // Provider linkage flags and profiles
+  providerLinks: {
+    google: { type: Boolean, default: false },
+    apple: { type: Boolean, default: false }
+  },
+  providerProfiles: {
+    google: { type: providerProfileSchema, default: undefined },
+    apple: { type: providerProfileSchema, default: undefined }
+  },
+
+  // Google Calendar linkage (MVP)
+  googleCalendar: {
+    refreshToken: { type: String, select: false },
+    accessToken: { type: String, select: false },
+    expiryDate: { type: Date },
+    scope: { type: String },
+    jaaiyeCalendarId: { type: String },
+    selectedCalendarIds: { type: [String], default: undefined },
+    syncToken: { type: String, select: false },
+    calendars: [{
+      id: { type: String },
+      syncToken: { type: String, select: false },
+      channelId: { type: String, select: false },
+      resourceId: { type: String, select: false },
+      expiration: { type: Date }
+    }]
+  },
+
+  ics: {
+    token: { type: String, select: false }
+  },
+
   // Profile Information
   profilePicture: {
     emoji: {
@@ -70,34 +109,40 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  verificationCode: {
-    type: String,
-    select: false,
+  verification: {
+    code: {
+      type: String,
+      select: false,
+    },
+    expires: {
+      type: Date,
+      select: false,
+    },
   },
-  verificationCodeExpires: {
-    type: Date,
-    select: false,
-  },
-  resetPasswordCode: {
-    type: String,
-    select: false,
-  },
-  resetPasswordExpires: {
-    type: Date,
-    select: false,
+  resetPassword: {
+    code: {
+      type: String,
+      select: false,
+    },
+    expires: {
+      type: Date,
+      select: false,
+    },
   },
   lastLogin: {
     type: Date,
   },
 
   // Account Status
-  isDeleted: {
-    type: Boolean,
-    default: false
-  },
-  deletedAt: {
-    type: Date,
-    default: null
+  deleted: {
+    status: {
+      type: Boolean,
+      default: false
+    },
+    date: {
+      type: Date,
+      default: null
+    },
   },
   isActive: {
     type: Boolean,

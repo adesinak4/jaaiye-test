@@ -1,354 +1,279 @@
 const User = require('../models/User');
-const { sendVerificationEmail } = require('../services/emailService');
+const { generateVerificationCode } = require('../services/authService');
 const { sendPushNotification, createInAppNotification } = require('../services/notificationService');
 const logger = require('../utils/logger');
-const emailService = require('../services/emailService');
+const { emailQueue } = require('../queues');
 const { addToBlacklist } = require('../services/authService');
-
-let notification;
+const { asyncHandler } = require('../utils/asyncHandler');
+const {
+  successResponse,
+  errorResponse,
+  notFoundResponse,
+  conflictResponse,
+  formatUserResponse
+} = require('../utils/response');
+const { NotFoundError, ConflictError, ValidationError, AuthenticationError } = require('../middleware/errorHandler');
+const { EMAIL_CONSTANTS } = require('../../constants');
 
 // @desc    Get current user profile
 // @route   GET /api/users/profile
 // @access  Private
-exports.getProfile = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      logger.error('User not found', new Error('User not found'), 404, { error: error.stack });
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-    }
+exports.getProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id);
 
-    res.json({
-      success: true,
-      user: {
-        id: user._id,
-        email: user.email,
-        username: user.username,
-        fullName: user.fullName,
-        emailVerified: user.emailVerified,
-        profilePicture: user.profilePicture,
-        createdAt: user.createdAt
-      }
-    });
-  } catch (error) {
-    logger.error('Failed to get user profile', error, 500, { error: error.stack });
-    next(error);
+  if (!user) {
+    throw new NotFoundError('User not found');
   }
-};
+
+  logger.info('User profile retrieved', {
+    userId: req.user.id,
+    email: user.email
+  });
+
+  return successResponse(res, { user: formatUserResponse(user) });
+});
 
 // @desc    Update user profile
 // @route   PUT /api/users/profile
 // @access  Private
-exports.updateProfile = async (req, res, next) => {
-  try {
-    const { username, fullName } = req.body;
-    const user = await User.findById(req.user.id);
+exports.updateProfile = asyncHandler(async (req, res) => {
+  const { username, fullName, preferences } = req.body;
+  const user = await User.findById(req.user.id);
 
-    if (!user) {
-      logger.error('User not found', new Error('User not found'), 404, { error: error.stack });
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-    }
-
-    // If changing username, check if it's available
-    if (username && username !== user.username) {
-      const usernameExists = await User.findOne({ username });
-      if (usernameExists) {
-        logger.error('Username already exists', new Error('Username taken'), 409, { username });
-        return res.status(409).json({
-          success: false,
-          error: 'Username already taken'
-        });
-      }
-      user.username = username;
-    }
-
-    // If changing full name
-    if (fullName) {
-      user.fullName = fullName;
-    }
-
-    await user.save();
-
-    res.json({
-      success: true,
-      user: {
-        id: user._id,
-        email: user.email,
-        username: user.username,
-        fullName: user.fullName,
-        emailVerified: user.emailVerified,
-        profilePicture: user.profilePicture,
-        createdAt: user.createdAt
-      }
-    });
-  } catch (error) {
-    logger.error('Failed to update profile', error, 500, { error: error.stack });
-    next(error);
+  if (!user) {
+    throw new NotFoundError('User not found');
   }
-};
+
+  // If changing username, check if it's available
+  if (username && username !== user.username) {
+    const usernameExists = await User.findOne({ username });
+    if (usernameExists) {
+      throw new ConflictError('Username already taken');
+    }
+    user.username = username;
+  }
+
+  // If changing full name
+  if (fullName) {
+    user.fullName = fullName;
+  }
+
+  if (preferences) {
+    user.preferences = preferences;
+  }
+
+  await user.save();
+
+  logger.info('User profile updated', {
+    userId: req.user.id,
+    updatedFields: { username, fullName, preferences }
+  });
+
+  return successResponse(res, { user: formatUserResponse(user) });
+});
 
 // @desc    Change password
 // @route   PUT /api/users/password
 // @access  Private
-exports.changePassword = async (req, res, next) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-    const user = await User.findById(req.user.id).select('+password');
+exports.changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const user = await User.findById(req.user.id).select('+password');
 
-    if (!user) {
-      logger.error('User not found', new Error('User not found'), 404, { error: error.stack });
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-    }
-
-    // Verify current password
-    const isMatch = await user.comparePassword(currentPassword);
-    if (!isMatch) {
-      logger.error('Invalid current password', new Error('Invalid password'), 401, { error: error.stack });
-      return res.status(401).json({
-        success: false,
-        error: 'Current password is incorrect'
-      });
-    }
-
-    // Update password
-    user.password = newPassword;
-    await user.save();
-
-    res.json({
-      success: true,
-      message: 'Password updated successfully'
-    });
-  } catch (error) {
-    logger.error('Failed to change password', error, 500, { error: error.stack });
-    next(error);
+  if (!user) {
+    throw new NotFoundError('User not found');
   }
-};
+
+  // Verify current password
+  const isMatch = await user.comparePassword(currentPassword);
+  if (!isMatch) {
+    throw new AuthenticationError('Current password is incorrect');
+  }
+
+  // Update password
+  user.password = newPassword;
+  await user.save();
+
+  logger.info('User password changed', {
+    userId: req.user.id
+  });
+
+  return successResponse(res, null, 200, 'Password updated successfully');
+});
 
 // @desc    Delete user account (Soft delete)
 // @route   DELETE /api/users
 // @access  Private
-exports.deleteUser = async (req, res, next) => {
-  try {
-    // Verify password
-    const user = await User.findById(req.user.id).select('+password +refresh.token +refresh.expiresAt');
-    if (!(await user.comparePassword(req.body.password))) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Invalid password'
-      });
-    }
+exports.deleteUser = asyncHandler(async (req, res) => {
+  // Verify password
+  const user = await User.findById(req.user.id).select('+password +refresh.token +refresh.expiresAt');
 
-    // Revoke tokens (implementation depends on your auth system)
-    await addToBlacklist(user.refresh.token, user.refresh.expiresAt);
-    await User.findByIdAndUpdate(req.user.id, { $unset: { 'refresh.token': 1, 'refresh.expiresAt': 1 } });
-
-    // Soft delete
-    await user.softDelete();
-    await emailService.sendAccountDeactivationEmail(user.email)
-
-    res.status(204).end();
-  } catch (error) {
-    logger.error(`Account deletion failed: ${error.message}`);
-    next(error);
+  if (!(await user.comparePassword(req.body.password))) {
+    throw new AuthenticationError('Invalid password');
   }
-};
+
+  // Revoke tokens (implementation depends on your auth system)
+  await addToBlacklist(user.refresh.token, user.refresh.expiresAt);
+  await User.findByIdAndUpdate(req.user.id, { $unset: { 'refresh.token': 1, 'refresh.expiresAt': 1 } });
+
+  // Soft delete
+  await user.softDelete();
+
+  // Send account deactivation email in background
+  await emailQueue.sendAccountDeactivationEmailAsync(user.email);
+
+  logger.info('User account deleted', {
+    userId: req.user.id,
+    email: user.email
+  });
+
+  return res.status(204).end();
+});
 
 // @desc    Update user email
 // @route   PUT /api/users/email
 // @access  Private
-exports.updateEmail = async (req, res, next) => {
-  try {
-    const { email, currentPassword } = req.body;
+exports.updateEmail = asyncHandler(async (req, res) => {
+  const { email, currentPassword } = req.body;
 
-    // Validate input
-    if (!email || !currentPassword) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email and current password are required'
-      });
-    }
-
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-    }
-    console.log(user);
-
-    // Check if email is already taken
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email is already in use'
-      });
-    }
-
-    // Update email and set as unverified
-    user.email = email;
-    user.emailVerified = false;
-
-    // If changing password
-    if (currentPassword) {
-      const isMatch = await user.comparePassword(currentPassword);
-      if (!isMatch) {
-        logger.error('Invalid current password', new Error('Invalid password'), 401, { error: error.stack });
-        return res.status(401).json({
-          success: false,
-          error: 'Current password is incorrect'
-        });
-      }
-    }
-    console.log(isMatch);
-
-    await user.save();
-
-    // Send verification email
-    await sendVerificationEmail(user);
-
-    notification = {
-      title: 'Email Update',
-      body: 'Please verify your new email address',
-      data: { type: 'email_update' }
-    }
-
-    // Send notification
-    await sendPushNotification(user._id, notification);
-    await createInAppNotification(user._id, notification);
-
-    res.json({
-      success: true,
-      message: 'Email updated. Please verify your new email address.'
-    });
-  } catch (error) {
-    console.error('Error updating email', error.stack);
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      // stack: error.stack
-    });
+  // Validate input
+  if (!email || !currentPassword) {
+    throw new ValidationError('Email and current password are required');
   }
-};
+
+  const user = await User.findById(req.user.id).select('+password +verification');
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  if (user.email === email) {
+    throw new ConflictError('New email cannot be the same as the current email');
+  }
+
+  // Check if email is already taken
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new ConflictError('Email is already in use');
+  }
+
+  // Verify current password
+  const isMatch = await user.comparePassword(currentPassword);
+  if (!isMatch) {
+    throw new AuthenticationError('Current password is incorrect');
+  }
+
+  const verificationCode = generateVerificationCode();
+
+  const previousEmail = user.email;
+  // Update email and set as unverified
+  user.email = email;
+  user.emailVerified = false;
+  user.verification = user.verification || {};
+  user.verification.code = verificationCode;
+  user.verification.expires = new Date(Date.now() + EMAIL_CONSTANTS.VERIFICATION_EXPIRY);
+  await user.save();
+
+  // Send verification email in background (faster API response)
+  await emailQueue.sendVerificationEmailAsync(user.email, verificationCode);
+
+  // Send notification in background (faster API response)
+  const notification = {
+    title: 'Email Update',
+    body: 'Please verify your new email address',
+    data: { type: 'email_update' }
+  };
+
+  // Use background processing for faster response
+  await sendPushNotification(user._id, notification);
+  await createInAppNotification(user._id, notification);
+
+  logger.info('User email updated', {
+    userId: req.user.id,
+    oldEmail: previousEmail,
+    newEmail: email
+  });
+
+  return successResponse(res, null, 200, 'Email updated. Please verify your new email address.');
+});
 
 // @desc    Update profile picture
 // @route   PUT /api/users/profile-picture
 // @access  Private
-exports.updateProfilePicture = async (req, res, next) => {
-  try {
-    const { emoji, color } = req.body;
+exports.updateProfilePicture = asyncHandler(async (req, res) => {
+  const { emoji, color } = req.body;
 
-    if (!emoji || !color) {
-      logger.error('Missing required fields', new Error('Missing fields'), 400, {
-        userId: req.user.id,
-        providedFields: { emoji, color }
-      });
-      return res.status(400).json({
-        success: false,
-        error: 'Please provide both emoji and color'
-      });
-    }
-
-    // Validate color format
-    const colorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
-    if (!colorRegex.test(color)) {
-      logger.error('Invalid color format', new Error('Invalid color'), 400, {
-        userId: req.user.id,
-        color
-      });
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid color format. Please use hex color code (e.g., #FF0000)'
-      });
-    }
-
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      logger.error('User not found', new Error('User not found'), 404, { error: error.stack });
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-    }
-
-    // Update profile picture
-    user.profilePicture = {
-      emoji,
-      color
-    };
-    await user.save();
-
-    notification = {
-      title: 'Profile Updated',
-      body: 'Your profile picture has been updated',
-      data: { type: 'profile_update' }
-    }
-
-    // Send notification
-    await sendPushNotification(user._id, notification);
-    await createInAppNotification(user._id, notification);
-
-    res.json({
-      success: true,
-      data: user.profilePicture
-    });
-  } catch (error) {
-    logger.error('Failed to update profile picture', error, 500, { error: error.stack });
-    next(error);
+  if (!emoji || !color) {
+    throw new ValidationError('Please provide both emoji and color');
   }
-};
+
+  // Validate color format
+  const colorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+  if (!colorRegex.test(color)) {
+    throw new ValidationError('Invalid color format. Please use hex color code (e.g., #FF0000)');
+  }
+
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  // Update profile picture
+  user.profilePicture = { emoji, color };
+  await user.save();
+
+  // Send notification in background (faster API response)
+  const notification = {
+    title: 'Profile Updated',
+    body: 'Your profile picture has been updated',
+    data: { type: 'profile_update' }
+  };
+
+  // Use background processing for faster response
+  await sendPushNotification(user._id, notification);
+  await createInAppNotification(user._id, notification);
+
+  logger.info('User profile picture updated', {
+    userId: req.user.id,
+    emoji,
+    color
+  });
+
+  return successResponse(res, user.profilePicture);
+});
 
 // @desc    Logout user
 // @route   POST /api/users/logout
 // @access  Private
-exports.logout = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user.id).select('+refresh.token +refresh.expiresAt');
-    if (!user) {
-      logger.error('User not found', new Error('User not found'), 404, { error: error.stack });
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-    }
+exports.logout = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id).select('+refresh.token +refresh.expiresAt');
 
-    if (!user.refresh?.token) {
-      logger.info('User has already logged out.')
-      return res.status(200).json({
-        success: true,
-        message: 'User has already logged out'
-      });
-    }
-
-    // Clear refresh token
-    await addToBlacklist(user.refresh.token, user.refresh.expiresAt);
-    await User.findByIdAndUpdate(req.user.id, { $unset: { 'refresh.token': 1, 'refresh.expiresAt': 1 } });
-
-    // Send notification
-    notification = {
-      title: 'Security Alert',
-      body: 'You have been logged out',
-      data: { type: 'logout' }
-    }
-    await sendPushNotification(user._id, notification);
-    await createInAppNotification(user._id, notification);
-
-    res.json({
-      success: true,
-      message: 'Logged out successfully'
-    });
-  } catch (error) {
-    logger.error('Failed to logout', error, 500, { error: error.stack });
-    next(error);
+  if (!user) {
+    throw new NotFoundError('User not found');
   }
-};
+
+  if (!user.refresh?.token) {
+    logger.info('User has already logged out', { userId: req.user.id });
+    return successResponse(res, null, 200, 'User has already logged out');
+  }
+
+  // Clear refresh token
+  await addToBlacklist(user.refresh.token, user.refresh.expiresAt);
+  await User.findByIdAndUpdate(req.user.id, { $unset: { 'refresh.token': 1, 'refresh.expiresAt': 1 } });
+
+  // Send notification in background (faster API response)
+  const notification = {
+    title: 'Security Alert',
+    body: 'You have been logged out',
+    data: { type: 'logout' }
+  };
+
+  // Use background processing for faster response
+  await sendPushNotification(user._id, notification);
+  await createInAppNotification(user._id, notification);
+
+  logger.info('User logged out', {
+    userId: req.user.id,
+    email: user.email
+  });
+
+  return successResponse(res, null, 200, 'Logged out successfully');
+});

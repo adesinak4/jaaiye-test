@@ -12,17 +12,17 @@ exports.registerValidator = [
     .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/)
     .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
 
-  // body('fullName')
-  //   .notEmpty()
-  //   .withMessage('Full name is required')
-  //   .isLength({ min: 2, max: 50 })
-    // .withMessage('Full name must be between 2 and 50 characters'),
+  body('username')
+    .optional()
+    .isLength({ min: 3 })
+    .withMessage('Username must be at least 3 characters long')
+    .matches(/^[a-zA-Z0-9_]+$/)
+    .withMessage('Username can only contain letters, numbers, and underscores'),
 
-  // body('username')
-  //   .isLength({ min: 3 })
-  //   .withMessage('Username must be at least 3 characters long')
-  //   .matches(/^[a-zA-Z0-9_]+$/)
-  //   .withMessage('Username can only contain letters, numbers, and underscores'),
+  body('fullName')
+    .optional()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Full name must be between 2 and 50 characters')
 ];
 
 exports.loginValidator = [
@@ -58,18 +58,25 @@ exports.resetPasswordValidator = [
     .isNumeric()
     .withMessage('Reset code must contain only numbers'),
 
-  body('password')
+  body('newPassword')
     .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
+    .withMessage('New password must be at least 8 characters long')
     .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
+    .withMessage('New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')
+];
 
-  body('confirmPassword')
-    .notEmpty()
-    .withMessage('Please confirm your password')
-    .custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error('Passwords do not match');
+exports.resendVerificationValidator = [
+  body('email')
+    .isEmail()
+    .withMessage('Please provide a valid email')
+    .normalizeEmail(),
+  body('type')
+    .optional()
+    .custom(value => {
+      if (value === undefined) return true; // allow existing resend-verification flow
+      const v = String(value).toLowerCase();
+      if (!['verification', 'reset'].includes(v)) {
+        throw new Error("type must be either 'verification' or 'reset'");
       }
       return true;
     })

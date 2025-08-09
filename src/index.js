@@ -11,7 +11,8 @@ const WebSocketService = require('./services/websocketService');
 const dotenv = require('dotenv');
 const connectDB = require('./config/database');
 const { validateMobileApiKey } = require('./middleware/mobileAuthMiddleware');
-const { errorHandler } = require('./utils/errors');
+const { errorHandler } = require('./middleware/errorHandler');
+const { requestLogger } = require('./utils/asyncHandler');
 const logger = require('./utils/logger');
 
 // Load environment variables
@@ -39,8 +40,8 @@ app.use(cors()); // Enable CORS
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
-// Logging middleware
-// app.use(morgan('combined', { stream: logger.stream }));
+// Request logging middleware (comprehensive logging)
+app.use(requestLogger);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -68,6 +69,9 @@ app.use('/api/v1/calendars', require('./routes/calendarRoutes'));
 app.use('/api/v1/events', require('./routes/eventRoutes'));
 app.use('/api/v1/notifications', require('./routes/notificationRoutes'));
 app.use('/api/v1/health', require('./routes/healthRoutes'));
+app.use('/api/v1/google', require('./routes/googleRoutes'));
+app.use('/api/v1/ics', require('./routes/icsRoutes'));
+app.use('/webhooks', require('./routes/webhookRoutes'));
 
 // 404 handler
 app.use((req, res, next) => {
@@ -80,19 +84,25 @@ app.use((req, res, next) => {
 // Error handling middleware
 app.use(errorHandler);
 
-// // Handle unhandled promise rejections
-// process.on('unhandledRejection', (err) => {
-//   logger.error('UNHANDLED REJECTION! 💥 Shutting down...');
-//   logger.error(err.name, err.message);
-//   process.exit(1);
-// });
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  logger.error('UNHANDLED REJECTION! 💥 Shutting down...', {
+    name: err.name,
+    message: err.message,
+    stack: err.stack
+  });
+  process.exit(1);
+});
 
-// // Handle uncaught exceptions
-// process.on('uncaughtException', (err) => {
-//   logger.error('UNCAUGHT EXCEPTION! 💥 Shutting down...');
-//   logger.error(err.name, err.message);
-//   process.exit(1);
-// });
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  logger.error('UNCAUGHT EXCEPTION! 💥 Shutting down...', {
+    name: err.name,
+    message: err.message,
+    stack: err.stack
+  });
+  process.exit(1);
+});
 
 // Connect to MongoDB using existing configuration
 connectDB();
@@ -100,17 +110,9 @@ connectDB();
 // Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  logger.info(`Server is running on port ${PORT}`);
+  logger.info(`Server running on port ${PORT}`, {
+    port: PORT,
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
 });
-
-// Handle server shutdown gracefully
-// process.on('SIGTERM', () => {
-//   logger.info('SIGTERM received. Shutting down gracefully...');
-//   server.close(() => {
-//     logger.info('Process terminated');
-//     process.exit(0);
-//   });
-// });
-
-// Export app for testing
-module.exports = app;

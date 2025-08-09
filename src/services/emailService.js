@@ -1,9 +1,71 @@
 const nodemailer = require('nodemailer');
 const logger = require('../utils/logger');
+const templates = require('../emails/templates');
+const path = require('path');
 
 class EmailService {
   constructor() {
-    this.transporter = nodemailer.createTransport({
+    this.transporter = this.createTransporter();
+  }
+
+  createTransporter() {
+    // Try different configurations based on environment
+    const configs = [
+      // Gmail with OAuth2 (recommended)
+      {
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS // This should be an App Password
+        },
+        secure: true,
+        port: 465
+      },
+      // Gmail with less secure settings (fallback)
+      {
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      },
+      // Alternative: Use a different SMTP service if configured
+      process.env.SMTP_HOST ? {
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT || 587,
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: {
+          user: process.env.SMTP_USER || process.env.EMAIL_USER,
+          pass: process.env.SMTP_PASS || process.env.EMAIL_PASS
+        }
+      } : null
+    ].filter(Boolean);
+
+    // Try each configuration
+    for (const config of configs) {
+      try {
+        const transporter = nodemailer.createTransport(config);
+        logger.info('Email transporter created successfully', {
+          service: config.service || config.host,
+          user: config.auth.user
+        });
+        return transporter;
+      } catch (error) {
+        logger.warn('Failed to create email transporter with config', {
+          config: config.service || config.host,
+          error: error.message
+        });
+      }
+    }
+
+    // Fallback to basic configuration
+    logger.warn('Using fallback email configuration');
+    return nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
@@ -12,47 +74,80 @@ class EmailService {
     });
   }
 
+  buildAttachmentsIfNeeded() {
+    if (process.env.APP_EMBED_LOGO === 'true') {
+      const logoPath = path.join(__dirname, '../..', 'assets', 'logo.png');
+      return [{
+        filename: 'logo.png',
+        path: logoPath,
+        cid: templates.LOGO_CID
+      }];
+    }
+    return [];
+  }
+
   async sendEmail({ to, subject, html, text }) {
     try {
       const mailOptions = {
-        from: `"${process.env.APP_NAME}" <${process.env.EMAIL_USER}>`,
+        from: `"${process.env.APP_NAME || 'Jaaiye'}" <${process.env.EMAIL_USER}>`,
         to,
         subject,
         html,
-        text
+        text,
+        attachments: this.buildAttachmentsIfNeeded()
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      logger.info('Email sent successfully', { messageId: info.messageId, to });
+      logger.info('Email sent successfully', {
+        messageId: info.messageId,
+        to,
+        subject
+      });
       return info;
     } catch (error) {
-      logger.error('Error sending email', { error: error.message, stack: error.stack, to });
-      next(error);
+      logger.error('Error sending email', {
+        error: error.message,
+        stack: error.stack,
+        to,
+        subject,
+        code: error.code,
+        command: error.command
+      });
+
+      // Provide more specific error messages
+      if (error.code === 'EAUTH') {
+        throw new Error('Email authentication failed. Please check your email credentials and ensure you\'re using an App Password for Gmail.');
+      } else if (error.code === 'ECONNECTION') {
+        throw new Error('Email connection failed. Please check your internet connection and firewall settings.');
+      } else if (error.code === 'EADDRNOTAVAIL') {
+        throw new Error('Email server unavailable. Please check your email configuration and try again later.');
+      }
+
+      throw error; // Re-throw for proper error handling
     }
   }
 
-  async sendVerificationEmail(email, verificationCode) {
-    const html = `
-      <h1>Welcome to ${process.env.APP_NAME}!</h1>
-      <p>Your verification code is:</p>
-      <div style="
-        font-size: 24px;
-        font-weight: bold;
-        letter-spacing: 2px;
-        margin: 20px 0;
-      ">${verificationCode}</div>
-      <p>Enter this code in the app to verify your email address.</p>
-      <p><em>This code expires in 10 minutes.</em></p>
-      <p>If you didn't request this, please ignore this email.</p>
-    `;
+  // Unified verification email method that handles both user objects and individual parameters
+  async sendVerificationEmail(userOrEmail, verificationCode = null) {
+    let email, code;
 
-    const text = `
-      Welcome to ${process.env.APP_NAME}!
-      Your verification code is: ${verificationCode}
-      Enter this code in the app to verify your email address.
-      Code expires in 10 minutes.
-      If you didn't request this, please ignore this email.
-    `;
+    // Handle both user object and individual parameters
+    if (typeof userOrEmail === 'object' && userOrEmail.email) {
+      // Called with user object: sendVerificationEmail(user)
+      email = userOrEmail.email;
+      code = userOrEmail.verificationCode || verificationCode;
+    } else {
+      // Called with individual parameters: sendVerificationEmail(email, code)
+      email = userOrEmail;
+      code = verificationCode;
+    }
+
+    if (!email || !code) {
+      throw new Error('Email and verification code are required');
+    }
+
+    const html = templates.verificationEmail({ code });
+    const text = `Your ${process.env.APP_NAME || 'Jaaiye'} verification code is: ${code}. It expires in 10 minutes.`;
 
     return this.sendEmail({
       to: email,
@@ -62,39 +157,54 @@ class EmailService {
     });
   }
 
-  async sendPasswordResetEmail(user, resetCode) {
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?code=${resetCode}`;
+  async sendPasswordResetEmail(userOrEmail, resetCode = null) {
+    let email, code;
 
-    const html = `
-      <h1>Password Reset Request</h1>
-      <p>You requested a password reset. Click the link below to reset your password:</p>
-      <a href="${resetUrl}">Reset Password</a>
-      <p>If you did not request a password reset, please ignore this email.</p>
-      <p>This link will expire in 1 hour.</p>
-    `;
+    // Handle both user object and individual parameters
+    if (typeof userOrEmail === 'object' && userOrEmail.email) {
+      email = userOrEmail.email;
+      code = userOrEmail.resetPasswordCode || resetCode;
+    } else {
+      email = userOrEmail;
+      code = resetCode;
+    }
 
-    const text = `
-      Password Reset Request
-      You requested a password reset. Visit this link to reset your password: ${resetUrl}
-      If you did not request a password reset, please ignore this email.
-      This link will expire in 1 hour.
-    `;
+    if (!email || !code) {
+      throw new Error('Email and reset code are required');
+    }
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?code=${code}`;
+    const html = templates.passwordResetEmail({ resetUrl, code });
+    const text = `Reset your password using this link: ${resetUrl} or use code: ${code}`;
 
     return this.sendEmail({
       to: email,
-      subject: 'Password Reset Request',
+      subject: 'Reset Your Password',
       html,
       text
     });
   }
 
-  async sendAccountDeactivationEmail(user) {
+  async sendAccountDeactivationEmail(userOrEmail) {
+    const email = typeof userOrEmail === 'object' ? userOrEmail.email : userOrEmail;
+
+    if (!email) {
+      throw new Error('Email is required');
+    }
+
     const reactivationUrl = `${process.env.FRONTEND_URL}/reactivate-account`;
 
     const html = `
       <h1>Account Deactivated</h1>
       <p>Your account has been deactivated. You can reactivate it at any time by clicking the link below:</p>
-      <a href="${reactivationUrl}">Reactivate Account</a>
+      <a href="${reactivationUrl}" style="
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #28a745;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+      ">Reactivate Account</a>
       <p>If you did not deactivate your account, please contact support immediately.</p>
     `;
 
@@ -112,7 +222,13 @@ class EmailService {
     });
   }
 
-  async sendAccountReactivatedEmail(user) {
+  async sendAccountReactivatedEmail(userOrEmail) {
+    const email = typeof userOrEmail === 'object' ? userOrEmail.email : userOrEmail;
+
+    if (!email) {
+      throw new Error('Email is required');
+    }
+
     const html = `
       <h1>Account Reactivated</h1>
       <p>Your account has been successfully reactivated. You can now log in and use all features.</p>
@@ -133,37 +249,80 @@ class EmailService {
     });
   }
 
-  async sendWelcomeEmail(user) {
-    const html = `
-      <h1>Welcome to ${process.env.APP_NAME}!</h1>
-      <p>Thank you for joining us. We're excited to have you on board!</p>
-      <p>You can now start using all our features:</p>
-      <ul>
-        <li>Create and manage calendars</li>
-        <li>Schedule events</li>
-        <li>Share with others</li>
-        <li>And much more!</li>
-      </ul>
-      <p>If you have any questions, feel free to contact our support team.</p>
-    `;
+  async sendWelcomeEmail(userOrEmail) {
+    const email = typeof userOrEmail === 'object' ? userOrEmail.email : userOrEmail;
+    const fullName = typeof userOrEmail === 'object' ? userOrEmail.fullName : undefined;
 
-    const text = `
-      Welcome to ${process.env.APP_NAME}!
-      Thank you for joining us. We're excited to have you on board!
-      You can now start using all our features:
-      - Create and manage calendars
-      - Schedule events
-      - Share with others
-      - And much more!
-      If you have any questions, feel free to contact our support team.
-    `;
+    if (!email) {
+      throw new Error('Email is required');
+    }
+
+    const html = templates.welcomeEmail({ fullName });
+    const text = `Welcome to ${process.env.APP_NAME || 'Jaaiye'}!`;
 
     return this.sendEmail({
       to: email,
-      subject: 'Welcome to ' + process.env.APP_NAME,
+      subject: `Welcome to ${process.env.APP_NAME || 'Jaaiye'}!`,
       html,
       text
     });
+  }
+
+  // New method for sending report emails
+  async sendReportEmail(userOrEmail, reportData) {
+    const email = typeof userOrEmail === 'object' ? userOrEmail.email : userOrEmail;
+
+    if (!email) {
+      throw new Error('Email is required');
+    }
+
+    const html = templates.reportEmail({ reportData });
+    const text = `Your report is ready. Type: ${reportData?.type || 'report'}`;
+
+    return this.sendEmail({
+      to: email,
+      subject: `Report Ready: ${reportData?.title || 'Your Report'}`,
+      html,
+      text
+    });
+  }
+
+  // Test email configuration
+  async testConnection() {
+    try {
+      await this.transporter.verify();
+      logger.info('Email configuration is valid');
+      return { success: true, message: 'Email configuration is valid' };
+    } catch (error) {
+      logger.error('Email configuration test failed', {
+        error: error.message,
+        code: error.code,
+        command: error.command
+      });
+
+      let message = 'Email configuration test failed';
+      if (error.code === 'EAUTH') {
+        message = 'Email authentication failed. Please check your credentials and ensure you\'re using an App Password for Gmail.';
+      } else if (error.code === 'ECONNECTION') {
+        message = 'Email connection failed. Please check your internet connection and firewall settings.';
+      } else if (error.code === 'EADDRNOTAVAIL') {
+        message = 'Email server unavailable. Please check your email configuration.';
+      }
+
+      return { success: false, message, error: error.message };
+    }
+  }
+
+  // Get email configuration info (without sensitive data)
+  getConfigInfo() {
+    return {
+      hasEmailUser: !!process.env.EMAIL_USER,
+      hasEmailPass: !!process.env.EMAIL_PASS,
+      hasSmtpHost: !!process.env.SMTP_HOST,
+      hasSmtpUser: !!process.env.SMTP_USER,
+      hasSmtpPass: !!process.env.SMTP_PASS,
+      appName: process.env.APP_NAME || 'Jaaiye'
+    };
   }
 }
 

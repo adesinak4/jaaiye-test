@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
 
+const externalMappingSchema = new mongoose.Schema({
+  google: {
+    calendarId: { type: String },
+    eventId: { type: String },
+    etag: { type: String }
+  }
+}, { _id: false });
+
 const eventSchema = new mongoose.Schema({
   calendar: {
     type: mongoose.Schema.Types.ObjectId,
@@ -33,7 +41,7 @@ const eventSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['meeting', 'appointment', 'task', 'reminder', 'other'],
+    enum: ['hangout', 'meeting', 'appointment', 'task', 'reminder', 'other'],
     default: 'other'
   },
   privacy: {
@@ -61,6 +69,7 @@ const eventSchema = new mongoose.Schema({
       default: false
     }
   }],
+  external: { type: externalMappingSchema, default: undefined },
   createdAt: {
     type: Date,
     default: Date.now

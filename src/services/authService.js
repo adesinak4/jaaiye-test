@@ -1,103 +1,56 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const User = require('../models/User');
-const TokenBlacklist = require('../models/TokenBlacklist');
+const { OAuth2Client } = require('google-auth-library');
 
-class AuthService {
-  // Generate JWT Token
-  generateToken(id) {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN,
-    });
+let googleClient;
+function getGoogleClient() {
+  if (!googleClient) {
+    const clientId = process.env.GOOGLE_CLIENT_ID || undefined; // optional for server flows
+    googleClient = new OAuth2Client(clientId);
   }
-
-  // Generate Refresh Token
-  generateRefreshToken(id) {
-    return jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, {
-      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
-    });
-  }
-
-  // Generate verification code (6 digits)
-  generateVerificationCode() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  }
-
-  // Generate password reset code
-  generateResetCode() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  }
-
-  // Generate API Key
-  generateApiKey() {
-    return crypto.randomBytes(32).toString('hex');
-  }
-
-  // Format user object for response (removes sensitive data)
-  formatUserResponse(user) {
-    return {
-      id: user._id,
-      email: user.email,
-      username: user.username,
-      fullName: user.fullName,
-      emailVerified: user.emailVerified,
-      profilePicture: user.profilePicture,
-      createdAt: user.createdAt
-    };
-  }
-
-  // Check if code is expired
-  isCodeExpired(expiryDate) {
-    return new Date(expiryDate) < new Date();
-  }
-
-  // Generate device fingerprint
-  generateDeviceFingerprint(req) {
-    const userAgent = req.headers['user-agent'];
-    const ip = req.ip;
-    return crypto.createHash('sha256').update(userAgent + ip).digest('hex');
-  }
-
-  async addToBlacklist(token, expiresAt) {
-    await TokenBlacklist.create({ token, expiresAt });
-  };
-
-  // Verify refresh token
-  async verifyRefreshToken(refreshToken) {
-    try {
-      const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-      const user = await User.findById(decoded.id);
-      if (!user) {
-        throw new Error('Invalid refresh token');
-      }
-      return user;
-    } catch(error) {
-      throw new Error('Invalid refresh token');
-    }
-  }
-
-  // Handle social authentication
-  async handleSocialAuth(profile, provider) {
-    const email = profile.email;
-    let user = await User.findOne({ email });
-
-    if (!user) {
-      // Create new user
-      user = await User.create({
-        email,
-        emailVerified: true,
-        fullName: profile.name,
-        [provider + 'Id']: profile.id,
-        apiKey: this.generateApiKey()
-      });
-    } else {
-      // Update existing user
-      user[provider + 'Id'] = profile.id;
-      await user.save();
-    }
-
-    return user;
-  }
+  return googleClient;
 }
 
-module.exports = new AuthService();
+function getAllowedGoogleAudiences() {
+  const list = process.env.GOOGLE_ALLOWED_AUDS || '';
+  return list
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+exports.verifyGoogleIdToken = async function verifyGoogleIdToken(idToken) {
+  const client = getGoogleClient();
+  const audiences = getAllowedGoogleAudiences();
+  const ticket = await client.verifyIdToken({ idToken, audience: audiences.length ? audiences : undefined });
+  const payload = ticket.getPayload();
+  return payload; // contains sub, email, email_verified, name, picture, etc.
+};
+
+exports.generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRE || '30d'
+  });
+};
+
+exports.generateRefreshToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_REFRESH_EXPIRE || '90d'
+  });
+};
+
+exports.generateVerificationCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+exports.generateResetCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+exports.isCodeExpired = (expiresAt) => {
+  return !expiresAt || new Date(expiresAt) < new Date();
+};
+
+exports.generateRandomPassword = (length = 32) => {
+  return crypto.randomBytes(length).toString('hex');
+};
