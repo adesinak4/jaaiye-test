@@ -37,7 +37,7 @@ exports.getProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/profile
 // @access  Private
 exports.updateProfile = asyncHandler(async (req, res) => {
-  const { username, fullName, preferences } = req.body;
+  const { username, fullName, preferences, emoji, color } = req.body;
   const user = await User.findById(req.user.id);
 
   if (!user) {
@@ -53,6 +53,12 @@ exports.updateProfile = asyncHandler(async (req, res) => {
     user.username = username;
   }
 
+  // Validate color format
+  const colorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+  if (!colorRegex.test(color)) {
+    throw new ValidationError('Invalid color format. Please use hex color code (e.g., #FF0000)');
+  }
+
   // If changing full name
   if (fullName) {
     user.fullName = fullName;
@@ -62,11 +68,26 @@ exports.updateProfile = asyncHandler(async (req, res) => {
     user.preferences = preferences;
   }
 
+  if (emoji && color) {
+    user.profilePicture = { emoji, color };
+  }
+
   await user.save();
+
+  // Send notification in background (faster API response)
+  const notification = {
+    title: 'Profile Updated',
+    body: 'Your profile has been updated',
+    data: { type: 'profile_update' }
+  };
+
+  // Use background processing for faster response
+  await sendPushNotification(user._id, notification);
+  await createInAppNotification(user._id, notification);
 
   logger.info('User profile updated', {
     userId: req.user.id,
-    updatedFields: { username, fullName, preferences }
+    updatedFields: { username, fullName, preferences, emoji, color }
   });
 
   return successResponse(res, { user: formatUserResponse(user) });
@@ -193,51 +214,6 @@ exports.updateEmail = asyncHandler(async (req, res) => {
   });
 
   return successResponse(res, null, 200, 'Email updated. Please verify your new email address.');
-});
-
-// @desc    Update profile picture
-// @route   PUT /api/users/profile-picture
-// @access  Private
-exports.updateProfilePicture = asyncHandler(async (req, res) => {
-  const { emoji, color } = req.body;
-
-  if (!emoji || !color) {
-    throw new ValidationError('Please provide both emoji and color');
-  }
-
-  // Validate color format
-  const colorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
-  if (!colorRegex.test(color)) {
-    throw new ValidationError('Invalid color format. Please use hex color code (e.g., #FF0000)');
-  }
-
-  const user = await User.findById(req.user.id);
-  if (!user) {
-    throw new NotFoundError('User not found');
-  }
-
-  // Update profile picture
-  user.profilePicture = { emoji, color };
-  await user.save();
-
-  // Send notification in background (faster API response)
-  const notification = {
-    title: 'Profile Updated',
-    body: 'Your profile picture has been updated',
-    data: { type: 'profile_update' }
-  };
-
-  // Use background processing for faster response
-  await sendPushNotification(user._id, notification);
-  await createInAppNotification(user._id, notification);
-
-  logger.info('User profile picture updated', {
-    userId: req.user.id,
-    emoji,
-    color
-  });
-
-  return successResponse(res, user.profilePicture);
 });
 
 // @desc    Logout user
