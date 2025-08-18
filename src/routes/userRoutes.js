@@ -8,7 +8,6 @@ const {
   changePassword,
   deleteUser,
   updateEmail,
-  updateProfilePicture,
   logout
 } = require('../controllers/userController');
 
@@ -36,7 +35,6 @@ router.put('/profile', updateProfile);
 router.put('/password', validatePassword, changePassword);
 router.put('/email', updateEmail);
 router.delete('/', validateDeactivateAccount, deleteUser);
-router.put('/profile-picture', validateProfilePicture, updateProfilePicture);
 router.post('/logout', logout);
 
 module.exports = router;
