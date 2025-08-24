@@ -67,7 +67,7 @@ router.post('/link', apiLimiter, async (req, res) => {
     const user = await User.findById(req.user._id || req.user.id);
     const tokens = await googleSvc.exchangeServerAuthCode(serverAuthCode);
     await googleSvc.saveTokensToUser(user, tokens);
-    await googleSvc.ensureJaaiyeCalendar(user);
+    await googleSvc.ensureJaaiyeCalendar(user, tokens);
 
     return successResponse(res, null, 200, 'Google account linked successfully');
   } catch (err) {
@@ -99,8 +99,8 @@ router.put('/link', apiLimiter, async (req, res) => {
     const tokens = await googleSvc.exchangeServerAuthCode(serverAuthCode);
     await googleSvc.saveTokensToUser(user, tokens);
 
-    // Ensure the Jaaiye calendar still exists
-    await googleSvc.ensureJaaiyeCalendar(user);
+    // Ensure the Jaaiye calendar still exists using fresh tokens
+    await googleSvc.ensureJaaiyeCalendar(user, tokens);
 
     return successResponse(res, null, 200, 'Google account link updated successfully');
   } catch (err) {
@@ -353,6 +353,33 @@ router.get('/diagnostics', apiLimiter, async (req, res) => {
     console.error('Diagnostics error:', err);
     return errorResponse(res, err, 500);
   }
+});
+
+// Simple callback route for Google OAuth (for debugging/testing)
+router.get('/callback', (req, res) => {
+  const { code, error } = req.query;
+
+  if (error) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'OAuth error occurred',
+      error: error
+    });
+  }
+
+  if (code) {
+    return res.status(200).json({
+      status: 'success',
+      message: 'Authorization code received successfully',
+      code: code,
+      note: 'Use this code with POST /api/v1/google/link or PUT /api/v1/google/link'
+    });
+  }
+
+  return res.status(400).json({
+    status: 'error',
+    message: 'No authorization code received'
+  });
 });
 
 module.exports = router;

@@ -128,9 +128,20 @@ exports.listCalendars = async function listCalendars(user) {
   return items.map(c => ({ id: c.id, summary: c.summary, primary: !!c.primary }));
 };
 
-exports.ensureJaaiyeCalendar = async function ensureJaaiyeCalendar(user) {
+exports.ensureJaaiyeCalendar = async function ensureJaaiyeCalendar(user, tokens = null) {
   const client = createOAuth2Client();
-  await setUserCredentials(client, user);
+
+  if (tokens) {
+    // Use provided tokens directly (for initial linking)
+    client.setCredentials({
+      access_token: tokens.access_token,
+      scope: tokens.scope
+    });
+  } else {
+    // Use saved user credentials (for existing users)
+    await setUserCredentials(client, user);
+  }
+
   const calendar = google.calendar({ version: 'v3', auth: client });
 
   if (user.googleCalendar && user.googleCalendar.jaaiyeCalendarId) {
