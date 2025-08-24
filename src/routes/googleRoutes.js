@@ -12,7 +12,6 @@ router.use(protect);
 
 // Link Google account with serverAuthCode
 router.post('/link', apiLimiter, async (req, res) => {
-  console.log('Linking Google account with serverAuthCode: ', req.body);
   try {
     const { serverAuthCode } = req.body;
     if (!serverAuthCode) {

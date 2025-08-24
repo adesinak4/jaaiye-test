@@ -1085,3 +1085,16 @@
 {"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-08-24T14:37:52.915Z","user":"friendnpaldoc@gmail.com"}
 {"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-08-24T14:37:58.688Z"}
 {"environment":"development","level":"error","message":"Error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017","timestamp":"2025-08-24T14:38:28.685Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-08-24T14:44:11.414Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-08-24T14:44:17.775Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-08-24T14:44:17.832Z"}
+{"durationMs":148,"environment":"development","level":"info","message":"Request","method":"PUT","path":"/link","statusCode":401,"timestamp":"2025-08-24T14:44:40.298Z"}
+{"environment":"development","errorMessage":"Invalid credentials","errorName":"AuthenticationError","level":"warn","message":"Request Error","method":"POST","path":"/api/v1/auth/login","statusCode":401,"timestamp":"2025-08-24T14:45:03.547Z","url":"/api/v1/auth/login","userId":"unauthenticated"}
+{"durationMs":280,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/auth/login","statusCode":401,"timestamp":"2025-08-24T14:45:03.550Z"}
+{"environment":"development","errorMessage":"User already exists with this email","errorName":"ConflictError","level":"warn","message":"Request Error","method":"POST","path":"/api/v1/auth/register","statusCode":409,"timestamp":"2025-08-24T14:45:11.095Z","url":"/api/v1/auth/register","userId":"unauthenticated"}
+{"durationMs":34,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/auth/register","statusCode":409,"timestamp":"2025-08-24T14:45:11.098Z"}
+{"email":"[REDACTED]","environment":"development","level":"info","message":"User logged in successfully","timestamp":"2025-08-24T14:45:24.355Z","userId":{}}
+{"durationMs":254,"environment":"development","level":"info","message":"Request","method":"POST","path":"/login","statusCode":200,"timestamp":"2025-08-24T14:45:24.362Z"}
+{"durationMs":26,"environment":"development","level":"info","message":"Request","method":"PUT","path":"/api/v1/google/link","statusCode":404,"timestamp":"2025-08-24T14:45:42.087Z","userId":"6896ff8931f10c5a5d6bb544"}
+{"environment":"development","errorMessage":"invalid_grant","level":"warn","message":"Error Response","statusCode":400,"timestamp":"2025-08-24T14:46:39.617Z"}
+{"durationMs":1559,"environment":"development","level":"info","message":"Request","method":"POST","path":"/link","statusCode":400,"timestamp":"2025-08-24T14:46:39.621Z","userId":"6896ff8931f10c5a5d6bb544"}
