@@ -1076,3 +1076,12 @@
 {"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-08-18T10:14:54.047Z"}
 {"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-08-18T10:14:54.126Z"}
 {"durationMs":2398,"environment":"development","level":"info","message":"Request","method":"POST","path":"/google/signin","statusCode":200,"timestamp":"2025-08-18T10:24:13.755Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-08-24T14:34:00.446Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-08-24T14:34:06.288Z"}
+{"environment":"development","level":"error","message":"Error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017","timestamp":"2025-08-24T14:34:36.288Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-08-24T14:35:11.002Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-08-24T14:35:16.198Z"}
+{"environment":"development","level":"error","message":"Error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017","timestamp":"2025-08-24T14:35:46.186Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-08-24T14:37:52.915Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-08-24T14:37:58.688Z"}
+{"environment":"development","level":"error","message":"Error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017","timestamp":"2025-08-24T14:38:28.685Z"}

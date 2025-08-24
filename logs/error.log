@@ -54,3 +54,6 @@
 {"environment":"development","errorMessage":"Illegal arguments: string, undefined","errorName":"Error","level":"error","message":"Server Error","timestamp":"2025-08-09T15:25:29.368Z"}
 {"environment":"development","errorMessage":"Illegal arguments: string, undefined","errorName":"Error","level":"error","message":"Request Error","method":"PUT","path":"/api/v1/users/email","statusCode":500,"timestamp":"2025-08-09T15:30:51.813Z","url":"/api/v1/users/email","userId":"6896ff8931f10c5a5d6bb544"}
 {"environment":"development","errorMessage":"Illegal arguments: string, undefined","errorName":"Error","level":"error","message":"Server Error","timestamp":"2025-08-09T15:30:51.816Z"}
+{"environment":"development","level":"error","message":"Error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017","timestamp":"2025-08-24T14:34:36.288Z"}
+{"environment":"development","level":"error","message":"Error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017","timestamp":"2025-08-24T14:35:46.186Z"}
+{"environment":"development","level":"error","message":"Error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017","timestamp":"2025-08-24T14:38:28.685Z"}
