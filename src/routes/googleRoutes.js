@@ -10,20 +10,164 @@ router.use(securityHeaders);
 router.use(sanitizeRequest);
 router.use(protect);
 
-// Link Google account with serverAuthCode
+// Helper function to handle Google OAuth errors
+function handleGoogleOAuthError(err, res) {
+  const errorMessage = err.message || err.toString();
+
+  // Handle specific Google OAuth errors
+  if (errorMessage.includes('invalid_grant')) {
+    return errorResponse(res, {
+      error: 'invalid_grant',
+      message: 'Google authorization has expired or was revoked. Please re-authenticate with Google.',
+      requiresReauth: true
+    }, 401);
+  }
+
+  if (errorMessage.includes('unauthorized_client')) {
+    return errorResponse(res, {
+      error: 'unauthorized_client',
+      message: 'Google OAuth client is not authorized. Please check your Google OAuth configuration.',
+      requiresConfigCheck: true
+    }, 401);
+  }
+
+  if (errorMessage.includes('invalid_client')) {
+    return errorResponse(res, {
+      error: 'invalid_client',
+      message: 'Invalid Google OAuth client configuration. Please check your client ID and secret.',
+      requiresConfigCheck: true
+    }, 401);
+  }
+
+  if (errorMessage.includes('access_denied')) {
+    return errorResponse(res, {
+      error: 'access_denied',
+      message: 'Access to Google Calendar was denied. Please grant the required permissions.',
+      requiresReauth: true
+    }, 403);
+  }
+
+  // Generic Google API error
+  return errorResponse(res, {
+    error: 'google_api_error',
+    message: 'Google API error occurred. Please try again later.',
+    details: errorMessage
+  }, 500);
+}
+
+// Link Google account with serverAuthCode (POST for initial linking)
 router.post('/link', apiLimiter, async (req, res) => {
+  console.log('Linking Google account with serverAuthCode: ', req.body);
   try {
     const { serverAuthCode } = req.body;
     if (!serverAuthCode) {
       return errorResponse(res, new Error('serverAuthCode is required'), 400);
     }
+
     const user = await User.findById(req.user._id || req.user.id);
     const tokens = await googleSvc.exchangeServerAuthCode(serverAuthCode);
     await googleSvc.saveTokensToUser(user, tokens);
     await googleSvc.ensureJaaiyeCalendar(user);
-    return successResponse(res, null, 200, 'Google account linked');
+
+    return successResponse(res, null, 200, 'Google account linked successfully');
   } catch (err) {
-    return errorResponse(res, err, 400);
+    console.error('Google account linking error:', err);
+    return handleGoogleOAuthError(err, res);
+  }
+});
+
+// Update/re-link Google account (PUT for updating existing link)
+router.put('/link', apiLimiter, async (req, res) => {
+  console.log('Updating Google account link: ', req.body);
+  try {
+    const { serverAuthCode } = req.body;
+    if (!serverAuthCode) {
+      return errorResponse(res, new Error('serverAuthCode is required'), 400);
+    }
+
+    const user = await User.findById(req.user._id || req.user.id);
+
+    // Check if user already has Google linked
+    if (!user.googleCalendar || !user.googleCalendar.refreshToken) {
+      return errorResponse(res, {
+        error: 'not_linked',
+        message: 'No existing Google account to update. Use POST /link instead.'
+      }, 400);
+    }
+
+    // Exchange the new auth code for fresh tokens
+    const tokens = await googleSvc.exchangeServerAuthCode(serverAuthCode);
+    await googleSvc.saveTokensToUser(user, tokens);
+
+    // Ensure the Jaaiye calendar still exists
+    await googleSvc.ensureJaaiyeCalendar(user);
+
+    return successResponse(res, null, 200, 'Google account link updated successfully');
+  } catch (err) {
+    console.error('Google account update error:', err);
+    return handleGoogleOAuthError(err, res);
+  }
+});
+
+// Refresh Google access token using refresh token
+router.post('/refresh', apiLimiter, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id || req.user.id)
+      .select('+googleCalendar.refreshToken +googleCalendar.accessToken +googleCalendar.expiryDate');
+
+    if (!user.googleCalendar || !user.googleCalendar.refreshToken) {
+      return errorResponse(res, {
+        error: 'not_linked',
+        message: 'No Google account linked. Please link your Google account first.'
+      }, 400);
+    }
+
+    // Check if token refresh is needed
+    const now = new Date();
+    const tokenExpiry = user.googleCalendar.expiryDate;
+
+    if (tokenExpiry && now < tokenExpiry) {
+      return successResponse(res, {
+        message: 'Access token is still valid',
+        expiresAt: tokenExpiry
+      }, 200);
+    }
+
+    // Refresh the token
+    const newTokens = await googleSvc.refreshAccessToken(user);
+    await googleSvc.saveTokensToUser(user, newTokens);
+
+    return successResponse(res, {
+      message: 'Access token refreshed successfully',
+      expiresAt: newTokens.expiry_date
+    }, 200);
+  } catch (err) {
+    console.error('Token refresh error:', err);
+    return handleGoogleOAuthError(err, res);
+  }
+});
+
+// Unlink Google account
+router.delete('/link', apiLimiter, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id || req.user.id);
+
+    if (!user.googleCalendar || !user.googleCalendar.refreshToken) {
+      return errorResponse(res, {
+        error: 'not_linked',
+        message: 'No Google account linked to unlink.'
+      }, 400);
+    }
+
+    // Clear Google calendar data
+    user.googleCalendar = undefined;
+    user.providerLinks.google = false;
+    await user.save();
+
+    return successResponse(res, null, 200, 'Google account unlinked successfully');
+  } catch (err) {
+    console.error('Google account unlink error:', err);
+    return errorResponse(res, err, 500);
   }
 });
 
@@ -176,5 +320,39 @@ function computeSlots(timeMin, timeMax, durationMinutes, freebusyCalendars) {
   }
   return slots;
 }
+
+// Diagnostic route to check OAuth configuration
+router.get('/diagnostics', apiLimiter, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id || req.user.id)
+      .select('+googleCalendar.refreshToken +googleCalendar.accessToken +googleCalendar.expiryDate +googleCalendar.scope');
+
+    const diagnostics = {
+      hasGoogleAccount: !!(user.googleCalendar && user.googleCalendar.refreshToken),
+      hasAccessToken: !!(user.googleCalendar && user.googleCalendar.accessToken),
+      hasExpiryDate: !!(user.googleCalendar && user.googleCalendar.expiryDate),
+      scope: user.googleCalendar?.scope || 'No scope set',
+      environment: process.env.NODE_ENV || 'development',
+      hasClientId: !!process.env.GOOGLE_CLIENT_ID,
+      hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+      hasRedirectUri: !!process.env.GOOGLE_REDIRECT_URI,
+      clientIdLength: process.env.GOOGLE_CLIENT_ID ? process.env.GOOGLE_CLIENT_ID.length : 0,
+      clientSecretLength: process.env.GOOGLE_CLIENT_SECRET ? process.env.GOOGLE_CLIENT_SECRET.length : 0
+    };
+
+    // Check if tokens are expired
+    if (user.googleCalendar && user.googleCalendar.expiryDate) {
+      const now = new Date();
+      const expiry = new Date(user.googleCalendar.expiryDate);
+      diagnostics.isExpired = now >= expiry;
+      diagnostics.expiresIn = Math.floor((expiry.getTime() - now.getTime()) / 1000); // seconds
+    }
+
+    return successResponse(res, { diagnostics });
+  } catch (err) {
+    console.error('Diagnostics error:', err);
+    return errorResponse(res, err, 500);
+  }
+});
 
 module.exports = router;

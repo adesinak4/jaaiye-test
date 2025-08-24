@@ -10,23 +10,102 @@ function createOAuth2Client() {
   return client;
 }
 
-function setUserCredentials(client, user) {
+async function setUserCredentials(client, user) {
   if (!user.googleCalendar || !user.googleCalendar.refreshToken) {
     throw new Error('Google account not linked');
   }
-  client.setCredentials({
-    refresh_token: user.googleCalendar.refreshToken,
-    access_token: user.googleCalendar.accessToken,
-    expiry_date: user.googleCalendar.expiryDate ? new Date(user.googleCalendar.expiryDate).getTime() : undefined,
-    scope: user.googleCalendar.scope
-  });
+
+  try {
+    // Check if access token is expired or will expire soon (within 5 minutes)
+    const now = new Date();
+    const tokenExpiry = user.googleCalendar.expiryDate;
+    const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+
+    if (tokenExpiry && now >= tokenExpiry) {
+      logger.info('Access token expired, refreshing...', { userId: user._id });
+
+      // Refresh the access token
+      const newTokens = await exports.refreshAccessToken(user);
+
+      // Update user with new tokens
+      if (newTokens.access_token) {
+        user.googleCalendar.accessToken = newTokens.access_token;
+        user.googleCalendar.expiryDate = newTokens.expiry_date;
+        await user.save();
+      }
+    }
+
+    client.setCredentials({
+      refresh_token: user.googleCalendar.refreshToken,
+      access_token: user.googleCalendar.accessToken,
+      expiry_date: user.googleCalendar.expiryDate ? new Date(user.googleCalendar.expiryDate).getTime() : undefined,
+      scope: user.googleCalendar.scope
+    });
+  } catch (error) {
+    logger.error('Failed to set user credentials:', {
+      error: error.message,
+      userId: user._id
+    });
+    throw new Error(`Failed to authenticate with Google: ${error.message}`);
+  }
 }
 
 exports.exchangeServerAuthCode = async function exchangeServerAuthCode(serverAuthCode) {
-  const client = createOAuth2Client();
-  const { tokens } = await client.getToken(serverAuthCode);
-  logger.info('Exchanged Google server auth code');
-  return tokens; // { access_token, refresh_token, scope, expiry_date, id_token }
+  try {
+    const client = createOAuth2Client();
+    const { tokens } = await client.getToken(serverAuthCode);
+    logger.info('Exchanged Google server auth code successfully');
+    return tokens; // { access_token, refresh_token, scope, expiry_date, id_token }
+  } catch (error) {
+    logger.error('Failed to exchange Google server auth code:', {
+      error: error.message,
+      code: error.code,
+      status: error.status
+    });
+
+    // Re-throw with enhanced error information
+    const enhancedError = new Error(error.message || 'Failed to exchange auth code');
+    enhancedError.originalError = error;
+    enhancedError.code = error.code;
+    enhancedError.status = error.status;
+    throw enhancedError;
+  }
+};
+
+exports.refreshAccessToken = async function refreshAccessToken(user) {
+  try {
+    if (!user.googleCalendar || !user.googleCalendar.refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const client = createOAuth2Client();
+    client.setCredentials({
+      refresh_token: user.googleCalendar.refreshToken
+    });
+
+    const { credentials } = await client.refreshAccessToken();
+    logger.info('Refreshed Google access token successfully');
+
+    return {
+      access_token: credentials.access_token,
+      expiry_date: credentials.expiry_date,
+      scope: credentials.scope
+    };
+  } catch (error) {
+    logger.error('Failed to refresh Google access token:', {
+      error: error.message,
+      code: error.code,
+      status: error.status,
+      userId: user._id
+    });
+
+    // Re-throw with enhanced error information
+    const enhancedError = new Error(error.message || 'Failed to refresh access token');
+    enhancedError.originalError = error;
+    enhancedError.code = error.code;
+    enhancedError.status = error.status;
+    throw enhancedError;
+  }
 };
 
 exports.saveTokensToUser = async function saveTokensToUser(user, tokens) {
@@ -42,7 +121,7 @@ exports.saveTokensToUser = async function saveTokensToUser(user, tokens) {
 
 exports.listCalendars = async function listCalendars(user) {
   const client = createOAuth2Client();
-  setUserCredentials(client, user);
+  await setUserCredentials(client, user);
   const calendar = google.calendar({ version: 'v3', auth: client });
   const res = await calendar.calendarList.list();
   const items = res.data.items || [];
@@ -51,7 +130,7 @@ exports.listCalendars = async function listCalendars(user) {
 
 exports.ensureJaaiyeCalendar = async function ensureJaaiyeCalendar(user) {
   const client = createOAuth2Client();
-  setUserCredentials(client, user);
+  await setUserCredentials(client, user);
   const calendar = google.calendar({ version: 'v3', auth: client });
 
   if (user.googleCalendar && user.googleCalendar.jaaiyeCalendarId) {
@@ -79,7 +158,7 @@ exports.ensureJaaiyeCalendar = async function ensureJaaiyeCalendar(user) {
 
 exports.insertEvent = async function insertEvent(user, eventBody) {
   const client = createOAuth2Client();
-  setUserCredentials(client, user);
+  await setUserCredentials(client, user);
   const calendar = google.calendar({ version: 'v3', auth: client });
   const calendarId = user.googleCalendar.jaaiyeCalendarId || await exports.ensureJaaiyeCalendar(user);
   const res = await calendar.events.insert({ calendarId, requestBody: eventBody });
@@ -88,7 +167,7 @@ exports.insertEvent = async function insertEvent(user, eventBody) {
 
 exports.updateEvent = async function updateEvent(user, calendarId, eventId, eventBody) {
   const client = createOAuth2Client();
-  setUserCredentials(client, user);
+  await setUserCredentials(client, user);
   const calendar = google.calendar({ version: 'v3', auth: client });
   const res = await calendar.events.patch({ calendarId, eventId, requestBody: eventBody });
   return res.data;
@@ -96,7 +175,7 @@ exports.updateEvent = async function updateEvent(user, calendarId, eventId, even
 
 exports.deleteEvent = async function deleteEvent(user, calendarId, eventId) {
   const client = createOAuth2Client();
-  setUserCredentials(client, user);
+  await setUserCredentials(client, user);
   const calendar = google.calendar({ version: 'v3', auth: client });
   await calendar.events.delete({ calendarId, eventId });
   return true;
@@ -104,7 +183,7 @@ exports.deleteEvent = async function deleteEvent(user, calendarId, eventId) {
 
 exports.freeBusy = async function freeBusy(user, timeMin, timeMax, calendarIds) {
   const client = createOAuth2Client();
-  setUserCredentials(client, user);
+  await setUserCredentials(client, user);
   const calendar = google.calendar({ version: 'v3', auth: client });
   const items = (calendarIds && calendarIds.length ? calendarIds : (user.googleCalendar?.selectedCalendarIds || ['primary']))
     .map(id => ({ id }));
@@ -120,7 +199,7 @@ exports.freeBusy = async function freeBusy(user, timeMin, timeMax, calendarIds) 
 
 exports.listEvents = async function listEvents(user, timeMin, timeMax, calendarIds) {
   const client = createOAuth2Client();
-  setUserCredentials(client, user);
+  await setUserCredentials(client, user);
   const calendar = google.calendar({ version: 'v3', auth: client });
   const ids = (calendarIds && calendarIds.length ? calendarIds : (user.googleCalendar?.selectedCalendarIds || ['primary']));
   const results = [];
@@ -150,7 +229,7 @@ exports.listEvents = async function listEvents(user, timeMin, timeMax, calendarI
 
 exports.backfillSelectedCalendars = async function backfillSelectedCalendars(user, timeMin, timeMax) {
   const client = createOAuth2Client();
-  setUserCredentials(client, user);
+  await setUserCredentials(client, user);
   const calendar = google.calendar({ version: 'v3', auth: client });
   const ids = user.googleCalendar?.selectedCalendarIds || ['primary'];
   const perCal = [];
@@ -169,7 +248,7 @@ exports.backfillSelectedCalendars = async function backfillSelectedCalendars(use
 
 exports.incrementalSync = async function incrementalSync(user) {
   const client = createOAuth2Client();
-  setUserCredentials(client, user);
+  await setUserCredentials(client, user);
   const calendar = google.calendar({ version: 'v3', auth: client });
   const updates = [];
   const selected = user.googleCalendar?.selectedCalendarIds || ['primary'];
@@ -200,7 +279,7 @@ exports.incrementalSync = async function incrementalSync(user) {
 
 exports.startWatch = async function startWatch(user, calendarId, channelId, webhookUrl) {
   const client = createOAuth2Client();
-  setUserCredentials(client, user);
+  await setUserCredentials(client, user);
   const calendar = google.calendar({ version: 'v3', auth: client });
   const resource = await calendar.events.watch({
     calendarId,
@@ -223,7 +302,7 @@ exports.startWatch = async function startWatch(user, calendarId, channelId, webh
 
 exports.stopWatch = async function stopWatch(user, calendarId) {
   const client = createOAuth2Client();
-  setUserCredentials(client, user);
+  await setUserCredentials(client, user);
   const calendar = google.calendar({ version: 'v3', auth: client });
   const calState = (user.googleCalendar.calendars || []).find(c => c.id === calendarId);
   if (calState?.channelId && calState?.resourceId) {

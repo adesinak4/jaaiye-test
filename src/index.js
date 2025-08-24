@@ -71,6 +71,10 @@ app.use('/api/v1/notifications', require('./routes/notificationRoutes'));
 app.use('/api/v1/health', require('./routes/healthRoutes'));
 app.use('/api/v1/google', require('./routes/googleRoutes'));
 app.use('/api/v1/ics', require('./routes/icsRoutes'));
+// app.use('/api/v1/analytics', require('./routes/analyticsRoutes'));
+// app.use('/api/v1/reports', require('./routes/reportRoutes'));
+// app.use('/api/v1/integrations', require('./routes/integrationRoutes'));
+app.use('/api/v1/calendar-shares', require('./routes/calendarShareRoutes'));
 app.use('/webhooks', require('./routes/webhookRoutes'));
 
 // 404 handler
