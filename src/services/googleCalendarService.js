@@ -128,14 +128,50 @@ exports.listCalendars = async function listCalendars(user) {
   return items.map(c => ({ id: c.id, summary: c.summary, primary: !!c.primary }));
 };
 
+// Validate that tokens have required scopes
+function validateCalendarScopes(tokens) {
+  const requiredScopes = [
+    'https://www.googleapis.com/auth/calendar',
+    'https://www.googleapis.com/auth/calendar.events'
+  ];
+
+  if (!tokens.scope) {
+    throw new Error('No scope information in tokens');
+  }
+
+  const userScopes = tokens.scope.split(' ');
+  const missingScopes = requiredScopes.filter(scope => !userScopes.includes(scope));
+
+  if (missingScopes.length > 0) {
+    console.warn('Missing required scopes:', missingScopes);
+    console.warn('User has scopes:', userScopes);
+    throw new Error(`Insufficient scopes. Missing: ${missingScopes.join(', ')}`);
+  }
+
+  console.log('✅ All required scopes are present:', userScopes);
+  return true;
+}
+
 exports.ensureJaaiyeCalendar = async function ensureJaaiyeCalendar(user, tokens = null) {
   const client = createOAuth2Client();
 
   if (tokens) {
+    // Validate scopes before proceeding
+    validateCalendarScopes(tokens);
+
     // Use provided tokens directly (for initial linking)
+    console.log('Setting credentials with tokens:', {
+      hasAccessToken: !!tokens.access_token,
+      hasRefreshToken: !!tokens.refresh_token,
+      scope: tokens.scope,
+      expiryDate: tokens.expiry_date
+    });
+
     client.setCredentials({
       access_token: tokens.access_token,
-      scope: tokens.scope
+      refresh_token: tokens.refresh_token,
+      scope: tokens.scope,
+      expiry_date: tokens.expiry_date ? new Date(tokens.expiry_date).getTime() : undefined
     });
   } else {
     // Use saved user credentials (for existing users)

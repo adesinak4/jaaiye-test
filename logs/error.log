@@ -57,3 +57,10 @@
 {"environment":"development","level":"error","message":"Error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017","timestamp":"2025-08-24T14:34:36.288Z"}
 {"environment":"development","level":"error","message":"Error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017","timestamp":"2025-08-24T14:35:46.186Z"}
 {"environment":"development","level":"error","message":"Error: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017","timestamp":"2025-08-24T14:38:28.685Z"}
+{"environment":"development","errorMessage":"Google API error occurred. Please try again later.","level":"error","message":"Error Response","statusCode":500,"timestamp":"2025-08-24T15:35:11.463Z"}
+{"code":"[REDACTED]","environment":"development","error":"invalid_grant","level":"error","message":"Failed to exchange Google server auth code:","status":400,"timestamp":"2025-08-24T15:38:26.142Z"}
+{"environment":"development","errorMessage":"Google API error occurred. Please try again later.","level":"error","message":"Error Response","statusCode":500,"timestamp":"2025-08-24T15:40:39.992Z"}
+{"code":"[REDACTED]","environment":"development","error":"invalid_grant","level":"error","message":"Failed to exchange Google server auth code:","status":400,"timestamp":"2025-08-24T15:42:59.533Z"}
+{"code":"[REDACTED]","environment":"development","error":"invalid_grant","level":"error","message":"Failed to exchange Google server auth code:","status":400,"timestamp":"2025-08-24T15:43:24.218Z"}
+{"environment":"development","errorMessage":"Google API error occurred. Please try again later.","level":"error","message":"Error Response","statusCode":500,"timestamp":"2025-08-24T15:44:22.050Z"}
+{"code":"[REDACTED]","environment":"development","error":"invalid_grant","level":"error","message":"Failed to exchange Google server auth code:","status":400,"timestamp":"2025-08-24T15:47:59.423Z"}

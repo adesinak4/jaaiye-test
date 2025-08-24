@@ -55,30 +55,9 @@ function handleGoogleOAuthError(err, res) {
   }, 500);
 }
 
-// Link Google account with serverAuthCode (POST for initial linking)
+// Link/Update Google account with serverAuthCode (POST handles both initial linking and updating)
 router.post('/link', apiLimiter, async (req, res) => {
-  console.log('Linking Google account with serverAuthCode: ', req.body);
-  try {
-    const { serverAuthCode } = req.body;
-    if (!serverAuthCode) {
-      return errorResponse(res, new Error('serverAuthCode is required'), 400);
-    }
-
-    const user = await User.findById(req.user._id || req.user.id);
-    const tokens = await googleSvc.exchangeServerAuthCode(serverAuthCode);
-    await googleSvc.saveTokensToUser(user, tokens);
-    await googleSvc.ensureJaaiyeCalendar(user, tokens);
-
-    return successResponse(res, null, 200, 'Google account linked successfully');
-  } catch (err) {
-    console.error('Google account linking error:', err);
-    return handleGoogleOAuthError(err, res);
-  }
-});
-
-// Update/re-link Google account (PUT for updating existing link)
-router.put('/link', apiLimiter, async (req, res) => {
-  console.log('Updating Google account link: ', req.body);
+  console.log('Linking/Updating Google account with serverAuthCode: ', req.body);
   try {
     const { serverAuthCode } = req.body;
     if (!serverAuthCode) {
@@ -88,23 +67,22 @@ router.put('/link', apiLimiter, async (req, res) => {
     const user = await User.findById(req.user._id || req.user.id);
 
     // Check if user already has Google linked
-    if (!user.googleCalendar || !user.googleCalendar.refreshToken) {
-      return errorResponse(res, {
-        error: 'not_linked',
-        message: 'No existing Google account to update. Use POST /link instead.'
-      }, 400);
-    }
+    const isUpdating = !!(user.googleCalendar && user.googleCalendar.refreshToken);
 
-    // Exchange the new auth code for fresh tokens
+    // Exchange the auth code for tokens
     const tokens = await googleSvc.exchangeServerAuthCode(serverAuthCode);
     await googleSvc.saveTokensToUser(user, tokens);
 
-    // Ensure the Jaaiye calendar still exists using fresh tokens
+    // Ensure the Jaaiye calendar exists using fresh tokens
     await googleSvc.ensureJaaiyeCalendar(user, tokens);
 
-    return successResponse(res, null, 200, 'Google account link updated successfully');
+    const message = isUpdating
+      ? 'Google account link updated successfully'
+      : 'Google account linked successfully';
+
+    return successResponse(res, null, 200, message);
   } catch (err) {
-    console.error('Google account update error:', err);
+    console.error('Google account linking error:', err);
     return handleGoogleOAuthError(err, res);
   }
 });
@@ -372,7 +350,7 @@ router.get('/callback', (req, res) => {
       status: 'success',
       message: 'Authorization code received successfully',
       code: code,
-      note: 'Use this code with POST /api/v1/google/link or PUT /api/v1/google/link'
+      note: 'Use this code with POST /api/v1/google/link to link or update your Google account'
     });
   }
 
