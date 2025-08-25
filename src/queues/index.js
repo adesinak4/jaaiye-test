@@ -1,5 +1,4 @@
 const emailQueue = require('./emailQueue');
-const reportQueue = require('./reportQueue');
 const notificationQueue = require('./notificationQueue');
 
 const syncQueue = {
@@ -17,7 +16,6 @@ const syncQueue = {
 
 module.exports = {
   emailQueue,
-  reportQueue,
   notificationQueue,
   syncQueue
 };

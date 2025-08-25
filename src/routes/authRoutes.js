@@ -7,9 +7,10 @@ const {
   forgotPassword,
   resetPassword,
   refreshToken,
-  resend
+  resend,
+  googleSignInViaIdToken
 } = require('../controllers/authController');
-const authGoogleController = require('../controllers/integrationController');
+
 const {
   registerValidator,
   loginValidator,
@@ -39,6 +40,6 @@ router.post('/reset-password', apiLimiter, resetPasswordValidator, validate, res
 router.post('/resend', apiLimiter, resendVerificationValidator, validate, resend);
 
 // Google sign-in/up via ID token (mobile sends idToken)
-router.post('/google/signin', apiLimiter, authGoogleController.googleSignInViaIdToken);
+router.post('/google/signin', apiLimiter, googleSignInViaIdToken);
 
 module.exports = router;

@@ -21,3 +21,5 @@ logs
 # Firebase config files (security)
 src/config/*.json
 firebase-config/
+
+Jaaiye_API_Collection.postman_collection.json

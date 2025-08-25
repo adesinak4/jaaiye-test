@@ -26,7 +26,7 @@ exports.registerDeviceToken = async (req, res, next) => {
 // Remove a device token
 exports.removeDeviceToken = async (req, res, next) => {
   try {
-    const { token } = req.params;
+    const { token } = req.body;
     const userId = req.user._id;
 
     await notificationService.removeDeviceToken(userId, token);
@@ -158,6 +158,37 @@ exports.bulkMarkAsRead = async (req, res, next) => {
   }
 };
 
+// Flexible: mark one, many, or all as read via body
+exports.markRead = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { all, ids, id } = req.body || {};
+
+    const filter = { user: userId };
+
+    if (all === true) {
+      // no-op: affect all user's notifications
+    } else if (Array.isArray(ids) && ids.length > 0) {
+      filter._id = { $in: ids };
+    } else if (id) {
+      filter._id = id;
+    } else {
+      return res.status(400).json({ success: false, message: 'Provide one of: all=true, ids=[...], or id' });
+    }
+
+    const result = await Notification.updateMany(filter, { $set: { read: true } });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Notifications marked as read',
+      modifiedCount: result.modifiedCount ?? result.nModified ?? 0
+    });
+  } catch (error) {
+    logger.error('Error marking notifications as read (flex)', error);
+    return res.status(500).json({ success: false, message: 'Error marking notifications as read', error: error.message });
+  }
+};
+
 // Delete notification
 exports.deleteNotification = async (req, res, next) => {
   try {
@@ -212,6 +243,37 @@ exports.bulkDelete = async (req, res, next) => {
       message: 'Error deleting notifications',
       error: error.message
     });
+  }
+};
+
+// Flexible: delete one, many, or all via body
+exports.deleteFlexible = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { all, ids, id } = req.body || {};
+
+    const filter = { user: userId };
+
+    if (all === true) {
+      // delete all user's notifications
+    } else if (Array.isArray(ids) && ids.length > 0) {
+      filter._id = { $in: ids };
+    } else if (id) {
+      filter._id = id;
+    } else {
+      return res.status(400).json({ success: false, message: 'Provide one of: all=true, ids=[...], or id' });
+    }
+
+    const result = await Notification.deleteMany(filter);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Notifications deleted',
+      deletedCount: result.deletedCount ?? 0
+    });
+  } catch (error) {
+    logger.error('Error deleting notifications (flex)', error);
+    return res.status(500).json({ success: false, message: 'Error deleting notifications', error: error.message });
   }
 };
 

@@ -5,7 +5,9 @@ const {
   generateVerificationCode,
   generateResetCode,
   isCodeExpired,
-  verifyRefreshToken
+  verifyRefreshToken,
+  verifyGoogleIdToken,
+  generateRandomPassword
 } = require('../services/authService');
 const { emailQueue } = require('../queues');
 const logger = require('../utils/logger');
@@ -336,4 +338,119 @@ exports.resend = asyncHandler(async (req, res) => {
 
   const result = await performResend(email, type);
   return successResponse(res, result.data, result.statusCode, result.message);
+});
+
+// @desc    Google Sign In/Sign Up via ID Token
+// @route   POST /api/auth/google/signin
+// @access  Public
+exports.googleSignInViaIdToken = asyncHandler(async (req, res) => {
+  const { idToken } = req.body;
+
+  if (!idToken) {
+    throw new ValidationError('Google ID token is required');
+  }
+
+  try {
+    // Verify the Google ID token
+    const payload = await verifyGoogleIdToken(idToken);
+
+    if (!payload.email_verified) {
+      throw new ValidationError('Google account email is not verified');
+    }
+
+    // Check if user exists with this Google ID
+    let user = await User.findOne({ googleId: payload.sub });
+
+    if (!user) {
+      // Check if user exists with this email
+      user = await User.findOne({ email: payload.email });
+
+      if (user) {
+        // Link existing user account to Google
+        user.googleId = payload.sub;
+        user.providerLinks.google = true;
+        user.providerProfiles.google = {
+          email: payload.email,
+          name: payload.name,
+          picture: payload.picture,
+          lastSignInAt: new Date()
+        };
+        await user.save();
+
+        logger.info('Existing user linked to Google account', {
+          email: payload.email,
+          googleId: payload.sub
+        });
+      } else {
+        // Create new user account
+        const randomPassword = generateRandomPassword();
+        user = await User.create({
+          email: payload.email,
+          password: randomPassword, // User won't use this password
+          username: payload.name?.toLowerCase().replace(/\s+/g, '') || payload.email.split('@')[0],
+          fullName: payload.name || payload.email.split('@')[0],
+          googleId: payload.sub,
+          providerLinks: { google: true },
+          providerProfiles: {
+            google: {
+              email: payload.email,
+              name: payload.name,
+              picture: payload.picture,
+              lastSignInAt: new Date()
+            }
+          },
+          emailVerified: true, // Google accounts are pre-verified
+          profilePicture: payload.picture
+        });
+
+        logger.info('New user created via Google sign-in', {
+          email: payload.email,
+          googleId: payload.sub
+        });
+      }
+    }
+
+    // Generate tokens
+    const accessToken = generateToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    // Save refresh token to user
+    user.refresh = {
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + EMAIL_CONSTANTS.REFRESH_TOKEN_EXPIRY)
+    };
+    user.lastLogin = new Date(Date.now());
+    await user.save();
+
+    logger.info('Google sign-in successful', {
+      email: payload.email,
+      userId: user._id
+    });
+
+    return successResponse(res, {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        fullName: user.fullName,
+        emailVerified: user.emailVerified,
+        profilePicture: user.profilePicture,
+        googleId: user.googleId
+      }
+    }, 200, 'Google sign-in successful');
+
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      throw error;
+    }
+
+    logger.error('Google sign-in failed', {
+      error: error.message,
+      stack: error.stack
+    });
+
+    throw new AuthenticationError('Google authentication failed. Please try again.');
+  }
 });

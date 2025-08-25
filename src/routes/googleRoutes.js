@@ -4,60 +4,22 @@ const { protect } = require('../middleware/authMiddleware');
 const { apiLimiter, securityHeaders, sanitizeRequest } = require('../middleware/securityMiddleware');
 const { successResponse, errorResponse } = require('../utils/response');
 const googleSvc = require('../services/googleCalendarService');
+const calendarService = require('../services/calendarService');
+const googleUtils = require('../utils/googleUtils');
 const User = require('../models/User');
 
 router.use(securityHeaders);
 router.use(sanitizeRequest);
 router.use(protect);
 
-// Helper function to handle Google OAuth errors
-function handleGoogleOAuthError(err, res) {
-  const errorMessage = err.message || err.toString();
+// ============================================================================
+// CORE OAUTH OPERATIONS
+// ============================================================================
 
-  // Handle specific Google OAuth errors
-  if (errorMessage.includes('invalid_grant')) {
-    return errorResponse(res, {
-      error: 'invalid_grant',
-      message: 'Google authorization has expired or was revoked. Please re-authenticate with Google.',
-      requiresReauth: true
-    }, 401);
-  }
-
-  if (errorMessage.includes('unauthorized_client')) {
-    return errorResponse(res, {
-      error: 'unauthorized_client',
-      message: 'Google OAuth client is not authorized. Please check your Google OAuth configuration.',
-      requiresConfigCheck: true
-    }, 401);
-  }
-
-  if (errorMessage.includes('invalid_client')) {
-    return errorResponse(res, {
-      error: 'invalid_client',
-      message: 'Invalid Google OAuth client configuration. Please check your client ID and secret.',
-      requiresConfigCheck: true
-    }, 401);
-  }
-
-  if (errorMessage.includes('access_denied')) {
-    return errorResponse(res, {
-      error: 'access_denied',
-      message: 'Access to Google Calendar was denied. Please grant the required permissions.',
-      requiresReauth: true
-    }, 403);
-  }
-
-  // Generic Google API error
-  return errorResponse(res, {
-    error: 'google_api_error',
-    message: 'Google API error occurred. Please try again later.',
-    details: errorMessage
-  }, 500);
-}
-
-// Link/Update Google account with serverAuthCode (POST handles both initial linking and updating)
-router.post('/link', apiLimiter, async (req, res) => {
-  console.log('Linking/Updating Google account with serverAuthCode: ', req.body);
+/**
+ * Link/Update Google account with serverAuthCode (POST handles both initial linking and updating)
+ */
+const handleGoogleLink = async (req, res) => {
   try {
     const { serverAuthCode } = req.body;
     if (!serverAuthCode) {
@@ -65,8 +27,6 @@ router.post('/link', apiLimiter, async (req, res) => {
     }
 
     const user = await User.findById(req.user._id || req.user.id);
-
-    // Check if user already has Google linked
     const isUpdating = !!(user.googleCalendar && user.googleCalendar.refreshToken);
 
     // Exchange the auth code for tokens
@@ -83,12 +43,15 @@ router.post('/link', apiLimiter, async (req, res) => {
     return successResponse(res, null, 200, message);
   } catch (err) {
     console.error('Google account linking error:', err);
-    return handleGoogleOAuthError(err, res);
+    const errorData = googleUtils.handleGoogleOAuthError(err, res);
+    return errorResponse(res, errorData, errorData.statusCode);
   }
-});
+};
 
-// Refresh Google access token using refresh token
-router.post('/refresh', apiLimiter, async (req, res) => {
+/**
+ * Refresh Google access token using refresh token
+ */
+const handleTokenRefresh = async (req, res) => {
   try {
     const user = await User.findById(req.user._id || req.user.id)
       .select('+googleCalendar.refreshToken +googleCalendar.accessToken +googleCalendar.expiryDate');
@@ -100,33 +63,28 @@ router.post('/refresh', apiLimiter, async (req, res) => {
       }, 400);
     }
 
-    // Check if token refresh is needed
-    const now = new Date();
-    const tokenExpiry = user.googleCalendar.expiryDate;
-
-    if (tokenExpiry && now < tokenExpiry) {
-      return successResponse(res, {
-        message: 'Access token is still valid',
-        expiresAt: tokenExpiry
-      }, 200);
-    }
-
-    // Refresh the token
     const newTokens = await googleSvc.refreshAccessToken(user);
-    await googleSvc.saveTokensToUser(user, newTokens);
+
+    // Update user with new tokens
+    user.googleCalendar.accessToken = newTokens.access_token;
+    user.googleCalendar.expiryDate = newTokens.expiry_date;
+    await user.save();
 
     return successResponse(res, {
       message: 'Access token refreshed successfully',
       expiresAt: newTokens.expiry_date
-    }, 200);
+    });
   } catch (err) {
     console.error('Token refresh error:', err);
-    return handleGoogleOAuthError(err, res);
+    const errorData = googleUtils.handleGoogleOAuthError(err, res);
+    return errorResponse(res, errorData, errorData.statusCode);
   }
-});
+};
 
-// Unlink Google account
-router.delete('/link', apiLimiter, async (req, res) => {
+/**
+ * Unlink Google account
+ */
+const handleGoogleUnlink = async (req, res) => {
   try {
     const user = await User.findById(req.user._id || req.user.id);
 
@@ -137,227 +95,497 @@ router.delete('/link', apiLimiter, async (req, res) => {
       }, 400);
     }
 
-    // Clear Google calendar data
+    // Clear Google Calendar data
     user.googleCalendar = undefined;
-    user.providerLinks.google = false;
     await user.save();
 
     return successResponse(res, null, 200, 'Google account unlinked successfully');
   } catch (err) {
-    console.error('Google account unlink error:', err);
+    console.error('Google account unlinking error:', err);
     return errorResponse(res, err, 500);
   }
-});
+};
 
-// List Google calendars
-router.get('/calendars', apiLimiter, async (req, res) => {
+// ============================================================================
+// CALENDAR OPERATIONS
+// ============================================================================
+
+/**
+ * List Google Calendars
+ */
+const handleListCalendars = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id || req.user.id).select('+googleCalendar.refreshToken +googleCalendar.accessToken');
-    const calendars = await googleSvc.listCalendars(user);
-    const selected = new Set(user.googleCalendar?.selectedCalendarIds || []);
-    const data = calendars.map(c => ({ ...c, selected: selected.has(c.id) }));
-    return successResponse(res, { calendars: data });
-  } catch (err) {
-    return errorResponse(res, err, 400);
-  }
-});
+    const user = await User.findById(req.user._id || req.user.id)
+      .select('+googleCalendar.refreshToken +googleCalendar.accessToken');
 
-// Select calendars to include in unified view
-router.post('/calendars/select', apiLimiter, async (req, res) => {
+    if (!user.googleCalendar || !user.googleCalendar.refreshToken) {
+      return errorResponse(res, {
+        error: 'not_linked',
+        message: 'No Google account linked. Please link your Google account first.'
+      }, 400);
+    }
+
+    const calendars = await googleSvc.listCalendars(user);
+    const formattedCalendars = googleUtils.formatGoogleCalendarData(calendars);
+
+    return successResponse(res, {
+      calendars: Object.values(formattedCalendars),
+      total: Object.keys(formattedCalendars).length
+    });
+  } catch (err) {
+    console.error('List calendars error:', err);
+    const errorData = googleUtils.handleGoogleOAuthError(err, res);
+    return errorResponse(res, errorData, errorData.statusCode);
+  }
+};
+
+/**
+ * Select Google Calendars for sync
+ */
+const handleSelectCalendars = async (req, res) => {
   try {
     const { calendarIds } = req.body;
     if (!Array.isArray(calendarIds)) {
       return errorResponse(res, new Error('calendarIds must be an array'), 400);
     }
+
     const user = await User.findById(req.user._id || req.user.id);
-    user.googleCalendar = user.googleCalendar || {};
+    if (!user.googleCalendar) {
+      return errorResponse(res, {
+        error: 'not_linked',
+        message: 'No Google account linked.'
+      }, 400);
+    }
+
     user.googleCalendar.selectedCalendarIds = calendarIds;
     await user.save();
-    return successResponse(res, null, 200, 'Calendars selection updated');
-  } catch (err) {
-    return errorResponse(res, err, 400);
-  }
-});
 
-// Free/busy query
-router.post('/freebusy', apiLimiter, async (req, res) => {
+    return successResponse(res, {
+      selectedCalendarIds: calendarIds,
+      message: 'Calendar selection updated successfully'
+    });
+  } catch (err) {
+    console.error('Select calendars error:', err);
+    return errorResponse(res, err, 500);
+  }
+};
+
+/**
+ * Create or update calendar mapping
+ */
+const handleCalendarMapping = async (req, res) => {
   try {
-    const { timeMin, timeMax, calendarIds } = req.body;
+    const { googleCalendarId, jaaiyeCalendarId } = req.body;
+
+    if (!googleCalendarId || !jaaiyeCalendarId) {
+      return errorResponse(res, new Error('googleCalendarId and jaaiyeCalendarId are required'), 400);
+    }
+
+    const mappings = await calendarService.createCalendarMapping(
+      req.user._id || req.user.id,
+      googleCalendarId,
+      jaaiyeCalendarId
+    );
+
+    return successResponse(res, { mappings }, 201, 'Calendar mapping created successfully');
+  } catch (err) {
+    console.error('Calendar mapping error:', err);
+    return errorResponse(res, err, 500);
+  }
+};
+
+/**
+ * Get calendar mappings
+ */
+const handleGetCalendarMapping = async (req, res) => {
+  try {
+    const mappings = await calendarService.getCalendarMappings(req.user._id || req.user.id);
+    return successResponse(res, { mappings });
+  } catch (err) {
+    console.error('Get calendar mapping error:', err);
+    return errorResponse(res, err, 500);
+  }
+};
+
+// ============================================================================
+// EVENT OPERATIONS
+// ============================================================================
+
+/**
+ * List Google Calendar events
+ */
+const handleListEvents = async (req, res) => {
+  try {
+    const {
+      timeMin,
+      timeMax,
+      calendarIds,
+      includeAllDay = true,
+      maxResults = 100,
+      viewType = 'monthly'
+    } = req.body;
+
     if (!timeMin || !timeMax) {
       return errorResponse(res, new Error('timeMin and timeMax are required (ISO strings)'), 400);
     }
-    const user = await User.findById(req.user._id || req.user.id).select('+googleCalendar.refreshToken +googleCalendar.accessToken');
-    const calendars = await googleSvc.freeBusy(user, timeMin, timeMax, calendarIds);
-    return successResponse(res, { calendars });
-  } catch (err) {
-    return errorResponse(res, err, 400);
-  }
-});
 
-// List provider events in a time range (MVP, read-only)
-router.post('/events', apiLimiter, async (req, res) => {
-  try {
-    const { timeMin, timeMax, calendarIds } = req.body;
-    if (!timeMin || !timeMax) {
-      return errorResponse(res, new Error('timeMin and timeMax are required (ISO strings)'), 400);
+    const user = await User.findById(req.user._id || req.user.id)
+      .select('+googleCalendar.refreshToken +googleCalendar.accessToken +googleCalendar.selectedCalendarIds');
+
+    if (!user.googleCalendar || !user.googleCalendar.refreshToken) {
+      return errorResponse(res, {
+        error: 'not_linked',
+        message: 'No Google account linked. Please link your Google account first.'
+      }, 400);
     }
-    const user = await User.findById(req.user._id || req.user.id).select('+googleCalendar.refreshToken +googleCalendar.accessToken');
+
     const events = await googleSvc.listEvents(user, timeMin, timeMax, calendarIds);
-    return successResponse(res, { events });
-  } catch (err) {
-    return errorResponse(res, err, 400);
-  }
-});
 
-// Backfill selected calendars (time-bounded)
-router.post('/sync/backfill', apiLimiter, async (req, res) => {
+    // Get calendar information for event enhancement
+    const calendars = await googleSvc.listCalendars(user);
+    const formattedCalendars = googleUtils.formatGoogleCalendarData(calendars);
+
+    // Enhance events with calendar information
+    const enhancedEvents = events.map(event => {
+      const calendarId = event.organizer?.email || event.calendarId || 'primary';
+      const calendar = formattedCalendars[calendarId] || {};
+
+      return {
+        id: event.id,
+        title: event.summary || 'No Title',
+        description: event.description || '',
+        location: event.location || '',
+        startTime: event.start?.dateTime || event.start?.date,
+        endTime: event.end?.dateTime || event.end?.date,
+        isAllDay: !!event.start?.date,
+        calendar: {
+          id: calendarId,
+          name: calendar.name || 'Google Calendar',
+          color: calendar.color || '#4285F4'
+        },
+        source: 'google',
+        external: {
+          google: {
+            calendarId: calendarId,
+            eventId: event.id,
+            etag: event.etag,
+            htmlLink: event.htmlLink
+          }
+        },
+        attendees: event.attendees || [],
+        recurringEventId: event.recurringEventId,
+        originalStartTime: event.originalStartTime,
+        createdAt: event.created,
+        updatedAt: event.updated
+      };
+    });
+
+    return successResponse(res, {
+      events: enhancedEvents,
+      total: enhancedEvents.length,
+      timeRange: { start: timeMin, end: timeMax },
+      viewType: viewType
+    });
+  } catch (err) {
+    console.error('List events error:', err);
+    const errorData = googleUtils.handleGoogleOAuthError(err, res);
+    return errorResponse(res, errorData, errorData.statusCode);
+  }
+};
+
+/**
+ * Get free/busy information
+ */
+const handleFreeBusy = async (req, res) => {
   try {
-    const { timeMin, timeMax } = req.body;
+    const { timeMin, timeMax, calendarIds } = req.body;
+
     if (!timeMin || !timeMax) {
       return errorResponse(res, new Error('timeMin and timeMax are required (ISO strings)'), 400);
     }
-    const user = await User.findById(req.user._id || req.user.id).select('+googleCalendar.refreshToken +googleCalendar.accessToken');
-    const perCal = await googleSvc.backfillSelectedCalendars(user, timeMin, timeMax);
-    return successResponse(res, { perCal }, 200, 'Backfill complete');
-  } catch (err) {
-    return errorResponse(res, err, 400);
-  }
-});
 
-// Incremental sync using per-calendar syncTokens
-router.post('/sync/incremental', apiLimiter, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id || req.user.id).select('+googleCalendar.refreshToken +googleCalendar.accessToken +googleCalendar.calendars.syncToken');
-    const updates = await googleSvc.incrementalSync(user);
-    return successResponse(res, { updates }, 200, 'Incremental sync complete');
-  } catch (err) {
-    return errorResponse(res, err, 400);
-  }
-});
+    const user = await User.findById(req.user._id || req.user.id)
+      .select('+googleCalendar.refreshToken +googleCalendar.accessToken');
 
-// Start watch channel for a calendar
-router.post('/watch/start', apiLimiter, async (req, res) => {
-  try {
-    const { calendarId, channelId } = req.body; // channelId should be a UUID generated by client/server
-    if (!calendarId || !channelId) {
-      return errorResponse(res, new Error('calendarId and channelId are required'), 400);
+    if (!user.googleCalendar || !user.googleCalendar.refreshToken) {
+      return errorResponse(res, {
+        error: 'not_linked',
+        message: 'No Google account linked. Please link your Google account first.'
+      }, 400);
     }
-    const user = await User.findById(req.user._id || req.user.id).select('+googleCalendar.refreshToken +googleCalendar.accessToken');
-    const data = await googleSvc.startWatch(user, calendarId, channelId, process.env.GOOGLE_WEBHOOK_URL);
-    return successResponse(res, { data }, 200, 'Watch started');
-  } catch (err) {
-    return errorResponse(res, err, 400);
-  }
-});
 
-// Stop watch channel for a calendar
-router.post('/watch/stop', apiLimiter, async (req, res) => {
+    const freeBusy = await googleSvc.getFreeBusy(user, {
+      timeMin,
+      timeMax,
+      calendarIds: calendarIds || ['primary']
+    });
+
+    return successResponse(res, { freeBusy });
+  } catch (err) {
+    console.error('Free/busy error:', err);
+    const errorData = googleUtils.handleGoogleOAuthError(err, res);
+    return errorResponse(res, errorData, errorData.statusCode);
+  }
+};
+
+// ============================================================================
+// UNIFIED CALENDAR (MAIN ENDPOINT)
+// ============================================================================
+
+/**
+ * Get unified calendar combining Jaaiye and Google events
+ */
+const handleUnifiedCalendar = async (req, res) => {
+  try {
+    const {
+      timeMin,
+      timeMax,
+      includeJaaiye = true,
+      includeGoogle = true,
+      viewType = 'monthly'
+    } = req.query;
+
+    if (!timeMin || !timeMax) {
+      return errorResponse(res, new Error('timeMin and timeMax are required (ISO strings)'), 400);
+    }
+
+    const calendarData = await calendarService.getUnifiedCalendar(
+      req.user._id || req.user.id,
+      timeMin,
+      timeMax,
+      { includeJaaiye, includeGoogle, viewType }
+    );
+
+    return successResponse(res, calendarData);
+  } catch (err) {
+    console.error('Unified calendar error:', err);
+    return errorResponse(res, err, 500);
+  }
+};
+
+/**
+ * Get monthly calendar grid view
+ */
+const handleMonthlyCalendar = async (req, res) => {
+  try {
+    const { year, month } = req.params;
+    const { includeJaaiye = true, includeGoogle = true } = req.query;
+
+    const yearNum = parseInt(year);
+    const monthNum = parseInt(month);
+
+    if (isNaN(yearNum) || isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+      return errorResponse(res, new Error('Invalid year or month'), 400);
+    }
+
+    const monthlyGrid = await calendarService.getMonthlyCalendarGrid(
+      req.user._id || req.user.id,
+      yearNum,
+      monthNum,
+      { includeJaaiye, includeGoogle }
+    );
+
+    return successResponse(res, monthlyGrid);
+  } catch (err) {
+    console.error('Monthly calendar error:', err);
+    return errorResponse(res, err, 500);
+  }
+};
+
+// ============================================================================
+// ADVANCED FEATURES
+// ============================================================================
+
+/**
+ * Start Google Calendar watch for real-time updates
+ */
+const handleStartWatch = async (req, res) => {
   try {
     const { calendarId } = req.body;
-    if (!calendarId) {
-      return errorResponse(res, new Error('calendarId is required'), 400);
+
+    const user = await User.findById(req.user._id || req.user.id)
+      .select('+googleCalendar.refreshToken +googleCalendar.accessToken');
+
+    if (!user.googleCalendar || !user.googleCalendar.refreshToken) {
+      return errorResponse(res, {
+        error: 'not_linked',
+        message: 'No Google account linked.'
+      }, 400);
     }
-    const user = await User.findById(req.user._id || req.user.id).select('+googleCalendar.refreshToken +googleCalendar.accessToken');
-    const ok = await googleSvc.stopWatch(user, calendarId);
-    return successResponse(res, { stopped: ok }, 200, ok ? 'Watch stopped' : 'No active watch');
-  } catch (err) {
-    return errorResponse(res, err, 400);
-  }
-});
 
-// Suggest times: given window and duration (minutes), return slots where all selected calendars are free
-router.post('/suggest-times', apiLimiter, async (req, res) => {
+    const watchResult = await googleSvc.startWatch(user, calendarId);
+    return successResponse(res, watchResult, 201, 'Watch started successfully');
+  } catch (err) {
+    console.error('Start watch error:', err);
+    const errorData = googleUtils.handleGoogleOAuthError(err, res);
+    return errorResponse(res, errorData, errorData.statusCode);
+  }
+};
+
+/**
+ * Stop Google Calendar watch
+ */
+const handleStopWatch = async (req, res) => {
   try {
-    const { timeMin, timeMax, durationMinutes = 60, calendarIds } = req.body;
-    if (!timeMin || !timeMax) {
-      return errorResponse(res, new Error('timeMin and timeMax are required (ISO strings)'), 400);
+    const { calendarId } = req.body;
+
+    const user = await User.findById(req.user._id || req.user.id)
+      .select('+googleCalendar.refreshToken +googleCalendar.accessToken');
+
+    if (!user.googleCalendar || !user.googleCalendar.refreshToken) {
+      return errorResponse(res, {
+        error: 'not_linked',
+        message: 'No Google account linked.'
+      }, 400);
     }
-    const user = await User.findById(req.user._id || req.user.id).select('+googleCalendar.refreshToken +googleCalendar.accessToken');
-    const fb = await googleSvc.freeBusy(user, timeMin, timeMax, calendarIds);
-    const slots = computeSlots(timeMin, timeMax, durationMinutes, fb);
-    return successResponse(res, { slots });
+
+    await googleSvc.stopWatch(user, calendarId);
+    return successResponse(res, null, 200, 'Watch stopped successfully');
   } catch (err) {
-    return errorResponse(res, err, 400);
+    console.error('Stop watch error:', err);
+    const errorData = googleUtils.handleGoogleOAuthError(err, res);
+    return errorResponse(res, errorData, errorData.statusCode);
   }
-});
+};
 
-function computeSlots(timeMin, timeMax, durationMinutes, freebusyCalendars) {
-  const start = new Date(timeMin).getTime();
-  const end = new Date(timeMax).getTime();
-  const step = durationMinutes * 60 * 1000;
-  const busyBlocks = Object.values(freebusyCalendars).flatMap(c => (c.busy || []).map(b => ({
-    s: new Date(b.start).getTime(),
-    e: new Date(b.end).getTime()
-  })));
-  const slots = [];
-  for (let t = start; t + step <= end; t += step) {
-    const slotStart = t;
-    const slotEnd = t + step;
-    const overlaps = busyBlocks.some(b => !(slotEnd <= b.s || slotStart >= b.e));
-    if (!overlaps) slots.push({ start: new Date(slotStart).toISOString(), end: new Date(slotEnd).toISOString() });
-  }
-  return slots;
-}
-
-// Diagnostic route to check OAuth configuration
-router.get('/diagnostics', apiLimiter, async (req, res) => {
+/**
+ * Backfill sync for Google Calendar
+ */
+const handleBackfillSync = async (req, res) => {
   try {
+    const { calendarId, daysBack = 30 } = req.body;
+
+    const user = await User.findById(req.user._id || req.user.id)
+      .select('+googleCalendar.refreshToken +googleCalendar.accessToken');
+
+    if (!user.googleCalendar || !user.googleCalendar.refreshToken) {
+      return errorResponse(res, {
+        error: 'not_linked',
+        message: 'No Google account linked.'
+      }, 400);
+    }
+
+    const syncResult = await googleSvc.backfillSync(user, calendarId, daysBack);
+    return successResponse(res, syncResult, 200, 'Backfill sync completed');
+  } catch (err) {
+    console.error('Backfill sync error:', err);
+    const errorData = googleUtils.handleGoogleOAuthError(err, res);
+    return errorResponse(res, errorData, errorData.statusCode);
+  }
+};
+
+// ============================================================================
+// UTILITIES
+// ============================================================================
+
+/**
+ * Get Google OAuth diagnostics
+ */
+const handleDiagnostics = async (req, res) => {
+  try {
+    const diagnostics = {
+      environment: process.env.NODE_ENV || 'development',
+      googleClientId: !!process.env.GOOGLE_CLIENT_ID,
+      googleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+      googleRedirectUri: !!process.env.GOOGLE_REDIRECT_URI,
+      googleWebhookUrl: !!process.env.GOOGLE_WEBHOOK_URL,
+      timestamp: new Date().toISOString()
+    };
+
+    // Check user's Google Calendar status
     const user = await User.findById(req.user._id || req.user.id)
       .select('+googleCalendar.refreshToken +googleCalendar.accessToken +googleCalendar.expiryDate +googleCalendar.scope');
 
-    const diagnostics = {
-      hasGoogleAccount: !!(user.googleCalendar && user.googleCalendar.refreshToken),
-      hasAccessToken: !!(user.googleCalendar && user.googleCalendar.accessToken),
-      hasExpiryDate: !!(user.googleCalendar && user.googleCalendar.expiryDate),
-      scope: user.googleCalendar?.scope || 'No scope set',
-      environment: process.env.NODE_ENV || 'development',
-      hasClientId: !!process.env.GOOGLE_CLIENT_ID,
-      hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
-      hasRedirectUri: !!process.env.GOOGLE_REDIRECT_URI,
-      clientIdLength: process.env.GOOGLE_CLIENT_ID ? process.env.GOOGLE_CLIENT_ID.length : 0,
-      clientSecretLength: process.env.GOOGLE_CLIENT_SECRET ? process.env.GOOGLE_CLIENT_SECRET.length : 0
-    };
-
-    // Check if tokens are expired
-    if (user.googleCalendar && user.googleCalendar.expiryDate) {
-      const now = new Date();
-      const expiry = new Date(user.googleCalendar.expiryDate);
-      diagnostics.isExpired = now >= expiry;
-      diagnostics.expiresIn = Math.floor((expiry.getTime() - now.getTime()) / 1000); // seconds
+    if (user?.googleCalendar) {
+      diagnostics.userStatus = {
+        hasRefreshToken: !!user.googleCalendar.refreshToken,
+        hasAccessToken: !!user.googleCalendar.accessToken,
+        hasExpiryDate: !!user.googleCalendar.expiryDate,
+        hasScope: !!user.googleCalendar.scope,
+        isExpired: user.googleCalendar.expiryDate ?
+          new Date() >= new Date(user.googleCalendar.expiryDate) : true
+      };
+    } else {
+      diagnostics.userStatus = {
+        hasRefreshToken: false,
+        hasAccessToken: false,
+        hasExpiryDate: false,
+        hasScope: false,
+        isExpired: true
+      };
     }
 
-    return successResponse(res, { diagnostics });
+    return successResponse(res, diagnostics);
   } catch (err) {
     console.error('Diagnostics error:', err);
     return errorResponse(res, err, 500);
   }
-});
+};
 
-// Simple callback route for Google OAuth (for debugging/testing)
-router.get('/callback', (req, res) => {
-  const { code, error } = req.query;
+/**
+ * Handle OAuth callback (for debugging)
+ */
+const handleOAuthCallback = (req, res) => {
+  try {
+    const { code, error, state } = req.query;
 
-  if (error) {
-    return res.status(400).json({
-      status: 'error',
-      message: 'OAuth error occurred',
-      error: error
+    if (error) {
+      return res.status(400).json({
+        error: 'OAuth Error',
+        message: error,
+        state
+      });
+    }
+
+    if (code) {
+      return res.json({
+        message: 'Authorization code received',
+        code: code.substring(0, 10) + '...',
+        state,
+        note: 'This endpoint is for debugging. Use the /link endpoint with the serverAuthCode.'
+      });
+    }
+
+    return res.json({
+      message: 'OAuth callback endpoint',
+      note: 'This endpoint receives Google OAuth callbacks for debugging purposes.'
     });
+  } catch (err) {
+    console.error('OAuth callback error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
+};
 
-  if (code) {
-    return res.status(200).json({
-      status: 'success',
-      message: 'Authorization code received successfully',
-      code: code,
-      note: 'Use this code with POST /api/v1/google/link to link or update your Google account'
-    });
-  }
+// ============================================================================
+// ROUTE REGISTRATION
+// ============================================================================
 
-  return res.status(400).json({
-    status: 'error',
-    message: 'No authorization code received'
-  });
-});
+// Core OAuth operations
+router.post('/link', apiLimiter, handleGoogleLink);
+router.post('/refresh', apiLimiter, handleTokenRefresh);
+router.delete('/link', apiLimiter, handleGoogleUnlink);
+
+// Calendar operations
+router.get('/calendars', apiLimiter, handleListCalendars);
+router.post('/calendars/select', apiLimiter, handleSelectCalendars);
+router.post('/calendar-mapping', apiLimiter, handleCalendarMapping);
+router.get('/calendar-mapping', apiLimiter, handleGetCalendarMapping);
+
+// Event operations
+router.post('/events', apiLimiter, handleListEvents);
+router.post('/freebusy', apiLimiter, handleFreeBusy);
+
+// Unified calendar (MAIN ENDPOINT)
+router.get('/unified-calendar', apiLimiter, handleUnifiedCalendar);
+router.get('/calendar/monthly/:year/:month', apiLimiter, handleMonthlyCalendar);
+
+// Advanced features
+router.post('/sync/backfill', apiLimiter, handleBackfillSync);
+router.post('/watch/start', apiLimiter, handleStartWatch);
+router.post('/watch/stop', apiLimiter, handleStopWatch);
+
+// Utilities
+router.get('/diagnostics', apiLimiter, handleDiagnostics);
+router.get('/callback', handleOAuthCallback);
 
 module.exports = router;

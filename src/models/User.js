@@ -79,6 +79,11 @@ const userSchema = new mongoose.Schema({
     jaaiyeCalendarId: { type: String },
     selectedCalendarIds: { type: [String], default: undefined },
     syncToken: { type: String, select: false },
+    calendarMappings: [{
+      googleCalendarId: { type: String, required: true },
+      jaaiyeCalendarId: { type: mongoose.Schema.Types.ObjectId, ref: 'Calendar' },
+      createdAt: { type: Date, default: Date.now }
+    }],
     calendars: [{
       id: { type: String },
       syncToken: { type: String, select: false },
