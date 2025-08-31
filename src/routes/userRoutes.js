@@ -19,7 +19,7 @@ const validatePassword = [
 
 const validateProfilePicture = [
   body('emoji').notEmpty().withMessage('Emoji is required'),
-  body('color').matches(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/).withMessage('Invalid color format. Use hex color code (e.g., #FF0000)')
+  body('color').notEmpty().withMessage('Color is required'),
 ];
 
 const validateDeactivateAccount = [
