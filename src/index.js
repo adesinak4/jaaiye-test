@@ -73,6 +73,7 @@ app.use('/api/v1/health', require('./routes/healthRoutes'));
 app.use('/api/v1/google', require('./routes/googleRoutes'));
 app.use('/api/v1/ics', require('./routes/icsRoutes'));
 app.use('/api/v1/calendar-shares', require('./routes/calendarShareRoutes'));
+app.use('/api/v1/groups', require('./routes/groupRoutes'));
 
 // 404 handler
 app.use((req, res, next) => {

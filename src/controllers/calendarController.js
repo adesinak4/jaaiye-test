@@ -214,91 +214,8 @@ exports.deleteCalendar = async (req, res, next) => {
   }
 };
 
-// Create a new event
-exports.createEvent = async (req, res, next) => {
-  try {
-    const {
-      calendarId,
-      title,
-      description,
-      startTime,
-      endTime,
-      isAllDay,
-      location,
-      category,
-      privacy,
-      reminders,
-      participants // Array of user IDs
-    } = req.body;
-
-    const userId = req.user._id;
-
-    // Verify calendar ownership
-    const calendar = await Calendar.findOne({ _id: calendarId, user: userId });
-    if (!calendar) {
-      return res.status(404).json({
-        success: false,
-        message: 'Calendar not found'
-      });
-    }
-
-    // Create the event
-    const event = await Event.create({
-      calendar: calendarId,
-      title,
-      description,
-      startTime,
-      endTime,
-      isAllDay,
-      location,
-      category,
-      privacy,
-      reminders
-    });
-
-    // Add creator as organizer
-    await EventParticipant.create({
-      event: event._id,
-      user: userId,
-      role: 'organizer',
-      status: 'accepted'
-    });
-
-    // Add other participants if provided
-    if (participants && participants.length > 0) {
-      const participantPromises = participants.map(userId =>
-        EventParticipant.create({
-          event: event._id,
-          user: userId,
-          role: 'attendee',
-          status: 'pending'
-        })
-      );
-      await Promise.all(participantPromises);
-    }
-
-    // Populate event with participants
-    const populatedEvent = await Event.findById(event._id)
-      .populate({
-        path: 'participants',
-        select: 'user role status'
-      });
-
-    res.status(201).json({
-      success: true,
-      data: populatedEvent
-    });
-  } catch(error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error creating event',
-      error: error.message
-    });
-  }
-};
-
 // Get events for a calendar
-exports.getEvents = async (req, res, next) => {
+exports.getCalendarEvents = async (req, res, next) => {
   try {
     const { calendarId } = req.params;
     const {
@@ -308,14 +225,24 @@ exports.getEvents = async (req, res, next) => {
       status
     } = req.query;
 
-    const userId = req.user._id;
+    const userId = req.user.id;
 
-    // Verify calendar ownership
-    const calendar = await Calendar.findOne({ _id: calendarId, user: userId });
+    // Verify calendar access
+    const calendar = await Calendar.findById(calendarId);
     if (!calendar) {
       return res.status(404).json({
         success: false,
         message: 'Calendar not found'
+      });
+    }
+
+    // Check if user has access
+    if (!calendar.isPublic &&
+        calendar.owner.toString() !== userId &&
+        !calendar.sharedWith.some(share => share.user.toString() === userId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
       });
     }
 
@@ -349,94 +276,13 @@ exports.getEvents = async (req, res, next) => {
     res.status(200).json({
       success: true,
       count: events.length,
-      data: events
+      events: events
     });
   } catch(error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching events',
-      error: error.message
+    logger.error('Failed to get calendar events', error, 500, {
+      calendarId: req.params.calendarId,
+      userId: req.user.id
     });
-  }
-};
-
-// Update an event
-exports.updateEvent = async (req, res, next) => {
-  try {
-    const { eventId } = req.params;
-    const updateData = req.body;
-    const userId = req.user._id;
-
-    // Find event and verify ownership through calendar
-    const event = await Event.findOne({ _id: eventId })
-      .populate('calendar');
-
-    if (!event || event.calendar.user.toString() !== userId.toString()) {
-      return res.status(404).json({
-        success: false,
-        message: 'Event not found'
-      });
-    }
-
-    // Update event
-    const updatedEvent = await Event.findByIdAndUpdate(
-      eventId,
-      updateData,
-      { new: true, runValidators: true }
-    ).populate({
-      path: 'participants',
-      select: 'user role status',
-      populate: {
-        path: 'user',
-        select: 'fullName email profilePicture'
-      }
-    });
-
-    res.status(200).json({
-      success: true,
-      data: updatedEvent
-    });
-  } catch(error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error updating event',
-      error: error.message
-    });
-  }
-};
-
-// Delete an event
-exports.deleteEvent = async (req, res, next) => {
-  try {
-    const { eventId } = req.params;
-    const userId = req.user._id;
-
-    // Find event and verify ownership through calendar
-    const event = await Event.findOne({ _id: eventId })
-      .populate('calendar');
-
-    if (!event || event.calendar.user.toString() !== userId.toString()) {
-      return res.status(404).json({
-        success: false,
-        message: 'Event not found'
-      });
-    }
-
-    // Delete event and its participants
-    await Promise.all([
-      Event.findByIdAndDelete(eventId),
-      EventParticipant.deleteMany({ event: eventId })
-    ]);
-
-    res.status(200).json({
-      success: true,
-      message: 'Event deleted successfully'
-    });
-  } catch(error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error deleting event',
-      error: error.message
-    });
+    next(error);
   }
 };

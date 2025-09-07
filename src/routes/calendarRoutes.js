@@ -4,20 +4,20 @@ const { protect } = require('../middleware/authMiddleware');
 const {
   createCalendar,
   getCalendars,
-  createEvent,
-  getEvents,
-  updateEvent,
-  deleteEvent
+  getCalendar,
+  updateCalendar,
+  deleteCalendar,
+  getCalendarEvents
 } = require('../controllers/calendarController');
 
 // Calendar routes
 router.post('/', protect, createCalendar);
 router.get('/', protect, getCalendars);
+router.get('/:id', protect, getCalendar);
+router.put('/:id', protect, updateCalendar);
+router.delete('/:id', protect, deleteCalendar);
 
-// Event routes
-router.post('/events', protect, createEvent);
-router.get('/:calendarId/events', protect, getEvents);
-router.put('/events/:eventId', protect, updateEvent);
-router.delete('/events/:eventId', protect, deleteEvent);
+// Calendar events routes (read-only for calendar context)
+router.get('/:calendarId/events', protect, getCalendarEvents);
 
 module.exports = router;

@@ -207,7 +207,40 @@ const userSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
-  }]
+  }],
+
+  // Friends System
+  friends: [{
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    friendshipId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Friendship',
+      required: true
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  friendSettings: {
+    allowFriendRequests: {
+      type: Boolean,
+      default: true
+    },
+    allowRequestsFrom: {
+      type: String,
+      enum: ['everyone', 'friends_of_friends', 'nobody'],
+      default: 'everyone'
+    },
+    showInSearch: {
+      type: Boolean,
+      default: true
+    }
+  }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
@@ -258,6 +291,66 @@ userSchema.query.active = function () {
   return this.where({ isActive: true });
 };
 
+// Friend management methods
+userSchema.methods.addFriend = function(friendId, friendshipId) {
+  // Check if friend already exists
+  const existingFriend = this.friends.find(friend =>
+    friend.user.toString() === friendId.toString()
+  );
+
+  if (existingFriend) {
+    throw new Error('User is already a friend');
+  }
+
+  this.friends.push({
+    user: friendId,
+    friendshipId: friendshipId
+  });
+
+  return this.save();
+};
+
+userSchema.methods.removeFriend = function(friendId) {
+  this.friends = this.friends.filter(friend =>
+    friend.user.toString() !== friendId.toString()
+  );
+
+  return this.save();
+};
+
+userSchema.methods.isFriend = function(userId) {
+  return this.friends.some(friend =>
+    friend.user.toString() === userId.toString()
+  );
+};
+
+userSchema.methods.getFriendIds = function() {
+  return this.friends.map(friend => friend.user.toString());
+};
+
+// Static method to search users for friend requests
+userSchema.statics.searchForFriends = function(searchTerm, requestingUserId, limit = 20) {
+  const searchRegex = new RegExp(searchTerm, 'i');
+
+  return this.find({
+    $and: [
+      { _id: { $ne: requestingUserId } }, // Exclude self
+      { isActive: true },
+      { 'deleted.status': { $ne: true } },
+      { 'friendSettings.showInSearch': true },
+      {
+        $or: [
+          { username: searchRegex },
+          { fullName: searchRegex },
+          { email: searchRegex }
+        ]
+      }
+    ]
+  })
+  .select('username fullName profilePicture email friendSettings')
+  .limit(limit);
+};
+
 // Indexes
 userSchema.index({ email: 1 });
 userSchema.index({ googleId: 1 });
@@ -266,6 +359,9 @@ userSchema.index({ username: 1 });
 userSchema.index({ deletedAt: 1 });
 userSchema.index({ isActive: 1 });
 userSchema.index({ deactivatedAt: 1 });
+userSchema.index({ 'friends.user': 1 });
+userSchema.index({ 'friendSettings.allowFriendRequests': 1 });
+userSchema.index({ 'friendSettings.showInSearch': 1 });
 
 const User = mongoose.model('User', userSchema);
 
