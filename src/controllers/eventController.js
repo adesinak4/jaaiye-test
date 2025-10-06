@@ -7,12 +7,51 @@ const { sendNotification } = require('../services/notificationService');
 const { successResponse, errorResponse } = require('../utils/response');
 const googleSvc = require('../services/googleCalendarService');
 
+// Internal helper to add participants with permission checks and notifications
+async function addParticipantsToEvent(event, calendar, participantsInput, actingUserId) {
+  if (!Array.isArray(participantsInput) || participantsInput.length === 0) {
+    return event;
+  }
+
+  // Permission: actor must be calendar owner or shared user
+  if (!calendar.owner.equals(actingUserId) && !calendar.sharedWith.includes(actingUserId)) {
+    throw new ForbiddenError('You do not have permission to add participants to this event');
+  }
+
+  const existingIds = new Set((event.participants || []).map(p => String(p.user)));
+  const normalized = participantsInput
+    .filter(p => p && (p.userId || p.user))
+    .map(p => ({ user: p.userId || p.user, role: p.role || 'attendee' }))
+    .filter(p => !existingIds.has(String(p.user)));
+
+  if (normalized.length === 0) {
+    return event;
+  }
+
+  event.participants = [...(event.participants || []), ...normalized];
+  await event.save();
+
+  await Promise.all(
+    normalized.map(p =>
+      sendNotification({
+        userId: p.user,
+        title: 'Event Invitation',
+        message: `You have been invited to the event "${event.title}"`,
+        type: 'event_invitation',
+        data: { eventId: event._id }
+      })
+    )
+  );
+
+  return event;
+}
+
 // @desc    Create a new event
 // @route   POST /api/events
 // @access  Private
 exports.createEvent = async (req, res, next) => {
   try {
-    const { calendarId, title, description, startTime, endTime, location, isAllDay, recurrence } = req.body;
+    const { calendarId, title, description, startTime, endTime, location, isAllDay, recurrence, participants } = req.body;
 
     // Check if calendar exists and user has access
     const calendar = await Calendar.findById(calendarId);
@@ -62,6 +101,11 @@ exports.createEvent = async (req, res, next) => {
     } catch (err) {
       logger.warn('Google write-through failed', { error: err.message });
       // Do not fail local creation
+    }
+
+    // Optionally add participants provided at creation via shared helper
+    if (Array.isArray(participants) && participants.length > 0) {
+      await addParticipantsToEvent(event, calendar, participants, req.user._id);
     }
 
     // Send notifications to calendar participants
@@ -452,6 +496,35 @@ exports.removeParticipant = async (req, res, next) => {
     });
 
     res.json(event);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Batch add participants to an event
+// @route   POST /api/events/:id/participants/batch
+// @access  Private
+exports.addParticipantsBatch = async (req, res, next) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate('calendar', 'owner sharedWith');
+
+    if (!event) {
+      throw new NotFoundError('Event not found');
+    }
+
+    const calendar = event.calendar;
+    if (!calendar.owner.equals(req.user._id) && !calendar.sharedWith.includes(req.user._id)) {
+      throw new ForbiddenError('You do not have permission to add participants to this event');
+    }
+
+    const { participants } = req.body; // [{ userId, role }]
+    if (!Array.isArray(participants) || participants.length === 0) {
+      throw new BadRequestError('participants array is required');
+    }
+
+    await addParticipantsToEvent(event, calendar, participants, req.user._id);
+    return res.json(event);
   } catch (err) {
     next(err);
   }

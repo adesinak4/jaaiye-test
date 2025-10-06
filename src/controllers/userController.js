@@ -286,8 +286,8 @@ exports.searchUsers = asyncHandler(async (req, res) => {
       }
     ]
   })
-  .select('username fullName profilePicture email')
-  .limit(parseInt(limit));
+    .select('username fullName profilePicture email')
+    .limit(parseInt(limit));
 
   // Check friendship status for each user
   const usersWithStatus = await Promise.all(

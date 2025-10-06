@@ -8,6 +8,7 @@ const {
   deleteEvent,
   listEvents,
   addParticipant,
+  addParticipantsBatch,
   updateParticipantStatus,
   removeParticipant
 } = require('../controllers/eventController');
@@ -21,6 +22,7 @@ router.get('/', protect, listEvents);
 
 // Participant management routes
 router.post('/:id/participants', protect, addParticipant);
+router.post('/:id/participants/batch', protect, addParticipantsBatch);
 router.put('/:id/participants/status', protect, updateParticipantStatus);
 router.delete('/:id/participants/:userId', protect, removeParticipant);
 
