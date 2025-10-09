@@ -39,6 +39,20 @@ exports.generateRefreshToken = (id) => {
   });
 };
 
+exports.verifyRefreshToken = (token) => {
+  if (!token) {
+    throw new Error('Refresh token is required');
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded; // { id, iat, exp }
+  } catch (err) {
+    const error = new Error('Invalid refresh token');
+    error.cause = err;
+    throw error;
+  }
+};
+
 exports.generateVerificationCode = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
