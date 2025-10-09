@@ -32,6 +32,52 @@ const options = {
           in: 'header',
           name: 'x-api-key'
         }
+      },
+      schemas: {
+        Calendar: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+            description: { type: 'string' },
+            color: { type: 'string' },
+            isPublic: { type: 'boolean' },
+            owner: { type: 'string' },
+            createdAt: { type: 'string', format: 'date-time' }
+          }
+        },
+        Event: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            title: { type: 'string' },
+            description: { type: 'string' },
+            startTime: { type: 'string', format: 'date-time' },
+            endTime: { type: 'string', format: 'date-time' },
+            location: { type: 'string' },
+            isAllDay: { type: 'boolean' },
+            recurrence: { type: 'object' },
+            calendar: { type: 'string' },
+            creator: { type: 'string' },
+            external: { type: 'object' },
+            createdAt: { type: 'string', format: 'date-time' }
+          }
+        },
+        AuthTokens: {
+          type: 'object',
+          properties: {
+            accessToken: { type: 'string' },
+            refreshToken: { type: 'string' }
+          }
+        },
+        Error: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            error: { type: 'string' },
+            message: { type: 'string' }
+          }
+        }
       }
     },
     security: [

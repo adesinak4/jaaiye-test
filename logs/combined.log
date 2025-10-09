@@ -1354,3 +1354,13 @@
 {"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-09T10:23:24.215Z","user":"friendnpaldoc@gmail.com"}
 {"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-09T10:23:27.012Z"}
 {"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-09T10:23:27.040Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-09T11:55:07.320Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-09T11:55:10.363Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-09T11:55:10.393Z"}
+{"durationMs":10,"environment":"development","level":"info","message":"Request","method":"GET","path":"/","statusCode":301,"timestamp":"2025-10-09T11:55:36.832Z"}
+{"durationMs":22,"environment":"development","level":"info","message":"Request","method":"GET","path":"/","statusCode":200,"timestamp":"2025-10-09T11:55:36.867Z"}
+{"durationMs":21,"environment":"development","level":"info","message":"Request","method":"GET","path":"/swagger-ui.css","statusCode":200,"timestamp":"2025-10-09T11:55:37.011Z"}
+{"durationMs":9,"environment":"development","level":"info","message":"Request","method":"GET","path":"/swagger-ui-init.js","statusCode":200,"timestamp":"2025-10-09T11:55:37.038Z"}
+{"durationMs":41,"environment":"development","level":"info","message":"Request","method":"GET","path":"/swagger-ui-standalone-preset.js","statusCode":200,"timestamp":"2025-10-09T11:55:37.068Z"}
+{"durationMs":135,"environment":"development","level":"info","message":"Request","method":"GET","path":"/swagger-ui-bundle.js","statusCode":200,"timestamp":"2025-10-09T11:55:37.129Z"}
+{"durationMs":8,"environment":"development","level":"info","message":"Request","method":"GET","path":"/favicon-32x32.png","statusCode":200,"timestamp":"2025-10-09T11:55:37.675Z"}

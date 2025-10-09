@@ -12,6 +12,13 @@ router.use(securityHeaders);
 router.use(sanitizeRequest);
 router.use(protect);
 
+/**
+ * @swagger
+ * tags:
+ *   name: Google
+ *   description: Google Calendar integration
+ */
+
 // ============================================================================
 // CORE OAUTH OPERATIONS
 // ============================================================================
@@ -561,30 +568,326 @@ const handleOAuthCallback = (req, res) => {
 // ============================================================================
 
 // Core OAuth operations
+/**
+ * @swagger
+ * /api/v1/google/link:
+ *   post:
+ *     summary: Link or update Google account using serverAuthCode
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               serverAuthCode:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Linked/Updated
+ */
 router.post('/link', apiLimiter, handleGoogleLink);
+/**
+ * @swagger
+ * /api/v1/google/refresh:
+ *   post:
+ *     summary: Refresh Google access token
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Refreshed
+ */
 router.post('/refresh', apiLimiter, handleTokenRefresh);
+/**
+ * @swagger
+ * /api/v1/google/link:
+ *   delete:
+ *     summary: Unlink Google account
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Unlinked
+ */
 router.delete('/link', apiLimiter, handleGoogleUnlink);
 
 // Calendar operations
+/**
+ * @swagger
+ * /api/v1/google/calendars:
+ *   get:
+ *     summary: List Google calendars
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success
+ */
 router.get('/calendars', apiLimiter, handleListCalendars);
+/**
+ * @swagger
+ * /api/v1/google/calendars/select:
+ *   post:
+ *     summary: Select Google calendars for sync
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               calendarIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ */
 router.post('/calendars/select', apiLimiter, handleSelectCalendars);
+/**
+ * @swagger
+ * /api/v1/google/calendar-mapping:
+ *   post:
+ *     summary: Create or update calendar mapping (Google ↔ Jaaiye)
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               googleCalendarId: { type: string }
+ *               jaaiyeCalendarId: { type: string }
+ *     responses:
+ *       201:
+ *         description: Created
+ */
 router.post('/calendar-mapping', apiLimiter, handleCalendarMapping);
+/**
+ * @swagger
+ * /api/v1/google/calendar-mapping:
+ *   get:
+ *     summary: Get calendar mappings
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success
+ */
 router.get('/calendar-mapping', apiLimiter, handleGetCalendarMapping);
 
 // Event operations
+/**
+ * @swagger
+ * /api/v1/google/events:
+ *   post:
+ *     summary: List Google events by time range
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [timeMin, timeMax]
+ *             properties:
+ *               timeMin: { type: string, format: date-time }
+ *               timeMax: { type: string, format: date-time }
+ *               calendarIds:
+ *                 type: array
+ *                 items: { type: string }
+ *               includeAllDay: { type: boolean }
+ *               maxResults: { type: number }
+ *               viewType: { type: string }
+ *     responses:
+ *       200:
+ *         description: Success
+ */
 router.post('/events', apiLimiter, handleListEvents);
+/**
+ * @swagger
+ * /api/v1/google/freebusy:
+ *   post:
+ *     summary: Get Google free/busy
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [timeMin, timeMax]
+ *             properties:
+ *               timeMin: { type: string, format: date-time }
+ *               timeMax: { type: string, format: date-time }
+ *               calendarIds:
+ *                 type: array
+ *                 items: { type: string }
+ *     responses:
+ *       200:
+ *         description: Success
+ */
 router.post('/freebusy', apiLimiter, handleFreeBusy);
 
 // Unified calendar (MAIN ENDPOINT)
+/**
+ * @swagger
+ * /api/v1/google/unified-calendar:
+ *   get:
+ *     summary: Get unified calendar (Jaaiye + Google)
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: timeMin
+ *         required: true
+ *         schema: { type: string, format: date-time }
+ *       - in: query
+ *         name: timeMax
+ *         required: true
+ *         schema: { type: string, format: date-time }
+ *       - in: query
+ *         name: includeJaaiye
+ *         schema: { type: boolean }
+ *       - in: query
+ *         name: includeGoogle
+ *         schema: { type: boolean }
+ *       - in: query
+ *         name: viewType
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Success
+ */
 router.get('/unified-calendar', apiLimiter, handleUnifiedCalendar);
+/**
+ * @swagger
+ * /api/v1/google/calendar/monthly/{year}/{month}:
+ *   get:
+ *     summary: Get monthly calendar grid
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: year
+ *         required: true
+ *         schema: { type: integer }
+ *       - in: path
+ *         name: month
+ *         required: true
+ *         schema: { type: integer }
+ *       - in: query
+ *         name: includeJaaiye
+ *         schema: { type: boolean }
+ *       - in: query
+ *         name: includeGoogle
+ *         schema: { type: boolean }
+ *     responses:
+ *       200:
+ *         description: Success
+ */
 router.get('/calendar/monthly/:year/:month', apiLimiter, handleMonthlyCalendar);
 
 // Advanced features
+/**
+ * @swagger
+ * /api/v1/google/sync/backfill:
+ *   post:
+ *     summary: Backfill sync for Google Calendar
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               calendarId: { type: string }
+ *               daysBack: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Success
+ */
 router.post('/sync/backfill', apiLimiter, handleBackfillSync);
+/**
+ * @swagger
+ * /api/v1/google/watch/start:
+ *   post:
+ *     summary: Start Google Calendar watch
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               calendarId: { type: string }
+ *     responses:
+ *       201:
+ *         description: Started
+ */
 router.post('/watch/start', apiLimiter, handleStartWatch);
+/**
+ * @swagger
+ * /api/v1/google/watch/stop:
+ *   post:
+ *     summary: Stop Google Calendar watch
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               calendarId: { type: string }
+ *     responses:
+ *       200:
+ *         description: Stopped
+ */
 router.post('/watch/stop', apiLimiter, handleStopWatch);
 
 // Utilities
+/**
+ * @swagger
+ * /api/v1/google/diagnostics:
+ *   get:
+ *     summary: Google OAuth diagnostics
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success
+ */
 router.get('/diagnostics', apiLimiter, handleDiagnostics);
 router.get('/callback', handleOAuthCallback);
 

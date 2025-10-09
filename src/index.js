@@ -14,6 +14,8 @@ const { validateMobileApiKey } = require('./middleware/mobileAuthMiddleware');
 const { errorHandler } = require('./middleware/errorHandler');
 const { requestLogger } = require('./utils/asyncHandler');
 const logger = require('./utils/logger');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpecs = require('./config/swagger');
 
 // Load environment variables
 dotenv.config();
@@ -59,6 +61,9 @@ app.get('/health', (req, res, next) => {
   });
 });
 app.use('/webhooks', require('./routes/webhookRoutes'));
+
+// Swagger docs (mounted before API key enforcement)
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 // Apply API key validation to all other routes
 app.use(validateMobileApiKey);
