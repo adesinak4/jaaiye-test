@@ -7,7 +7,9 @@ const {
   getCalendar,
   updateCalendar,
   deleteCalendar,
-  getCalendarEvents
+  getCalendarEvents,
+  linkGoogleCalendars,
+  setPrimaryGoogleCalendar
 } = require('../controllers/calendarController');
 
 // Calendar routes
@@ -19,5 +21,9 @@ router.delete('/:id', protect, deleteCalendar);
 
 // Calendar events routes (read-only for calendar context)
 router.get('/:calendarId/events', protect, getCalendarEvents);
+
+// Google mappings for calendar
+router.post('/:id/google/link', protect, linkGoogleCalendars);
+router.post('/:id/google/primary', protect, setPrimaryGoogleCalendar);
 
 module.exports = router;

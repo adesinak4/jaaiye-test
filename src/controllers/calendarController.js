@@ -10,6 +10,10 @@ const logger = require('../utils/logger');
 exports.createCalendar = async (req, res, next) => {
   try {
     const { name, description, color, isPublic } = req.body;
+    const existing = await Calendar.findOne({ owner: req.user.id });
+    if (existing) {
+      return res.status(400).json({ success: false, error: 'User already has a calendar' });
+    }
     const calendar = await Calendar.create({
       owner: req.user.id,
       name,
@@ -41,12 +45,7 @@ exports.createCalendar = async (req, res, next) => {
 // @access  Private
 exports.getCalendars = async (req, res, next) => {
   try {
-    const calendars = await Calendar.find({
-      $or: [
-        { owner: req.user.id },
-        { 'sharedWith.user': req.user.id }
-      ]
-    });
+    const calendars = await Calendar.find({ owner: req.user.id });
 
     res.json({
       success: true,
@@ -238,8 +237,7 @@ exports.getCalendarEvents = async (req, res, next) => {
 
     // Check if user has access
     if (!calendar.isPublic &&
-        calendar.owner.toString() !== userId &&
-        !calendar.sharedWith.some(share => share.user.toString() === userId)) {
+        calendar.owner.toString() !== userId) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -283,6 +281,70 @@ exports.getCalendarEvents = async (req, res, next) => {
       calendarId: req.params.calendarId,
       userId: req.user.id
     });
+    next(error);
+  }
+};
+
+// Link multiple Google calendars to a Jaaiye calendar (replace set)
+exports.linkGoogleCalendars = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { linkedIds } = req.body; // array of strings
+
+    if (!Array.isArray(linkedIds)) {
+      return res.status(400).json({ success: false, error: 'linkedIds must be an array' });
+    }
+
+    const calendar = await Calendar.findById(id);
+    if (!calendar) {
+      return res.status(404).json({ success: false, error: 'Calendar not found' });
+    }
+    if (String(calendar.owner) !== String(req.user.id)) {
+      return res.status(403).json({ success: false, error: 'Access denied' });
+    }
+
+    calendar.google = calendar.google || {};
+    calendar.google.linkedIds = linkedIds.filter(x => typeof x === 'string' && x.trim().length > 0);
+    // Ensure primary remains valid
+    if (calendar.google.primaryId && !calendar.google.linkedIds.includes(calendar.google.primaryId)) {
+      calendar.google.primaryId = undefined;
+    }
+    await calendar.save();
+
+    return res.json({ success: true, google: calendar.google });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Set primary Google calendar for writes
+exports.setPrimaryGoogleCalendar = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { primaryId } = req.body;
+
+    if (!primaryId || typeof primaryId !== 'string') {
+      return res.status(400).json({ success: false, error: 'primaryId is required' });
+    }
+
+    const calendar = await Calendar.findById(id);
+    if (!calendar) {
+      return res.status(404).json({ success: false, error: 'Calendar not found' });
+    }
+    if (String(calendar.owner) !== String(req.user.id)) {
+      return res.status(403).json({ success: false, error: 'Access denied' });
+    }
+
+    calendar.google = calendar.google || {};
+    const set = new Set(calendar.google.linkedIds || []);
+    if (!set.has(primaryId)) {
+      return res.status(400).json({ success: false, error: 'primaryId must be one of linkedIds' });
+    }
+    calendar.google.primaryId = primaryId;
+    await calendar.save();
+
+    return res.json({ success: true, google: calendar.google });
+  } catch (error) {
     next(error);
   }
 };

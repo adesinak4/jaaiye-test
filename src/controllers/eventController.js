@@ -51,10 +51,22 @@ async function addParticipantsToEvent(event, calendar, participantsInput, acting
 // @access  Private
 exports.createEvent = async (req, res, next) => {
   try {
-    const { calendarId, title, description, startTime, endTime, location, isAllDay, recurrence, participants } = req.body;
+    const { calendarId: inputCalendarId, googleCalendarId: overrideGoogleCalId, title, description, startTime, endTime, location, isAllDay, recurrence, participants } = req.body;
 
-    // Check if calendar exists and user has access
-    const calendar = await Calendar.findById(calendarId);
+    // Resolve calendar: default to user's calendar if not provided
+    let calendar;
+    let calendarId = inputCalendarId;
+    if (!calendarId) {
+      const defaultCal = await Calendar.findOne({ owner: req.user.id });
+      if (!defaultCal) {
+        return errorResponse(res, new Error('No calendar found for user'), 400);
+      }
+      calendar = defaultCal;
+      calendarId = defaultCal._id;
+    } else {
+      // Check if calendar exists and user has access
+      calendar = await Calendar.findById(calendarId);
+    }
     if (!calendar) {
       return errorResponse(res, new Error('Calendar not found'), 404);
     }
@@ -83,16 +95,21 @@ exports.createEvent = async (req, res, next) => {
       // load full user for tokens
       const dbUser = await User.findById(user.id).select('+googleCalendar.refreshToken +googleCalendar.accessToken');
       if (dbUser && dbUser.providerLinks && dbUser.providerLinks.google && dbUser.googleCalendar && dbUser.googleCalendar.refreshToken) {
-        const googleEvent = await googleSvc.insertEvent(dbUser, {
+        // Determine Google calendar to write
+        const targetGoogleCalId = overrideGoogleCalId || calendar.google?.primaryId || dbUser.googleCalendar?.jaaiyeCalendarId;
+
+        const eventBody = {
           summary: title,
           description,
           start: { dateTime: new Date(startTime).toISOString() },
           end: { dateTime: new Date(endTime).toISOString() },
           location
-        });
+        };
+
+        const googleEvent = await googleSvc.insertEvent(dbUser, eventBody, targetGoogleCalId);
         event.external = event.external || {};
         event.external.google = {
-          calendarId: dbUser.googleCalendar.jaaiyeCalendarId,
+          calendarId: targetGoogleCalId || dbUser.googleCalendar.jaaiyeCalendarId,
           eventId: googleEvent.id,
           etag: googleEvent.etag
         };

@@ -48,12 +48,23 @@ exports.protect = async (req, res, next) => {
   }
 };
 
-// Check if user is admin
+// Check if user is admin (allows superadmin)
 exports.admin = (req, res, next) => {
-  if (req.user.role !== 'admin') {
+  if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
     return res.status(403).json({
       success: false,
       error: 'Not authorized as admin'
+    });
+  }
+  next();
+};
+
+// Check if user is superadmin only
+exports.superadmin = (req, res, next) => {
+  if (req.user.role !== 'superadmin') {
+    return res.status(403).json({
+      success: false,
+      error: 'Not authorized as superadmin'
     });
   }
   next();

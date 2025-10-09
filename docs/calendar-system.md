@@ -1,242 +1,87 @@
-# Jaaiye Calendar System Documentation
+# Calendar System
 
 ## Overview
-The Jaaiye Calendar System is a comprehensive calendar management solution that allows users to:
-- Create and manage events in the app
-- Sync with external calendars (Google, Apple)
-- Share calendar availability with friends
-- Collaborate on events
 
-## Core Features
+This document explains how Jaaiye calendars interact with Google Calendars and how events are created, read, and synchronized.
 
-### 1. Native Calendar
-- [ ] Event Creation
-  - Basic event details (title, description, date/time)
-  - Recurring events
-  - Event categories
-  - Event privacy settings
-  - Event reminders
-  - Event attachments
+## Data Model (Jaaiye)
 
-- [ ] Calendar Views
-  - Day view
-  - Week view
-  - Month view
-  - List view
-  - Agenda view
+- Calendar
+  - owner: UserId (unique) — one Jaaiye calendar per user
+  - name, color, isDefault
+  - google: { linkedIds: string[], primaryId?: string }
+- Event
+  - calendar: CalendarId
+  - external.google: { calendarId, eventId, etag }
 
-- [ ] Event Management
-  - Create/Edit/Delete events
-  - Event search
-  - Event filtering
-  - Event categories
-  - Event templates
+## Google Integration
 
-### 2. External Calendar Integration
-- [ ] Google Calendar Integration
-  - OAuth2 authentication
-  - Two-way sync
-  - Conflict resolution
-  - Sync frequency settings
+- Users can link their Google account (tokens stored on User.googleCalendar)
+- Calendar-level mapping
+  - linkedIds: multiple Google calendar IDs read for aggregation
+  - primaryId: the Google calendar ID used for write-through (create/update/delete)
 
-- [ ] Apple Calendar Integration
-  - OAuth2 authentication
-  - Two-way sync
-  - Conflict resolution
-  - Sync frequency settings
+## Creation Flows
 
-### 3. Friend Calendar Features
-- [ ] Friend Calendar Visibility
-  - Free/Busy view
-  - Basic details view
-  - Full details view
-  - Privacy controls
+### User Registration
+1. User registers (or first-time Google sign-in)
+2. System auto-creates a default Jaaiye calendar `{ owner: userId, name: 'My Calendar' }`
 
-- [ ] Friend Interaction
-  - Event invitations
-  - RSVP system
-  - Event comments
-  - Availability suggestions
+### Create Event (Jaaiye)
+1. Client calls `POST /api/events`
+   - If `calendarId` omitted → server uses the user's Jaaiye calendar
+   - Optional `googleCalendarId` to override write target
+2. Server creates the Jaaiye event
+3. If Google is linked:
+   - Determine Google target: override `googleCalendarId` → `calendar.google.primaryId` → fallback to user `jaaiyeCalendarId`
+   - Write event to Google and store `external.google`
 
-### 4. Notifications
-- [ ] Event Notifications
-  - Event reminders
-  - Event updates
-  - RSVP notifications
-  - Sync status notifications
+## Reading Flows
 
-## Technical Requirements
+### Jaaiye Events for a Calendar
+1. Client calls `GET /api/calendars/:calendarId/events`
+2. Server returns events from Jaaiye for that calendar
 
-### 1. Data Models
-```javascript
-// Calendar Model
-{
-  user: ObjectId,
-  name: String,
-  color: String,
-  isDefault: Boolean,
-  externalConnections: [{
-    provider: String, // 'google' | 'apple'
-    token: String,
-    refreshToken: String,
-    lastSynced: Date
-  }]
-}
+### Unified Google View
+1. Client calls Google endpoints (e.g., `/google/unified-calendar`)
+2. Server aggregates events from `linkedIds` or user’s selected Google calendars
+3. Results are enhanced with calendar metadata
 
-// Event Model
-{
-  calendar: ObjectId,
-  title: String,
-  description: String,
-  startTime: Date,
-  endTime: Date,
-  isAllDay: Boolean,
-  location: String,
-  category: String,
-  privacy: String, // 'private' | 'friends' | 'public'
-  recurrence: {
-    frequency: String, // 'daily' | 'weekly' | 'monthly' | 'yearly'
-    interval: Number,
-    endDate: Date
-  },
-  externalId: String, // For synced events
-  externalProvider: String, // 'google' | 'apple'
-  reminders: [{
-    time: Number, // minutes before
-    type: String // 'push' | 'email'
-  }]
-}
+## Mapping Management
 
-// CalendarShare Model
-{
-  calendar: ObjectId,
-  sharedWith: ObjectId, // User ID
-  permission: String, // 'freeBusy' | 'basic' | 'full'
-  createdAt: Date
-}
+- Link Google calendars to Jaaiye calendar
+  - `POST /api/calendars/:id/google/link` with `{ linkedIds: string[] }`
+- Set primary Google calendar for writes
+  - `POST /api/calendars/:id/google/primary` with `{ primaryId: string }` (must be in `linkedIds`)
 
-// EventParticipant Model
-{
-  event: ObjectId,
-  user: ObjectId,
-  status: String, // 'pending' | 'accepted' | 'declined'
-  role: String // 'organizer' | 'attendee'
-}
-```
+## Access Control
 
-### 2. API Endpoints
-```
-// Calendar Management
-POST /api/calendars
-GET /api/calendars
-GET /api/calendars/:id
-PUT /api/calendars/:id
-DELETE /api/calendars/:id
+- One calendar per user; owner-only access for mutations
+- Event access validated via calendar ownership
 
-// Event Management
-POST /api/events
-GET /api/events
-GET /api/events/:id
-PUT /api/events/:id
-DELETE /api/events/:id
+## Edge Cases & Notes
 
-// Calendar Sharing
-POST /api/calendars/:id/share
-GET /api/calendars/:id/shares
-DELETE /api/calendars/:id/share/:userId
+- If Google is not linked, events are created only in Jaaiye
+- If `primaryId` is not set and no override provided, write-through falls back to service default (ensuring a Jaaiye Google calendar)
+- If `primaryId` not in `linkedIds`, request is rejected
 
-// External Calendar Integration
-POST /api/calendars/:id/connect/google
-POST /api/calendars/:id/connect/apple
-DELETE /api/calendars/:id/connect/:provider
-POST /api/calendars/:id/sync
+## Scenarios Summary
 
-// Event Participation
-POST /api/events/:id/invite
-PUT /api/events/:id/rsvp
-GET /api/events/:id/participants
-```
+1) New user (email/password)
+   - Auto-create Jaaiye calendar
+   - No Google writes until user links account
 
-### 3. Services Required
-1. Calendar Sync Service
-   - Handle external calendar sync
-   - Conflict resolution
-   - Background sync jobs
+2) New user (Google sign-in)
+   - Auto-create Jaaiye calendar
+   - Can immediately write to Google using default target
 
-2. Notification Service
-   - Event reminders
-   - Sync notifications
-   - RSVP notifications
+3) Create event without calendarId
+   - Uses the user’s Jaaiye calendar
+   - Writes to Google using primary or override
 
-3. Friend Calendar Service
-   - Handle calendar sharing
-   - Manage permissions
-   - Process visibility requests
+4) Map multiple Google calendars to one Jaaiye calendar
+   - Reads aggregate from all `linkedIds`
+   - Writes go to `primaryId` unless overridden
 
-## Implementation Phases
-
-### Phase 1: Basic Calendar (2 weeks)
-- [ ] Basic event CRUD
-- [ ] Calendar views
-- [ ] Event categories
-- [ ] Basic notifications
-
-### Phase 2: Friend Features (2 weeks)
-- [ ] Calendar sharing
-- [ ] Friend visibility
-- [ ] Event invitations
-- [ ] RSVP system
-
-### Phase 3: External Integration (3 weeks)
-- [ ] Google Calendar integration
-- [ ] Apple Calendar integration
-- [ ] Sync service
-- [ ] Conflict resolution
-
-### Phase 4: Advanced Features (2 weeks)
-- [ ] Recurring events
-- [ ] Event templates
-- [ ] Advanced notifications
-- [ ] Search and filtering
-
-## Security Considerations
-1. OAuth2 implementation
-2. Data encryption
-3. Permission management
-4. Rate limiting
-5. Input validation
-
-## Performance Considerations
-1. Efficient sync algorithms
-2. Caching strategy
-3. Pagination
-4. Background processing
-5. Database indexing
-
-## Testing Strategy
-1. Unit tests for models and services
-2. Integration tests for API endpoints
-3. E2E tests for calendar features
-4. Performance testing
-5. Security testing
-
-## Monitoring and Maintenance
-1. Error tracking
-2. Performance monitoring
-3. Sync status monitoring
-4. Usage analytics
-5. Regular maintenance tasks
-
-## Dependencies
-1. OAuth libraries
-2. Calendar API clients
-3. Background job processor
-4. Caching system
-5. Notification service
-
-## Future Enhancements
-1. More calendar providers
-2. Advanced recurrence patterns
-3. Event templates
-4. Calendar analytics
-5. Group calendars
+5) Change primary
+   - Future writes go to the new `primaryId`

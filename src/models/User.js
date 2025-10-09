@@ -159,7 +159,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
+    enum: ['superadmin', 'admin', 'user'],
     default: 'user',
   },
 
@@ -281,6 +281,15 @@ userSchema.methods.restore = function () {
   return this.save();
 };
 
+// Role helpers
+userSchema.methods.isSuperadmin = function () {
+  return this.role === 'superadmin';
+};
+
+userSchema.methods.isAdmin = function () {
+  return this.role === 'admin' || this.role === 'superadmin';
+};
+
 // Query helper for non-deleted users
 userSchema.query.notDeleted = function () {
   return this.where({ deletedAt: null });
@@ -362,6 +371,7 @@ userSchema.index({ deactivatedAt: 1 });
 userSchema.index({ 'friends.user': 1 });
 userSchema.index({ 'friendSettings.allowFriendRequests': 1 });
 userSchema.index({ 'friendSettings.showInSearch': 1 });
+userSchema.index({ role: 1 });
 
 const User = mongoose.model('User', userSchema);
 

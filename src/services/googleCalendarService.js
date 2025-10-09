@@ -203,11 +203,11 @@ exports.ensureJaaiyeCalendar = async function ensureJaaiyeCalendar(user, tokens 
   return calId;
 };
 
-exports.insertEvent = async function insertEvent(user, eventBody) {
+exports.insertEvent = async function insertEvent(user, eventBody, explicitCalendarId) {
   const client = createOAuth2Client();
   await setUserCredentials(client, user);
   const calendar = google.calendar({ version: 'v3', auth: client });
-  const calendarId = user.googleCalendar.jaaiyeCalendarId || await exports.ensureJaaiyeCalendar(user);
+  const calendarId = explicitCalendarId || user.googleCalendar.jaaiyeCalendarId || await exports.ensureJaaiyeCalendar(user);
   const res = await calendar.events.insert({ calendarId, requestBody: eventBody });
   return res.data; // contains id, etag, etc.
 };

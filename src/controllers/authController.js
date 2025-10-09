@@ -22,6 +22,7 @@ const {
   NotFoundError
 } = require('../middleware/errorHandler');
 const { ERROR_MESSAGES, SUCCESS_MESSAGES, EMAIL_CONSTANTS } = require('../../constants');
+const Calendar = require('../models/Calendar');
 
 // Internal helper to DRY resend flows
 async function performResend(email, type) {
@@ -109,6 +110,18 @@ exports.register = asyncHandler(async (req, res) => {
     userId: user._id
   });
 
+  // Auto-create default Jaaiye calendar (enforce one-per-user)
+  try {
+    const existing = await Calendar.findOne({ owner: user._id });
+    if (!existing) {
+      await Calendar.create({ owner: user._id, name: 'My Calendar', isDefault: true });
+      logger.info('Default calendar created on registration', { userId: user._id });
+    }
+  } catch (e) {
+    logger.error('Failed to auto-create default calendar on register', { userId: user._id, error: e.message });
+    // do not fail registration
+  }
+
   return successResponse(res, {
     email,
     expiresIn: "10 minutes"
@@ -119,10 +132,23 @@ exports.register = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 exports.login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, username, password } = req.body;
+
+  // Accept either email or username
+  if (!email && !username) {
+    throw new ValidationError('Email or username is required');
+  }
+
+  // Build query to find user by email or username
+  const query = {};
+  if (email) {
+    query.email = email;
+  } else {
+    query.username = username;
+  }
 
   // Check if user exists
-  const user = await User.findOne({ email }).select('+password +verification');
+  const user = await User.findOne(query).select('+password +verification');
   if (!user) {
     throw new AuthenticationError(ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS);
   }
@@ -165,6 +191,7 @@ exports.login = asyncHandler(async (req, res) => {
       email: user.email,
       username: user.username,
       fullName: user.fullName,
+      role: user.role,
       emailVerified: user.emailVerified,
       profilePicture: user.profilePicture
     }
@@ -427,6 +454,17 @@ exports.googleSignInViaIdToken = asyncHandler(async (req, res) => {
       userId: user._id
     });
 
+    // Auto-create default Jaaiye calendar for first-time Google users
+    try {
+      const existing = await Calendar.findOne({ owner: user._id });
+      if (!existing) {
+        await Calendar.create({ owner: user._id, name: 'My Calendar', isDefault: true });
+        logger.info('Default calendar created on Google sign-in', { userId: user._id });
+      }
+    } catch (e) {
+      logger.error('Failed to auto-create default calendar on Google sign-in', { userId: user._id, error: e.message });
+    }
+
     return successResponse(res, {
       accessToken,
       refreshToken,
@@ -435,6 +473,7 @@ exports.googleSignInViaIdToken = asyncHandler(async (req, res) => {
         email: user.email,
         username: user.username,
         fullName: user.fullName,
+      role: user.role,
         emailVerified: user.emailVerified,
         profilePicture: user.profilePicture,
         googleId: user.googleId

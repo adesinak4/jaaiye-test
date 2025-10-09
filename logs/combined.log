@@ -1278,3 +1278,79 @@
 {"durationMs":17,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/users/friend-request","statusCode":500,"timestamp":"2025-09-17T10:18:54.402Z","userId":"6896ff8931f10c5a5d6bb544"}
 {"environment":"development","level":"info","message":"Friend request sent","recipientId":"68a2ff4da018d5daac1cbdb9","requestId":{},"requesterId":"6896ff8931f10c5a5d6bb544","timestamp":"2025-09-17T10:19:28.335Z"}
 {"durationMs":67,"environment":"development","level":"info","message":"Request","method":"POST","path":"/friend-request","statusCode":201,"timestamp":"2025-09-17T10:19:28.337Z","userId":"6896ff8931f10c5a5d6bb544"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-07T19:31:33.718Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-07T19:31:37.047Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-07T19:31:37.113Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-08T15:48:45.386Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-08T15:48:48.496Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-08T15:48:48.548Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-08T18:56:33.860Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-08T18:56:42.942Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-08T18:56:43.057Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-08T18:56:48.992Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-08T18:56:53.159Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-08T18:56:53.193Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-08T18:57:33.044Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-08T18:57:35.814Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-08T18:57:35.842Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-08T19:05:46.367Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-08T19:05:48.371Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-08T19:05:48.391Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-08T19:08:14.018Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-08T19:08:18.364Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-08T19:08:18.395Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-08T19:08:24.510Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-08T19:08:28.244Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-08T19:08:28.320Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-08T19:08:53.410Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-08T19:08:56.217Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-08T19:08:56.239Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-08T21:48:47.677Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-08T21:49:19.918Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-08T21:49:20.177Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-08T21:50:30.421Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-08T21:50:49.108Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-08T21:50:49.198Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-08T21:51:51.663Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-08T21:51:55.922Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-08T21:51:56.010Z"}
+{"durationMs":15,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/auth/login","statusCode":401,"timestamp":"2025-10-08T21:53:22.329Z"}
+{"durationMs":47,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/auth/login","statusCode":401,"timestamp":"2025-10-08T21:56:21.383Z"}
+{"durationMs":8,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/auth/login","statusCode":401,"timestamp":"2025-10-08T21:56:50.492Z"}
+{"durationMs":9,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/auth/login","statusCode":401,"timestamp":"2025-10-08T21:57:15.768Z"}
+{"email":"[REDACTED]","environment":"development","level":"info","message":"User logged in successfully","timestamp":"2025-10-08T21:58:19.852Z","userId":{}}
+{"durationMs":198,"environment":"development","level":"info","message":"Request","method":"POST","path":"/login","statusCode":200,"timestamp":"2025-10-08T21:58:19.854Z"}
+{"durationMs":12,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/auth/logout","statusCode":404,"timestamp":"2025-10-08T21:58:25.937Z"}
+{"email":"[REDACTED]","environment":"development","level":"info","message":"User logged in successfully","timestamp":"2025-10-08T21:59:39.783Z","userId":{}}
+{"durationMs":110,"environment":"development","level":"info","message":"Request","method":"POST","path":"/login","statusCode":200,"timestamp":"2025-10-08T21:59:39.785Z"}
+{"email":"[REDACTED]","environment":"development","level":"info","message":"User logged in successfully","timestamp":"2025-10-08T22:01:02.282Z","userId":{}}
+{"durationMs":213,"environment":"development","level":"info","message":"Request","method":"POST","path":"/login","statusCode":200,"timestamp":"2025-10-08T22:01:02.286Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-08T22:01:39.744Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-08T22:01:48.587Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-08T22:01:48.635Z"}
+{"email":"[REDACTED]","environment":"development","level":"info","message":"User logged in successfully","timestamp":"2025-10-08T22:03:05.754Z","userId":{}}
+{"durationMs":259,"environment":"development","level":"info","message":"Request","method":"POST","path":"/login","statusCode":200,"timestamp":"2025-10-08T22:03:05.762Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-08T22:08:33.793Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-08T22:08:43.523Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-08T22:08:43.654Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-09T10:16:37.904Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-09T10:16:42.607Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-09T10:16:42.650Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-09T10:16:49.774Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-09T10:16:58.529Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-09T10:16:58.613Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-09T10:17:08.530Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-09T10:17:17.412Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-09T10:17:17.523Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-09T10:17:24.403Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-09T10:17:31.424Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-09T10:17:31.503Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-09T10:18:21.220Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-09T10:18:27.211Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-09T10:18:27.286Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-09T10:19:40.713Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-09T10:19:44.208Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-09T10:19:44.289Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-09T10:23:24.215Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-09T10:23:27.012Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: localhost","timestamp":"2025-10-09T10:23:27.040Z"}
