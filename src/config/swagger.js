@@ -9,14 +9,14 @@ const options = {
       description: 'API documentation for Jaaiye application',
       contact: {
         name: 'Jaaiye Support',
-        email: 'support@jaaiye.com'
+        email: 'adesinak4@gmail.com'
       }
     },
     servers: [
       {
         url: process.env.NODE_ENV === 'production'
-          ? 'https://api.jaaiye.com'
-          : 'http://localhost:3000',
+          ? 'https://jaaiye-test.onrender.com/'
+          : 'http://localhost:5000',
         description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server'
       }
     ],
