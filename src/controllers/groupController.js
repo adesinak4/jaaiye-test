@@ -3,6 +3,7 @@ const Event = require('../models/Event');
 const EventParticipant = require('../models/EventParticipant');
 const User = require('../models/User');
 const { sendNotification } = require('../services/notificationService');
+const firebaseService = require('../services/firebaseService');
 const logger = require('../utils/logger');
 const { successResponse, errorResponse } = require('../utils/response');
 const { NotFoundError, ForbiddenError, BadRequestError, ValidationError } = require('../utils/errors');
@@ -15,35 +16,43 @@ exports.createGroup = asyncHandler(async (req, res) => {
   const { name, description, memberIds = [] } = req.body;
   const creatorId = req.user.id;
 
-  // Validate required fields
-  if (!name || name.trim().length === 0) {
-    throw new ValidationError('Group name is required');
-  }
+  if (!name || name.trim().length === 0) throw new ValidationError('Group name is required');
 
-  // Create the group
   const group = await Group.create({
     name: name.trim(),
     description: description?.trim(),
     creator: creatorId
   });
 
-  // Add additional members if provided
   if (memberIds.length > 0) {
-    const memberPromises = memberIds.map(memberId =>
+    await Promise.all(memberIds.map(memberId =>
       group.addMember(memberId, creatorId, 'member')
-    );
-    await Promise.all(memberPromises);
+    ));
   }
 
-  // Populate the group with member details
   const populatedGroup = await Group.findById(group._id)
     .populate('creator', 'username fullName profilePicture')
     .populate('members.user', 'username fullName profilePicture')
     .populate('members.addedBy', 'username fullName');
 
-  // Send notifications to added members
+  // 🔸 Soft-sync to Firebase
+  firebaseService.createGroup(group._id.toString(), {
+    name: group.name,
+    description: group.description,
+    creator: creatorId,
+    members: populatedGroup.members.reduce((acc, m) => {
+      acc[m.user._id] = {
+        name: m.user.fullName,
+        avatar: m.user.profilePicture,
+        role: m.role
+      };
+      return acc;
+    }, {}),
+    createdAt: new Date().toISOString()
+  });
+
   if (memberIds.length > 0) {
-    const notificationPromises = memberIds.map(memberId =>
+    await Promise.all(memberIds.map(memberId =>
       sendNotification({
         userId: memberId,
         title: 'Added to Group',
@@ -51,16 +60,10 @@ exports.createGroup = asyncHandler(async (req, res) => {
         type: 'group_member_added',
         data: { groupId: group._id }
       })
-    );
-    await Promise.all(notificationPromises);
+    ));
   }
 
-  logger.info('Group created', {
-    groupId: group._id,
-    creatorId,
-    memberCount: group.members.length
-  });
-
+  logger.info('Group created', { groupId: group._id, creatorId });
   return successResponse(res, { group: populatedGroup }, 201, 'Group created successfully');
 });
 
@@ -132,12 +135,17 @@ exports.getUserGroups = asyncHandler(async (req, res) => {
 
   const groups = await Group.getUserGroups(userId, includeInactive === 'true');
 
-  logger.info('User groups retrieved', {
-    userId,
-    groupCount: groups.length
-  });
+  const enrichedGroups = await Promise.all(groups.map(async group => {
+    const fbData = await firebaseService.getGroupSnapshot(group._id);
+    return {
+      ...group.toObject(),
+      lastMessage: fbData?.lastMessage || null,
+      updatedAtFirebase: fbData?.updatedAt || null
+    };
+  }));
 
-  return successResponse(res, { groups });
+  logger.info('User groups retrieved', { userId, groupCount: enrichedGroups.length });
+  return successResponse(res, { groups: enrichedGroups });
 });
 
 // @desc    Get single group
@@ -153,21 +161,18 @@ exports.getGroup = asyncHandler(async (req, res) => {
     .populate('members.addedBy', 'username fullName')
     .populate('events', 'title startTime endTime location description');
 
-  if (!group) {
-    throw new NotFoundError('Group not found');
-  }
+  if (!group) throw new NotFoundError('Group not found');
+  if (!group.isMember(userId)) throw new ForbiddenError('You are not a member of this group');
 
-  // Check if user is a member
-  if (!group.isMember(userId)) {
-    throw new ForbiddenError('You are not a member of this group');
-  }
+  const fbGroup = await firebaseService.getGroupSnapshot(id);
 
-  logger.info('Group retrieved', {
-    groupId: id,
-    userId
+  return successResponse(res, {
+    group: {
+      ...group.toObject(),
+      lastMessage: fbGroup?.lastMessage || null,
+      lastActiveAt: fbGroup?.updatedAt || group.updatedAt
+    }
   });
-
-  return successResponse(res, { group });
 });
 
 // @desc    Update group
@@ -179,40 +184,27 @@ exports.updateGroup = asyncHandler(async (req, res) => {
   const userId = req.user.id;
 
   const group = await Group.findById(id);
-  if (!group) {
-    throw new NotFoundError('Group not found');
-  }
+  if (!group) throw new NotFoundError('Group not found');
+  if (!group.isAdmin(userId)) throw new ForbiddenError('Only group admins can update the group');
 
-  // Check if user is an admin
-  if (!group.isAdmin(userId)) {
-    throw new ForbiddenError('Only group admins can update the group');
-  }
-
-  // Update fields
-  if (name !== undefined) {
-    group.name = name.trim();
-  }
-  if (description !== undefined) {
-    group.description = description?.trim();
-  }
-  if (settings !== undefined) {
-    group.settings = { ...group.settings, ...settings };
-  }
-
+  if (name) group.name = name.trim();
+  if (description) group.description = description?.trim();
+  if (settings) group.settings = { ...group.settings, ...settings };
   await group.save();
 
-  // Populate the updated group
   const populatedGroup = await Group.findById(group._id)
     .populate('creator', 'username fullName profilePicture')
     .populate('members.user', 'username fullName profilePicture')
     .populate('events', 'title startTime endTime location');
 
-  logger.info('Group updated', {
-    groupId: id,
-    userId,
-    updatedFields: { name, description, settings }
+  firebaseService.updateGroup(group._id.toString(), {
+    name: group.name,
+    description: group.description,
+    settings: group.settings,
+    updatedAt: new Date().toISOString()
   });
 
+  logger.info('Group updated', { groupId: id, userId });
   return successResponse(res, { group: populatedGroup }, 200, 'Group updated successfully');
 });
 
@@ -225,25 +217,22 @@ exports.addMember = asyncHandler(async (req, res) => {
   const currentUserId = req.user.id;
 
   const group = await Group.findById(id);
-  if (!group) {
-    throw new NotFoundError('Group not found');
-  }
+  if (!group) throw new NotFoundError('Group not found');
+  if (!group.canAddMembers(currentUserId))
+    throw new ForbiddenError('You do not have permission to add members');
 
-  // Check if user can add members
-  if (!group.canAddMembers(currentUserId)) {
-    throw new ForbiddenError('You do not have permission to add members to this group');
-  }
-
-  // Check if user exists
   const userToAdd = await User.findById(memberId);
-  if (!userToAdd) {
-    throw new NotFoundError('User not found');
-  }
+  if (!userToAdd) throw new NotFoundError('User not found');
 
-  // Add member
   await group.addMember(memberId, currentUserId, role);
 
-  // Send notification to the new member
+  firebaseService.addMember(id, {
+    id: memberId,
+    name: userToAdd.fullName,
+    avatar: userToAdd.profilePicture,
+    role
+  });
+
   await sendNotification({
     userId: memberId,
     title: 'Added to Group',
@@ -252,19 +241,12 @@ exports.addMember = asyncHandler(async (req, res) => {
     data: { groupId: group._id }
   });
 
-  // Populate the updated group
   const populatedGroup = await Group.findById(group._id)
     .populate('creator', 'username fullName profilePicture')
     .populate('members.user', 'username fullName profilePicture')
     .populate('members.addedBy', 'username fullName');
 
-  logger.info('Member added to group', {
-    groupId: id,
-    memberId,
-    addedBy: currentUserId,
-    role
-  });
-
+  logger.info('Member added to group', { groupId: id, memberId });
   return successResponse(res, { group: populatedGroup }, 200, 'Member added successfully');
 });
 
@@ -276,19 +258,13 @@ exports.removeMember = asyncHandler(async (req, res) => {
   const currentUserId = req.user.id;
 
   const group = await Group.findById(id);
-  if (!group) {
-    throw new NotFoundError('Group not found');
-  }
+  if (!group) throw new NotFoundError('Group not found');
+  if (!group.isAdmin(currentUserId) && currentUserId !== memberId)
+    throw new ForbiddenError('You can only remove yourself or be an admin');
 
-  // Check if user is an admin or removing themselves
-  if (!group.isAdmin(currentUserId) && currentUserId !== memberId) {
-    throw new ForbiddenError('You can only remove yourself or be an admin to remove others');
-  }
-
-  // Remove member
   await group.removeMember(memberId);
+  firebaseService.removeMember(id, memberId);
 
-  // Send notification to the removed member
   await sendNotification({
     userId: memberId,
     title: 'Removed from Group',
@@ -297,18 +273,12 @@ exports.removeMember = asyncHandler(async (req, res) => {
     data: { groupId: group._id }
   });
 
-  // Populate the updated group
   const populatedGroup = await Group.findById(group._id)
     .populate('creator', 'username fullName profilePicture')
     .populate('members.user', 'username fullName profilePicture')
     .populate('members.addedBy', 'username fullName');
 
-  logger.info('Member removed from group', {
-    groupId: id,
-    memberId,
-    removedBy: currentUserId
-  });
-
+  logger.info('Member removed from group', { groupId: id, memberId });
   return successResponse(res, { group: populatedGroup }, 200, 'Member removed successfully');
 });
 
@@ -482,53 +452,31 @@ exports.deleteGroup = asyncHandler(async (req, res) => {
   const userId = req.user.id;
 
   const group = await Group.findById(id);
-  if (!group) {
-    throw new NotFoundError('Group not found');
-  }
+  if (!group) throw new NotFoundError('Group not found');
+  if (group.creator.toString() !== userId)
+    throw new ForbiddenError('Only the creator can delete the group');
 
-  // Check if user is the creator
-  if (group.creator.toString() !== userId) {
-    throw new ForbiddenError('Only the group creator can delete the group');
-  }
-
-  // Delete all events tied to this group
   if (group.events.length > 0) {
-    // Delete all group events
     await Event.deleteMany({ _id: { $in: group.events } });
-
-    // Also delete associated event participants
     await EventParticipant.deleteMany({ event: { $in: group.events } });
-
-    logger.info('Group events deleted', {
-      groupId: id,
-      deletedEventCount: group.events.length
-    });
   }
 
-  // Soft delete the group
   group.isActive = false;
   await group.save();
 
-  // Send notifications to all members
-  const notificationPromises = group.members
+  firebaseService.deleteGroup(id);
+
+  await Promise.all(group.members
     .filter(member => member.user.toString() !== userId)
-    .map(member =>
-      sendNotification({
-        userId: member.user,
-        title: 'Group Deleted',
-        message: `The group "${group.name}" and all its events have been deleted`,
-        type: 'group_deleted',
-        data: { groupId: group._id }
-      })
-    );
-  await Promise.all(notificationPromises);
+    .map(member => sendNotification({
+      userId: member.user,
+      title: 'Group Deleted',
+      message: `The group "${group.name}" has been deleted`,
+      type: 'group_deleted',
+      data: { groupId: group._id }
+    }))
+  );
 
-  logger.info('Group deleted', {
-    groupId: id,
-    creatorId: userId,
-    memberCount: group.members.length,
-    deletedEventCount: group.events.length
-  });
-
-  return successResponse(res, null, 200, 'Group and all associated events deleted successfully');
+  logger.info('Group deleted', { groupId: id, userId });
+  return successResponse(res, null, 200, 'Group deleted successfully');
 });

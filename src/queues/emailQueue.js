@@ -100,6 +100,9 @@ class EmailQueue {
         case 'report':
           await emailService.sendReportEmail(to, data.reportData);
           break;
+        case 'ticket':
+          await emailService.sendPaymentConfirmationEmail(to, data.ticketData);
+          break;
         default:
           logger.warn(`Unknown email type: ${type}`);
           return;
@@ -185,6 +188,14 @@ class EmailQueue {
       type: 'report',
       to,
       data: { reportData }
+    });
+  }
+
+  async sendPaymentConfirmationEmailAsync(to, ticketData) {
+    this.addToQueue({
+      type: 'ticket',
+      to,
+      data: { ticketData }
     });
   }
 

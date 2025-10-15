@@ -3,6 +3,7 @@ const router = express.Router();
 const { body } = require('express-validator');
 const { protect, admin } = require('../middleware/authMiddleware');
 const {
+  getFirebaseToken,
   getProfile,
   updateProfile,
   changePassword,
@@ -55,6 +56,7 @@ const validateFriendSettings = [
 router.use(protect);
 
 // User profile routes
+router.get('/firebase-token', getFirebaseToken);
 router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
 router.put('/password', validatePassword, changePassword);

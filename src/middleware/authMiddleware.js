@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { isBlacklisted } = require('../services/authService');
 
 // Protect routes
 exports.protect = async (req, res, next) => {
@@ -16,6 +17,10 @@ exports.protect = async (req, res, next) => {
         success: false,
         error: 'Not authorized to access this route'
       });
+    }
+
+    if (await isBlacklisted(token)) {
+      return res.status(401).json({ success: false, error: 'Token revoked' });
     }
 
     // Verify token
@@ -40,7 +45,7 @@ exports.protect = async (req, res, next) => {
 
     req.user = user;
     next();
-  } catch(error) {
+  } catch (error) {
     return res.status(401).json({
       success: false,
       error: 'Not authorized to access this route'
@@ -76,6 +81,21 @@ exports.verified = (req, res, next) => {
     return res.status(403).json({
       success: false,
       error: 'Please verify your email first'
+    });
+  }
+  next();
+};
+
+// ✅ Check if user is a scanner (or admin/superadmin)
+exports.scanner = (req, res, next) => {
+  if (
+    req.user.role !== 'scanner' &&
+    req.user.role !== 'admin' &&
+    req.user.role !== 'superadmin'
+  ) {
+    return res.status(403).json({
+      success: false,
+      error: 'Not authorized as scanner'
     });
   }
   next();

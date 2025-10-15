@@ -2,10 +2,12 @@ const Event = require('../models/Event');
 const Calendar = require('../models/Calendar');
 const User = require('../models/User');
 const logger = require('../utils/logger');
-const { NotFoundError, ForbiddenError, BadRequestError } = require('../utils/errors');
+const { NotFoundError, ForbiddenError, BadRequestError, ValidationError } = require('../utils/errors');
 const { sendNotification } = require('../services/notificationService');
 const { successResponse, errorResponse } = require('../utils/response');
 const googleSvc = require('../services/googleCalendarService');
+const CloudinaryService = require('../services/cloudinaryService');
+const { asyncHandler } = require('../utils/asyncHandler');
 
 // Internal helper to add participants with permission checks and notifications
 async function addParticipantsToEvent(event, calendar, participantsInput, actingUserId) {
@@ -51,7 +53,7 @@ async function addParticipantsToEvent(event, calendar, participantsInput, acting
 // @access  Private
 exports.createEvent = async (req, res, next) => {
   try {
-    const { calendarId: inputCalendarId, googleCalendarId: overrideGoogleCalId, title, description, startTime, endTime, location, isAllDay, recurrence, participants } = req.body;
+    const { calendarId: inputCalendarId, googleCalendarId: overrideGoogleCalId, title, description, startTime, endTime, location, venue, category, ticketFee, isAllDay, recurrence, participants } = req.body;
 
     // Resolve calendar: default to user's calendar if not provided
     let calendar;
@@ -77,6 +79,15 @@ exports.createEvent = async (req, res, next) => {
       return errorResponse(res, new Error('Access denied'), 403);
     }
 
+    // Validate start/end times: cannot be in the past
+    const now = new Date();
+    if (new Date(startTime) < now) {
+      return errorResponse(res, new Error('Start time cannot be in the past'), 400);
+    }
+    if (endTime && new Date(endTime) < new Date(startTime)) {
+      return errorResponse(res, new Error('End time must be after start time'), 400);
+    }
+
     const event = await Event.create({
       calendar: calendarId,
       title,
@@ -84,6 +95,9 @@ exports.createEvent = async (req, res, next) => {
       startTime,
       endTime,
       location,
+      venue,
+      category: category || 'event',
+      ticketFee: ticketFee === 'free' ? 'free' : ticketFee,
       isAllDay,
       recurrence,
       creator: req.user.id
@@ -147,6 +161,9 @@ exports.createEvent = async (req, res, next) => {
         startTime: event.startTime,
         endTime: event.endTime,
         location: event.location,
+        venue: event.venue,
+        category: event.category,
+        ticketFee: event.ticketFee,
         isAllDay: event.isAllDay,
         recurrence: event.recurrence,
         calendar: event.calendar,
@@ -316,7 +333,7 @@ exports.deleteEvent = async (req, res, next) => {
       logger.warn('Google delete write-through failed', { error: err.message });
     }
 
-    await event.remove();
+    await Event.deleteOne({ _id: event._id });
 
     return successResponse(res, null, 200, 'Event deleted successfully');
   } catch (error) {
@@ -546,3 +563,671 @@ exports.addParticipantsBatch = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Create event with image upload
+// @route   POST /api/v1/events/create-with-image
+// @access  Private
+exports.createEventWithImage = asyncHandler(async (req, res) => {
+  const {
+    calendarId: inputCalendarId,
+    title,
+    description,
+    startTime,
+    endTime,
+    location,
+    venue,
+    category,
+    ticketFee,
+    isAllDay,
+    recurrence,
+    participants
+  } = req.body;
+
+  // Validate required fields
+  if (!title || !startTime || !endTime) {
+    throw new ValidationError('Title, start time, and end time are required');
+  }
+
+  // Validate ticketFee
+  if (ticketFee !== undefined && ticketFee !== null && ticketFee !== 'free' && (isNaN(ticketFee) || ticketFee < 0)) {
+    throw new ValidationError('Ticket fee must be "free", null, or a positive number');
+  }
+
+  // Handle image upload if provided
+  let imageUrl = null;
+  if (req.file) {
+    const uploadResult = await CloudinaryService.uploadImage(req.file.buffer, {
+      folder: 'jaaiye/events',
+      transformation: [
+        { width: 800, height: 600, crop: 'fill', quality: 'auto' }
+      ]
+    });
+
+    if (!uploadResult.success) {
+      throw new ValidationError('Failed to upload image: ' + uploadResult.error);
+    }
+
+    imageUrl = uploadResult.url;
+  }
+
+  // Resolve calendar
+  let calendar;
+  let calendarId = inputCalendarId;
+  if (!calendarId) {
+    const defaultCal = await Calendar.findOne({ owner: req.user.id });
+    if (!defaultCal) {
+      throw new NotFoundError('No calendar found for user');
+    }
+    calendar = defaultCal;
+    calendarId = defaultCal._id;
+  } else {
+    calendar = await Calendar.findById(calendarId);
+    if (!calendar) {
+      throw new NotFoundError('Calendar not found');
+    }
+  }
+
+  // Check calendar access
+  if (!calendar.isPublic &&
+      calendar.owner.toString() !== req.user.id &&
+      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    throw new ForbiddenError('Access denied to calendar');
+  }
+
+  // Create event
+  const event = await Event.create({
+    calendar: calendarId,
+    title,
+    description,
+    startTime,
+    endTime,
+    location,
+    venue,
+    category: category || 'event',
+    ticketFee: ticketFee === 'free' ? 'free' : ticketFee,
+    image: imageUrl,
+    isAllDay,
+    recurrence,
+    creator: req.user.id
+  });
+
+  // Google Calendar integration (existing logic)
+  try {
+    const dbUser = await User.findById(req.user.id).select('+googleCalendar.refreshToken +googleCalendar.accessToken');
+    if (dbUser && dbUser.providerLinks && dbUser.providerLinks.google && dbUser.googleCalendar && dbUser.googleCalendar.refreshToken) {
+      const targetGoogleCalId = calendar.google?.primaryId || dbUser.googleCalendar?.jaaiyeCalendarId;
+
+      const eventBody = {
+        summary: title,
+        description,
+        start: { dateTime: new Date(startTime).toISOString() },
+        end: { dateTime: new Date(endTime).toISOString() },
+        location: location || venue
+      };
+
+      const googleEvent = await googleSvc.insertEvent(dbUser, eventBody, targetGoogleCalId);
+      event.external = event.external || {};
+      event.external.google = {
+        calendarId: targetGoogleCalId || dbUser.googleCalendar.jaaiyeCalendarId,
+        eventId: googleEvent.id,
+        etag: googleEvent.etag
+      };
+      await event.save();
+    }
+  } catch (err) {
+    logger.warn('Google write-through failed', { error: err.message });
+  }
+
+  // Add participants if provided
+  if (Array.isArray(participants) && participants.length > 0) {
+    await addParticipantsToEvent(event, calendar, participants, req.user._id);
+  }
+
+  // Send notifications
+  if (calendar.sharedWith.length > 0) {
+    const notificationPromises = calendar.sharedWith.map(userId =>
+      sendNotification({
+        userId,
+        title: 'New Event Created',
+        message: `A new event "${event.title}" has been created in calendar "${calendar.name}"`,
+        type: 'event_created',
+        data: { eventId: event._id, calendarId }
+      })
+    );
+    await Promise.all(notificationPromises);
+  }
+
+  logger.info('Event created with image', {
+    eventId: event._id,
+    userId: req.user.id,
+    hasImage: !!imageUrl
+  });
+
+  return successResponse(res, {
+    event: {
+      id: event._id,
+      title: event.title,
+      description: event.description,
+      startTime: event.startTime,
+      endTime: event.endTime,
+      location: event.location,
+      venue: event.venue,
+      category: event.category,
+      ticketFee: event.ticketFee,
+      attendeeCount: event.attendeeCount,
+      image: event.image,
+      isAllDay: event.isAllDay,
+      recurrence: event.recurrence,
+      calendar: event.calendar,
+      creator: event.creator,
+      external: event.external,
+      createdAt: event.createdAt
+    }
+  }, 201, 'Event created successfully');
+});
+
+// @desc    Get all events (public)
+// @route   GET /api/v1/events
+// @access  Public
+exports.getAllEvents = asyncHandler(async (req, res) => {
+  const { category, limit = 20, page = 1 } = req.query;
+
+  const query = { status: 'scheduled' };
+
+  if (category) {
+    query.category = category;
+  }
+
+  const events = await Event.find(query)
+    .populate('calendar', 'name')
+    .sort({ startTime: 1 })
+    .limit(parseInt(limit))
+    .skip((parseInt(page) - 1) * parseInt(limit));
+
+  const totalEvents = await Event.countDocuments(query);
+
+  return successResponse(res, {
+    events: events.map(event => ({
+      id: event._id,
+      title: event.title,
+      description: event.description,
+      startTime: event.startTime,
+      endTime: event.endTime,
+      location: event.location,
+      venue: event.venue,
+      category: event.category,
+      ticketFee: event.ticketFee,
+      attendeeCount: event.attendeeCount,
+      image: event.image,
+      isAllDay: event.isAllDay,
+      calendar: event.calendar,
+      createdAt: event.createdAt
+    })),
+    pagination: {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total: totalEvents,
+      pages: Math.ceil(totalEvents / parseInt(limit))
+    }
+  });
+});
+
+// @desc    Add ticket type to an event
+// @route   POST /api/v1/events/:eventId/ticket-types
+// @access  Private
+exports.addTicketType = asyncHandler(async (req, res) => {
+  const { eventId } = req.params;
+  const { name, description, price, capacity, salesStartDate, salesEndDate } = req.body;
+
+  // Validate required fields
+  if (!name || price === undefined) {
+    throw new ValidationError('Name and price are required');
+  }
+
+  if (price < 0) {
+    throw new ValidationError('Price must be non-negative');
+  }
+
+  if (capacity && capacity < 0) {
+    throw new ValidationError('Capacity must be non-negative');
+  }
+
+  // Find event
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new NotFoundError('Event not found');
+  }
+
+  // Check if user has permission to modify this event
+  const calendar = await Calendar.findById(event.calendar);
+  if (!calendar.isPublic &&
+      calendar.owner.toString() !== req.user.id &&
+      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    throw new ForbiddenError('Access denied to event');
+  }
+
+  // Check if ticket type name already exists
+  const existingTicketType = event.ticketTypes.find(tt => tt.name.toLowerCase() === name.toLowerCase());
+  if (existingTicketType) {
+    throw new ValidationError('Ticket type with this name already exists');
+  }
+
+  // Add ticket type
+  const ticketTypeData = {
+    name,
+    description,
+    price,
+    capacity: capacity || null,
+    salesStartDate: salesStartDate || null,
+    salesEndDate: salesEndDate || null
+  };
+
+  await event.addTicketType(ticketTypeData);
+
+  logger.info('Ticket type added to event', {
+    eventId: event._id,
+    userId: req.user.id,
+    ticketTypeName: name
+  });
+
+  return successResponse(res, {
+    ticketType: event.ticketTypes[event.ticketTypes.length - 1]
+  }, 201, 'Ticket type added successfully');
+});
+
+// @desc    Update ticket type
+// @route   PUT /api/v1/events/:eventId/ticket-types/:ticketTypeId
+// @access  Private
+exports.updateTicketType = asyncHandler(async (req, res) => {
+  const { eventId, ticketTypeId } = req.params;
+  const { name, description, price, capacity, isActive, salesStartDate, salesEndDate } = req.body;
+
+  // Find event
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new NotFoundError('Event not found');
+  }
+
+  // Check if user has permission to modify this event
+  const calendar = await Calendar.findById(event.calendar);
+  if (!calendar.isPublic &&
+      calendar.owner.toString() !== req.user.id &&
+      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    throw new ForbiddenError('Access denied to event');
+  }
+
+  // Find ticket type
+  const ticketType = event.ticketTypes.id(ticketTypeId);
+  if (!ticketType) {
+    throw new NotFoundError('Ticket type not found');
+  }
+
+  // Validate price if provided
+  if (price !== undefined && price < 0) {
+    throw new ValidationError('Price must be non-negative');
+  }
+
+  // Validate capacity if provided
+  if (capacity !== undefined && capacity < 0) {
+    throw new ValidationError('Capacity must be non-negative');
+  }
+
+  // Check if new name conflicts with existing ticket types
+  if (name && name !== ticketType.name) {
+    const existingTicketType = event.ticketTypes.find(tt =>
+      tt._id.toString() !== ticketTypeId && tt.name.toLowerCase() === name.toLowerCase()
+    );
+    if (existingTicketType) {
+      throw new ValidationError('Ticket type with this name already exists');
+    }
+  }
+
+  // Update ticket type
+  const updateData = {};
+  if (name !== undefined) updateData.name = name;
+  if (description !== undefined) updateData.description = description;
+  if (price !== undefined) updateData.price = price;
+  if (capacity !== undefined) updateData.capacity = capacity;
+  if (isActive !== undefined) updateData.isActive = isActive;
+  if (salesStartDate !== undefined) updateData.salesStartDate = salesStartDate;
+  if (salesEndDate !== undefined) updateData.salesEndDate = salesEndDate;
+
+  await event.updateTicketType(ticketTypeId, updateData);
+
+  logger.info('Ticket type updated', {
+    eventId: event._id,
+    ticketTypeId,
+    userId: req.user.id
+  });
+
+  return successResponse(res, {
+    ticketType: event.ticketTypes.id(ticketTypeId)
+  }, 200, 'Ticket type updated successfully');
+});
+
+// @desc    Remove ticket type
+// @route   DELETE /api/v1/events/:eventId/ticket-types/:ticketTypeId
+// @access  Private
+exports.removeTicketType = asyncHandler(async (req, res) => {
+  const { eventId, ticketTypeId } = req.params;
+
+  // Find event
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new NotFoundError('Event not found');
+  }
+
+  // Check if user has permission to modify this event
+  const calendar = await Calendar.findById(event.calendar);
+  if (!calendar.isPublic &&
+      calendar.owner.toString() !== req.user.id &&
+      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    throw new ForbiddenError('Access denied to event');
+  }
+
+  // Find ticket type
+  const ticketType = event.ticketTypes.id(ticketTypeId);
+  if (!ticketType) {
+    throw new NotFoundError('Ticket type not found');
+  }
+
+  // Check if there are existing tickets for this type
+  const Ticket = require('../models/Ticket');
+  const existingTickets = await Ticket.countDocuments({ eventId, ticketTypeId });
+  if (existingTickets > 0) {
+    throw new ValidationError('Cannot remove ticket type with existing tickets');
+  }
+
+  // Remove ticket type
+  await event.removeTicketType(ticketTypeId);
+
+  logger.info('Ticket type removed', {
+    eventId: event._id,
+    ticketTypeId,
+    userId: req.user.id
+  });
+
+  return successResponse(res, null, 200, 'Ticket type removed successfully');
+});
+
+// @desc    Get available ticket types for an event
+// @route   GET /api/v1/events/:eventId/ticket-types/available
+// @access  Public
+exports.getAvailableTicketTypes = asyncHandler(async (req, res) => {
+  const { eventId } = req.params;
+
+  // Find event
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new NotFoundError('Event not found');
+  }
+
+  // Get available ticket types
+  const availableTicketTypes = event.getAvailableTicketTypes();
+
+  return successResponse(res, {
+    ticketTypes: availableTicketTypes.map(tt => ({
+      id: tt._id,
+      name: tt.name,
+      description: tt.description,
+      price: tt.price,
+      capacity: tt.capacity,
+      soldCount: tt.soldCount,
+      remainingCapacity: tt.capacity ? tt.capacity - tt.soldCount : null,
+      salesStartDate: tt.salesStartDate,
+      salesEndDate: tt.salesEndDate
+    }))
+  });
+});
+
+// @desc    Get events by category
+// @route   GET /api/v1/events/category/:category
+// @access  Public
+exports.getEventsByCategory = asyncHandler(async (req, res) => {
+  const { category } = req.params;
+  const { limit = 20, page = 1 } = req.query;
+
+  if (!['hangout', 'event'].includes(category)) {
+    throw new ValidationError('Invalid category. Must be "hangout" or "event"');
+  }
+
+  const events = await Event.findByCategory(category)
+    .populate('calendar', 'name')
+    .limit(parseInt(limit))
+    .skip((parseInt(page) - 1) * parseInt(limit));
+
+  const totalEvents = await Event.countDocuments({ category, status: 'scheduled' });
+
+  return successResponse(res, {
+    events: events.map(event => ({
+      id: event._id,
+      title: event.title,
+      description: event.description,
+      startTime: event.startTime,
+      endTime: event.endTime,
+      location: event.location,
+      venue: event.venue,
+      category: event.category,
+      ticketFee: event.ticketFee,
+      attendeeCount: event.attendeeCount,
+      image: event.image,
+      isAllDay: event.isAllDay,
+      calendar: event.calendar,
+      createdAt: event.createdAt
+    })),
+    pagination: {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total: totalEvents,
+      pages: Math.ceil(totalEvents / parseInt(limit))
+    }
+  });
+});
+
+// @desc    Add ticket type to an event
+// @route   POST /api/v1/events/:eventId/ticket-types
+// @access  Private
+exports.addTicketType = asyncHandler(async (req, res) => {
+  const { eventId } = req.params;
+  const { name, description, price, capacity, salesStartDate, salesEndDate } = req.body;
+
+  // Validate required fields
+  if (!name || price === undefined) {
+    throw new ValidationError('Name and price are required');
+  }
+
+  if (price < 0) {
+    throw new ValidationError('Price must be non-negative');
+  }
+
+  if (capacity && capacity < 0) {
+    throw new ValidationError('Capacity must be non-negative');
+  }
+
+  // Find event
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new NotFoundError('Event not found');
+  }
+
+  // Check if user has permission to modify this event
+  const calendar = await Calendar.findById(event.calendar);
+  if (!calendar.isPublic &&
+      calendar.owner.toString() !== req.user.id &&
+      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    throw new ForbiddenError('Access denied to event');
+  }
+
+  // Check if ticket type name already exists
+  const existingTicketType = event.ticketTypes.find(tt => tt.name.toLowerCase() === name.toLowerCase());
+  if (existingTicketType) {
+    throw new ValidationError('Ticket type with this name already exists');
+  }
+
+  // Add ticket type
+  const ticketTypeData = {
+    name,
+    description,
+    price,
+    capacity: capacity || null,
+    salesStartDate: salesStartDate || null,
+    salesEndDate: salesEndDate || null
+  };
+
+  await event.addTicketType(ticketTypeData);
+
+  logger.info('Ticket type added to event', {
+    eventId: event._id,
+    userId: req.user.id,
+    ticketTypeName: name
+  });
+
+  return successResponse(res, {
+    ticketType: event.ticketTypes[event.ticketTypes.length - 1]
+  }, 201, 'Ticket type added successfully');
+});
+
+// @desc    Update ticket type
+// @route   PUT /api/v1/events/:eventId/ticket-types/:ticketTypeId
+// @access  Private
+exports.updateTicketType = asyncHandler(async (req, res) => {
+  const { eventId, ticketTypeId } = req.params;
+  const { name, description, price, capacity, isActive, salesStartDate, salesEndDate } = req.body;
+
+  // Find event
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new NotFoundError('Event not found');
+  }
+
+  // Check if user has permission to modify this event
+  const calendar = await Calendar.findById(event.calendar);
+  if (!calendar.isPublic &&
+      calendar.owner.toString() !== req.user.id &&
+      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    throw new ForbiddenError('Access denied to event');
+  }
+
+  // Find ticket type
+  const ticketType = event.ticketTypes.id(ticketTypeId);
+  if (!ticketType) {
+    throw new NotFoundError('Ticket type not found');
+  }
+
+  // Validate price if provided
+  if (price !== undefined && price < 0) {
+    throw new ValidationError('Price must be non-negative');
+  }
+
+  // Validate capacity if provided
+  if (capacity !== undefined && capacity < 0) {
+    throw new ValidationError('Capacity must be non-negative');
+  }
+
+  // Check if new name conflicts with existing ticket types
+  if (name && name !== ticketType.name) {
+    const existingTicketType = event.ticketTypes.find(tt =>
+      tt._id.toString() !== ticketTypeId && tt.name.toLowerCase() === name.toLowerCase()
+    );
+    if (existingTicketType) {
+      throw new ValidationError('Ticket type with this name already exists');
+    }
+  }
+
+  // Update ticket type
+  const updateData = {};
+  if (name !== undefined) updateData.name = name;
+  if (description !== undefined) updateData.description = description;
+  if (price !== undefined) updateData.price = price;
+  if (capacity !== undefined) updateData.capacity = capacity;
+  if (isActive !== undefined) updateData.isActive = isActive;
+  if (salesStartDate !== undefined) updateData.salesStartDate = salesStartDate;
+  if (salesEndDate !== undefined) updateData.salesEndDate = salesEndDate;
+
+  await event.updateTicketType(ticketTypeId, updateData);
+
+  logger.info('Ticket type updated', {
+    eventId: event._id,
+    ticketTypeId,
+    userId: req.user.id
+  });
+
+  return successResponse(res, {
+    ticketType: event.ticketTypes.id(ticketTypeId)
+  }, 200, 'Ticket type updated successfully');
+});
+
+// @desc    Remove ticket type
+// @route   DELETE /api/v1/events/:eventId/ticket-types/:ticketTypeId
+// @access  Private
+exports.removeTicketType = asyncHandler(async (req, res) => {
+  const { eventId, ticketTypeId } = req.params;
+
+  // Find event
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new NotFoundError('Event not found');
+  }
+
+  // Check if user has permission to modify this event
+  const calendar = await Calendar.findById(event.calendar);
+  if (!calendar.isPublic &&
+      calendar.owner.toString() !== req.user.id &&
+      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    throw new ForbiddenError('Access denied to event');
+  }
+
+  // Find ticket type
+  const ticketType = event.ticketTypes.id(ticketTypeId);
+  if (!ticketType) {
+    throw new NotFoundError('Ticket type not found');
+  }
+
+  // Check if there are existing tickets for this type
+  const Ticket = require('../models/Ticket');
+  const existingTickets = await Ticket.countDocuments({ eventId, ticketTypeId });
+  if (existingTickets > 0) {
+    throw new ValidationError('Cannot remove ticket type with existing tickets');
+  }
+
+  // Remove ticket type
+  await event.removeTicketType(ticketTypeId);
+
+  logger.info('Ticket type removed', {
+    eventId: event._id,
+    ticketTypeId,
+    userId: req.user.id
+  });
+
+  return successResponse(res, null, 200, 'Ticket type removed successfully');
+});
+
+// @desc    Get available ticket types for an event
+// @route   GET /api/v1/events/:eventId/ticket-types/available
+// @access  Public
+exports.getAvailableTicketTypes = asyncHandler(async (req, res) => {
+  const { eventId } = req.params;
+
+  // Find event
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new NotFoundError('Event not found');
+  }
+
+  // Get available ticket types
+  const availableTicketTypes = event.getAvailableTicketTypes();
+
+  return successResponse(res, {
+    ticketTypes: availableTicketTypes.map(tt => ({
+      id: tt._id,
+      name: tt.name,
+      description: tt.description,
+      price: tt.price,
+      capacity: tt.capacity,
+      soldCount: tt.soldCount,
+      remainingCapacity: tt.capacity ? tt.capacity - tt.soldCount : null,
+      salesStartDate: tt.salesStartDate,
+      salesEndDate: tt.salesEndDate
+    }))
+  });
+});

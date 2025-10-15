@@ -38,7 +38,30 @@ if (!fs.existsSync(logsDir)) {
 // Middleware
 app.use(helmet()); // Security headers
 app.use(compression()); // Compress responses
-app.use(cors()); // Enable CORS
+// CORS configuration to support credentials from specific origins
+const allowedOrigins = [
+  process.env.ADMIN_ORIGIN,
+  process.env.FRONTEND_ORIGIN,
+  'http://localhost:3000'
+].filter(Boolean);
+
+const corsOptions = {
+  origin: function(origin, callback) {
+    // Allow non-browser/SSR requests without an origin
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
+  exposedHeaders: ['Content-Type']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
@@ -80,6 +103,10 @@ app.use('/api/v1/google', require('./routes/googleRoutes'));
 app.use('/api/v1/ics', require('./routes/icsRoutes'));
 app.use('/api/v1/calendar-shares', require('./routes/calendarShareRoutes'));
 app.use('/api/v1/groups', require('./routes/groupRoutes'));
+app.use('/api/v1/tickets', require('./routes/ticketRoutes'));
+app.use('/api/v1/transactions', require('./routes/transactionRoutes'));
+app.use('/api/v1/payments', require('./routes/paymentRoutes'));
+app.use('/api/v1/webhook', require('./routes/webhookRoutes'));
 
 // 404 handler
 app.use((req, res, next) => {

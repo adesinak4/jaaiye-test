@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const { successResponse, errorResponse } = require('../utils/response');
 const { syncQueue } = require('../queues');
+const PaymentController = require('../controllers/paymentController');
 
 // Google Calendar webhook
 // POST /webhooks/google/calendar
@@ -33,5 +34,38 @@ router.post('/google/calendar', async (req, res) => {
     return res.status(200).end();
   }
 });
+
+/**
+ * @swagger
+ * tags:
+ *   name: Webhooks
+ *   description: External webhook endpoints
+ */
+
+/**
+ * @swagger
+ * /webhooks/paystack:
+ *   post:
+ *     summary: Paystack webhook receiver
+ *     tags: [Webhooks]
+ *     responses:
+ *       200:
+ *         description: Acknowledged
+ */
+// Paystack webhook
+router.post('/paystack', express.json({ type: '*/*' }), PaymentController.handlePaystackWebhook);
+
+/**
+ * @swagger
+ * /webhooks/flutterwave:
+ *   post:
+ *     summary: Flutterwave webhook receiver
+ *     tags: [Webhooks]
+ *     responses:
+ *       200:
+ *         description: Acknowledged
+ */
+// Flutterwave webhook
+router.post('/flutterwave', express.json({ type: '*/*' }), PaymentController.handleFlutterwaveWebhook);
 
 module.exports = router;

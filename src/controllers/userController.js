@@ -3,6 +3,7 @@ const Friendship = require('../models/Friendship');
 const FriendRequest = require('../models/FriendRequest');
 const { generateVerificationCode } = require('../services/authService');
 const { sendPushNotification, createInAppNotification } = require('../services/notificationService');
+const firebaseService = require('../services/firebaseService');
 const logger = require('../utils/logger');
 const { emailQueue } = require('../queues');
 const { addToBlacklist } = require('../services/authService');
@@ -16,6 +17,15 @@ const {
 } = require('../utils/response');
 const { NotFoundError, ConflictError, ValidationError, AuthenticationError, BadRequestError } = require('../middleware/errorHandler');
 const { EMAIL_CONSTANTS } = require('../../constants');
+
+// @desc    Get Firebase token
+// @route   GET /api/users/firebase-token
+// @access  Private
+exports.getFirebaseToken = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id);
+  const firebaseToken = await firebaseService.generateToken(user._id.toString());
+  return successResponse(res, { firebaseToken });
+});
 
 // @desc    Get current user profile
 // @route   GET /api/users/profile

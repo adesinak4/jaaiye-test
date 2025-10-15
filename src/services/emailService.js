@@ -287,6 +287,25 @@ class EmailService {
     });
   }
 
+  // New method for sending report emails
+  async sendPaymentConfirmationEmail(userOrEmail, ticket) {
+    const email = typeof userOrEmail === 'object' ? userOrEmail.email : userOrEmail;
+
+    if (!email) {
+      throw new Error('Email is required');
+    }
+
+    const html = templates.paymentConfirmationEmail({ ticket });
+    const text = `Payment Confirmed! Your Tickets are Ready`;
+
+    return this.sendEmail({
+      to: email,
+      subject: `Payment Confirmed! Your Tickets are Ready`,
+      html,
+      text
+    });
+  }
+
   // Test email configuration
   async testConnection() {
     try {

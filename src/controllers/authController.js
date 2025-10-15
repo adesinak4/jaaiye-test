@@ -9,6 +9,7 @@ const {
   verifyGoogleIdToken,
   generateRandomPassword
 } = require('../services/authService');
+const firebaseService = require('../services/firebaseService');
 const { emailQueue } = require('../queues');
 const logger = require('../utils/logger');
 const { asyncHandler } = require('../utils/asyncHandler');
@@ -167,12 +168,14 @@ exports.login = asyncHandler(async (req, res) => {
   }
 
   // Generate tokens
-  const accessToken = generateToken(user._id);
+  const accessToken = generateToken(user);
   const refreshToken = generateRefreshToken(user._id);
+  const firebaseToken = await firebaseService.generateToken(user._id.toString());
 
   // Save refresh token to user
   user.refresh = {
     token: refreshToken,
+    firebaseToken,
     expiresAt: new Date(Date.now() + EMAIL_CONSTANTS.REFRESH_TOKEN_EXPIRY)
   };
   user.lastLogin = new Date(Date.now());
@@ -229,8 +232,9 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
   await emailQueue.sendWelcomeEmailAsync(user);
 
   // Generate tokens
-  const accessToken = generateToken(user._id);
+  const accessToken = generateToken(user);
   const refreshToken = generateRefreshToken(user._id);
+  const firebaseToken = await firebaseService.generateToken(user._id.toString());
 
   // Save refresh token to user
   user.refresh = {
@@ -245,6 +249,7 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
   return successResponse(res, {
     accessToken,
     refreshToken,
+    firebaseToken,
     user: {
       id: user._id,
       email: user.email,
@@ -335,7 +340,7 @@ exports.refreshToken = asyncHandler(async (req, res) => {
   }
 
   // Generate new tokens
-  const newAccessToken = generateToken(user._id);
+  const newAccessToken = generateToken(user);
   const newRefreshToken = generateRefreshToken(user._id);
 
   // Update refresh token
@@ -438,7 +443,7 @@ exports.googleSignInViaIdToken = asyncHandler(async (req, res) => {
     }
 
     // Generate tokens
-    const accessToken = generateToken(user._id);
+    const accessToken = generateToken(user);
     const refreshToken = generateRefreshToken(user._id);
 
     // Save refresh token to user

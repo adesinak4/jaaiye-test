@@ -114,6 +114,43 @@ function welcomeEmail({ username }) {
   return baseLayout({ title, previewText, bodyHtml, cta: { label: 'Open App', url: APP_URL } });
 }
 
+function paymentConfirmationEmail({ ticket }) {
+  const title = `🎟️ Your Ticket for ${escapeHtml(ticket.eventId?.title || 'the event')}`;
+  const previewText = `Here are your ticket details for ${escapeHtml(ticket.eventId?.title || '')}.`;
+
+  const event = ticket.eventId || {};
+  const user = ticket.userId || {};
+  const assigned = ticket.assignedTo || {};
+
+  const bodyHtml = `
+    <p>Hi ${escapeHtml(assigned.name || user.username || 'there')},</p>
+    <p>You're all set! Here's your ticket for <strong>${escapeHtml(event.title || 'the event')}</strong>.</p>
+
+    <div style="margin:16px 0;padding:16px;border:1px solid #E2E8F0;border-radius:12px;background:#F8FAFC;">
+      <p><strong>Event:</strong> ${escapeHtml(event.title || '')}</p>
+      <p><strong>Date:</strong> ${new Date(event.startTime).toLocaleString()}</p>
+      ${event.venue ? `<p><strong>Venue:</strong> ${escapeHtml(event.venue)}</p>` : ''}
+      <p><strong>Ticket Type:</strong> ${escapeHtml(ticket.ticketTypeName || '')}</p>
+      <p><strong>Ticket ID:</strong> ${escapeHtml(ticket.ticketId || '')}</p>
+      ${ticket.quantity > 1 ? `<p><strong>Quantity:</strong> ${ticket.quantity}</p>` : ''}
+    </div>
+
+    <div style="margin-top:20px;text-align:center;">
+      <img src="${ticket.qrCode}" alt="QR Code" style="width:180px;height:180px;border-radius:8px;border:1px solid #E2E8F0;" />
+      <p style="font-size:13px;color:#64748B;margin-top:6px;">Show this QR code at the event entrance.</p>
+    </div>
+
+    <p style="margin-top:20px;">We look forward to seeing you!</p>
+  `;
+
+  return baseLayout({
+    title,
+    previewText,
+    bodyHtml,
+    cta: { label: 'View Event', url: `${APP_URL}events/${event._id}` }
+  });
+}
+
 function reportEmail({ reportData }) {
   const title = 'Your Report';
   const previewText = 'Your requested report is ready.';
@@ -140,5 +177,6 @@ module.exports = {
   passwordResetEmail,
   welcomeEmail,
   reportEmail,
-  LOGO_CID
+  LOGO_CID,
+  paymentConfirmationEmail
 };

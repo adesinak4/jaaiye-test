@@ -22,6 +22,48 @@ exports.listUsers = asyncHandler(async (req, res) => {
   return successResponse(res, { users });
 });
 
+// ✅ POST /api/v1/admin/users (Create user)
+exports.createUser = asyncHandler(async (req, res) => {
+  const { email, fullName, username, password, role = 'admin', isActive = true } = req.body;
+
+  if (!email || !fullName || !password) {
+    return res.status(400).json({ success: false, error: 'Email, fullName and password are required' });
+  }
+
+  const validRoles = ['superadmin', 'admin', 'scanner'];
+  if (!validRoles.includes(role)) {
+    return res.status(400).json({ success: false, error: 'Invalid role' });
+  }
+
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(400).json({ success: false, error: 'Email already in use' });
+  }
+  const user = await User.create({
+    email,
+    username: username || email.split('@')[0],
+    fullName,
+    password,
+    role,
+    isActive,
+    emailVerified: true
+  });
+
+  return successResponse(res, {
+    message: 'User created successfully',
+    user: {
+      id: user._id,
+      email: user.email,
+      fullName: user.fullName,
+      username: user.username,
+      role: user.role,
+      isActive: user.isActive,
+      emailVerified: user.emailVerified,
+      createdAt: user.createdAt
+    }
+  });
+});
+
 // PATCH /api/v1/admin/users/:id/role
 exports.updateUserRole = asyncHandler(async (req, res) => {
   const { id } = req.params;
