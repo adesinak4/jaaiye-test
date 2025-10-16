@@ -340,6 +340,9 @@ router.delete('/:id/participants/:userId', protect, removeParticipant);
  */
 router.post('/create-with-image', protect, upload.single('image'), createEventWithImage);
 
+// Update event image
+router.put('/:id/image', protect, upload.single('image'), require('../controllers/eventController').updateEventImage);
+
 /**
  * @swagger
  * /api/v1/events:

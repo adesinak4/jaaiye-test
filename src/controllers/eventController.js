@@ -1024,6 +1024,66 @@ exports.getEventsByCategory = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Update event image
+// @route   PUT /api/v1/events/:id/image
+// @access  Private
+exports.updateEventImage = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!req.file) {
+    throw new ValidationError('Image file is required');
+  }
+
+  const event = await Event.findById(id);
+  if (!event) {
+    throw new NotFoundError('Event not found');
+  }
+
+  const calendar = await Calendar.findById(event.calendar);
+  if (!calendar) {
+    throw new NotFoundError('Calendar not found');
+  }
+
+  if (!calendar.isPublic &&
+      calendar.owner.toString() !== req.user.id &&
+      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    throw new ForbiddenError('Access denied to calendar');
+  }
+
+  // Upload new image
+  const uploadResult = await CloudinaryService.uploadImage(req.file.buffer, {
+    folder: 'jaaiye/events',
+    transformation: [
+      { width: 1200, height: 630, crop: 'fill', quality: 'auto' }
+    ]
+  });
+
+  if (!uploadResult.success) {
+    throw new ValidationError('Failed to upload image: ' + uploadResult.error);
+  }
+
+  const previousImageUrl = event.image;
+  event.image = uploadResult.url;
+  await event.save();
+
+  // Best effort delete of previous image
+  if (previousImageUrl) {
+    const publicId = CloudinaryService.extractPublicId(previousImageUrl);
+    if (publicId) {
+      try {
+        await CloudinaryService.deleteImage(publicId);
+      } catch (e) {
+        // swallow cleanup errors
+      }
+    }
+  }
+
+  return successResponse(res, {
+    image: event.image,
+    eventId: event._id
+  }, 200, 'Event image updated');
+});
+
 // @desc    Add ticket type to an event
 // @route   POST /api/v1/events/:eventId/ticket-types
 // @access  Private
