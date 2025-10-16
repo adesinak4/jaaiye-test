@@ -42,6 +42,7 @@ app.use(compression()); // Compress responses
 const allowedOrigins = [
   process.env.ADMIN_ORIGIN,
   process.env.FRONTEND_ORIGIN,
+  'https://jaaiye-admin.vercel.app',
   'http://localhost:3000'
 ].filter(Boolean);
 
