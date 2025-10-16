@@ -67,5 +67,8 @@
       "withCompare": true,
       "withGenerator": true
     }
+  },
+  "resolutions": {
+    "buffer-equal-constant-time": "1.0.1"
   }
 }
