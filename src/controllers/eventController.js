@@ -216,10 +216,16 @@ exports.getEvent = async (req, res, next) => {
         startTime: event.startTime,
         endTime: event.endTime,
         location: event.location,
+        venue: event.venue,
+        category: event.category,
+        ticketFee: event.ticketFee,
+        attendeeCount: event.attendeeCount,
+        image: event.image,
         isAllDay: event.isAllDay,
         recurrence: event.recurrence,
         calendar: event.calendar,
         creator: event.creator,
+        external: event.external,
         createdAt: event.createdAt
       }
     });
@@ -583,9 +589,9 @@ exports.createEventWithImage = asyncHandler(async (req, res) => {
     participants
   } = req.body;
 
-  // Validate required fields
-  if (!title || !startTime || !endTime) {
-    throw new ValidationError('Title, start time, and end time are required');
+  // Validate required fields (endTime optional)
+  if (!title || !startTime) {
+    throw new ValidationError('Title and start time are required');
   }
 
   // Validate ticketFee
