@@ -126,6 +126,11 @@ const eventSchema = new mongoose.Schema({
     }
   }],
   external: { type: externalMappingSchema, default: undefined },
+  createdBy: {
+    type: String,
+    default: 'Jaaiye',
+    trim: true
+  },
   createdAt: {
     type: Date,
     default: Date.now

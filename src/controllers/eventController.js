@@ -35,12 +35,12 @@ async function addParticipantsToEvent(event, calendar, participantsInput, acting
 
   await Promise.all(
     normalized.map(p =>
-      sendNotification({
-        userId: p.user,
+      sendNotification(p.user, {
         title: 'Event Invitation',
-        message: `You have been invited to the event "${event.title}"`,
+        body: `You have been invited to the event "${event.title}"`
+      }, {
         type: 'event_invitation',
-        data: { eventId: event._id }
+        eventId: event._id.toString()
       })
     )
   );
@@ -142,12 +142,13 @@ exports.createEvent = async (req, res, next) => {
     // Send notifications to calendar participants
     if (calendar.sharedWith.length > 0) {
       const notificationPromises = calendar.sharedWith.map(userId =>
-        sendNotification({
-          userId,
+        sendNotification(userId, {
           title: 'New Event Created',
-          message: `A new event "${event.title}" has been created in calendar "${calendar.name}"`,
+          body: `A new event "${event.title}" has been created in calendar "${calendar.name}"`
+        }, {
           type: 'event_created',
-          data: { eventId: event._id, calendarId }
+          eventId: event._id.toString(),
+          calendarId
         })
       );
       await Promise.all(notificationPromises);
@@ -448,12 +449,12 @@ exports.addParticipant = async (req, res, next) => {
     await event.save();
 
     // Send notification to the new participant
-    await sendNotification({
-      userId,
+    await sendNotification(userId, {
       title: 'Event Invitation',
-      message: `You have been invited to the event "${event.title}"`,
+      body: `You have been invited to the event "${event.title}"`
+    }, {
       type: 'event_invitation',
-      data: { eventId: event._id }
+      eventId: event._id.toString()
     });
 
     res.json(event);
@@ -484,12 +485,14 @@ exports.updateParticipantStatus = async (req, res, next) => {
     // Send notification to event creator about status change
     const calendar = await Calendar.findById(event.calendar);
     if (calendar.owner) {
-      await sendNotification({
-        userId: calendar.owner,
+      await sendNotification(calendar.owner, {
         title: 'Participant Status Update',
-        message: `A participant has updated their status to "${status}" for event "${event.title}"`,
+        body: `A participant has updated their status to "${status}" for event "${event.title}"`
+      }, {
         type: 'participant_status_update',
-        data: { eventId: event._id, userId: req.user._id, status }
+        eventId: event._id.toString(),
+        userId: req.user._id.toString(),
+        status
       });
     }
 
@@ -527,12 +530,12 @@ exports.removeParticipant = async (req, res, next) => {
     await event.save();
 
     // Send notification to the removed participant
-    await sendNotification({
-      userId: req.params.userId,
+    await sendNotification(req.params.userId, {
       title: 'Removed from Event',
-      message: `You have been removed from the event "${event.title}"`,
+      body: `You have been removed from the event "${event.title}"`
+    }, {
       type: 'event_removal',
-      data: { eventId: event._id }
+      eventId: event._id.toString()
     });
 
     res.json(event);
@@ -697,12 +700,13 @@ exports.createEventWithImage = asyncHandler(async (req, res) => {
   // Send notifications
   if (calendar.sharedWith.length > 0) {
     const notificationPromises = calendar.sharedWith.map(userId =>
-      sendNotification({
-        userId,
+      sendNotification(userId, {
         title: 'New Event Created',
-        message: `A new event "${event.title}" has been created in calendar "${calendar.name}"`,
+        body: `A new event "${event.title}" has been created in calendar "${calendar.name}"`
+      }, {
         type: 'event_created',
-        data: { eventId: event._id, calendarId }
+        eventId: event._id.toString(),
+        calendarId
       })
     );
     await Promise.all(notificationPromises);
@@ -989,6 +993,193 @@ exports.getAvailableTicketTypes = asyncHandler(async (req, res) => {
       salesEndDate: tt.salesEndDate
     }))
   });
+});
+
+// @desc    Create event with image (Admin only)
+// @route   POST /api/v1/events/admin/create-with-image
+// @access  Admin
+exports.createEventWithImageAdmin = asyncHandler(async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      startTime,
+      endTime,
+      location,
+      venue,
+      category,
+      ticketFee,
+      isAllDay,
+      recurrence,
+      participants,
+      createdBy = 'Jaaiye'
+    } = req.body;
+
+    // Validate required fields
+    if (!title || !startTime) {
+      throw new ValidationError('Title and start time are required');
+    }
+
+    // Validate ticketFee
+    if (ticketFee !== undefined && ticketFee !== null && ticketFee !== 'free' && (isNaN(ticketFee) || ticketFee < 0)) {
+      throw new ValidationError('Ticket fee must be "free", null, or a positive number');
+    }
+
+    // Handle image upload if provided
+    let imageUrl = null;
+    if (req.file) {
+      const uploadResult = await CloudinaryService.uploadImage(req.file.buffer, {
+        folder: 'jaaiye/events',
+        transformation: [
+          { width: 800, height: 600, crop: 'fill', quality: 'auto' }
+        ]
+      });
+
+      if (!uploadResult.success) {
+        throw new ValidationError('Failed to upload image: ' + uploadResult.error);
+      }
+
+      imageUrl = uploadResult.url;
+    }
+
+    // For admin events, we'll create a special "Jaaiye" calendar or use a default one
+    let calendar;
+    let calendarId;
+
+    // Try to find or create a Jaaiye calendar
+    calendar = await Calendar.findOne({ name: 'Jaaiye Events' });
+    if (!calendar) {
+      // Create a default Jaaiye calendar
+      calendar = await Calendar.create({
+        name: 'Jaaiye Events',
+        description: 'Official Jaaiye events calendar',
+        owner: req.user.id, // Admin user owns this calendar
+        isPublic: true,
+        color: '#3B82F6'
+      });
+    }
+    calendarId = calendar._id;
+
+    // Default endTime to 8 hours after startTime if not provided
+    const computedEndTime = endTime && endTime !== 'null' && endTime !== 'undefined'
+      ? endTime
+      : new Date(new Date(startTime).getTime() + 8 * 60 * 60 * 1000);
+
+    // Create event with createdBy field
+    const event = await Event.create({
+      calendar: calendarId,
+      title,
+      description,
+      startTime,
+      endTime: computedEndTime,
+      location,
+      venue,
+      category: category || 'event',
+      ticketFee: ticketFee === 'free' ? 'free' : ticketFee,
+      image: imageUrl,
+      isAllDay,
+      recurrence,
+      createdBy: createdBy,
+      creator: req.user.id // Admin user as creator
+    });
+
+    // Add participants if provided
+    if (participants && participants.length > 0) {
+      await addParticipantsToEvent(event, calendar, participants, req.user.id);
+    }
+
+    // Populate the event for response
+    const populatedEvent = await Event.findById(event._id)
+      .populate('calendar', 'name color')
+      .populate('participants.user', 'username fullName profilePicture');
+
+    logger.info('Admin event created with image', {
+      eventId: event._id,
+      adminId: req.user.id,
+      createdBy: createdBy,
+      hasImage: !!imageUrl
+    });
+
+    return successResponse(res, { event: populatedEvent }, 201, 'Admin event created successfully');
+  } catch (error) {
+    logger.error('Error creating admin event with image', {
+      error: error.message,
+      adminId: req.user?.id,
+      eventData: req.body
+    });
+    throw error;
+  }
+});
+
+// @desc    Get all Jaaiye events
+// @route   GET /api/v1/events/jaaiye
+// @access  Public
+exports.getJaaiyeEvents = asyncHandler(async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      category,
+      upcoming = true,
+      sortBy = 'startTime',
+      sortOrder = 'asc'
+    } = req.query;
+
+    // Build filter
+    const filter = { createdBy: 'Jaaiye' };
+
+    if (category) {
+      filter.category = category;
+    }
+
+    if (upcoming === 'true') {
+      filter.startTime = { $gte: new Date() };
+    }
+
+    // Build sort
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get events
+    const events = await Event.find(filter)
+      .populate('calendar', 'name color')
+      .populate('participants.user', 'username fullName profilePicture')
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Get total count for pagination
+    const totalCount = await Event.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / parseInt(limit));
+
+    logger.info('Jaaiye events retrieved', {
+      count: events.length,
+      totalCount,
+      page: parseInt(page),
+      totalPages,
+      filter
+    });
+
+    return successResponse(res, {
+      events,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalCount,
+        hasNextPage: parseInt(page) < totalPages,
+        hasPrevPage: parseInt(page) > 1
+      }
+    });
+  } catch (error) {
+    logger.error('Error retrieving Jaaiye events', {
+      error: error.message,
+      query: req.query
+    });
+    throw error;
+  }
 });
 
 // @desc    Get events by category
@@ -1301,4 +1492,191 @@ exports.getAvailableTicketTypes = asyncHandler(async (req, res) => {
       salesEndDate: tt.salesEndDate
     }))
   });
+});
+
+// @desc    Create event with image (Admin only)
+// @route   POST /api/v1/events/admin/create-with-image
+// @access  Admin
+exports.createEventWithImageAdmin = asyncHandler(async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      startTime,
+      endTime,
+      location,
+      venue,
+      category,
+      ticketFee,
+      isAllDay,
+      recurrence,
+      participants,
+      createdBy = 'Jaaiye'
+    } = req.body;
+
+    // Validate required fields
+    if (!title || !startTime) {
+      throw new ValidationError('Title and start time are required');
+    }
+
+    // Validate ticketFee
+    if (ticketFee !== undefined && ticketFee !== null && ticketFee !== 'free' && (isNaN(ticketFee) || ticketFee < 0)) {
+      throw new ValidationError('Ticket fee must be "free", null, or a positive number');
+    }
+
+    // Handle image upload if provided
+    let imageUrl = null;
+    if (req.file) {
+      const uploadResult = await CloudinaryService.uploadImage(req.file.buffer, {
+        folder: 'jaaiye/events',
+        transformation: [
+          { width: 800, height: 600, crop: 'fill', quality: 'auto' }
+        ]
+      });
+
+      if (!uploadResult.success) {
+        throw new ValidationError('Failed to upload image: ' + uploadResult.error);
+      }
+
+      imageUrl = uploadResult.url;
+    }
+
+    // For admin events, we'll create a special "Jaaiye" calendar or use a default one
+    let calendar;
+    let calendarId;
+
+    // Try to find or create a Jaaiye calendar
+    calendar = await Calendar.findOne({ name: 'Jaaiye Events' });
+    if (!calendar) {
+      // Create a default Jaaiye calendar
+      calendar = await Calendar.create({
+        name: 'Jaaiye Events',
+        description: 'Official Jaaiye events calendar',
+        owner: req.user.id, // Admin user owns this calendar
+        isPublic: true,
+        color: '#3B82F6'
+      });
+    }
+    calendarId = calendar._id;
+
+    // Default endTime to 8 hours after startTime if not provided
+    const computedEndTime = endTime && endTime !== 'null' && endTime !== 'undefined'
+      ? endTime
+      : new Date(new Date(startTime).getTime() + 8 * 60 * 60 * 1000);
+
+    // Create event with createdBy field
+    const event = await Event.create({
+      calendar: calendarId,
+      title,
+      description,
+      startTime,
+      endTime: computedEndTime,
+      location,
+      venue,
+      category: category || 'event',
+      ticketFee: ticketFee === 'free' ? 'free' : ticketFee,
+      image: imageUrl,
+      isAllDay,
+      recurrence,
+      createdBy: createdBy,
+      creator: req.user.id // Admin user as creator
+    });
+
+    // Add participants if provided
+    if (participants && participants.length > 0) {
+      await addParticipantsToEvent(event, calendar, participants, req.user.id);
+    }
+
+    // Populate the event for response
+    const populatedEvent = await Event.findById(event._id)
+      .populate('calendar', 'name color')
+      .populate('participants.user', 'username fullName profilePicture');
+
+    logger.info('Admin event created with image', {
+      eventId: event._id,
+      adminId: req.user.id,
+      createdBy: createdBy,
+      hasImage: !!imageUrl
+    });
+
+    return successResponse(res, { event: populatedEvent }, 201, 'Admin event created successfully');
+  } catch (error) {
+    logger.error('Error creating admin event with image', {
+      error: error.message,
+      adminId: req.user?.id,
+      eventData: req.body
+    });
+    throw error;
+  }
+});
+
+// @desc    Get all Jaaiye events
+// @route   GET /api/v1/events/jaaiye
+// @access  Public
+exports.getJaaiyeEvents = asyncHandler(async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      category,
+      upcoming = true,
+      sortBy = 'startTime',
+      sortOrder = 'asc'
+    } = req.query;
+
+    // Build filter
+    const filter = { createdBy: 'Jaaiye' };
+
+    if (category) {
+      filter.category = category;
+    }
+
+    if (upcoming === 'true') {
+      filter.startTime = { $gte: new Date() };
+    }
+
+    // Build sort
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get events
+    const events = await Event.find(filter)
+      .populate('calendar', 'name color')
+      .populate('participants.user', 'username fullName profilePicture')
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Get total count for pagination
+    const totalCount = await Event.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / parseInt(limit));
+
+    logger.info('Jaaiye events retrieved', {
+      count: events.length,
+      totalCount,
+      page: parseInt(page),
+      totalPages,
+      filter
+    });
+
+    return successResponse(res, {
+      events,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalCount,
+        hasNextPage: parseInt(page) < totalPages,
+        hasPrevPage: parseInt(page) > 1
+      }
+    });
+  } catch (error) {
+    logger.error('Error retrieving Jaaiye events', {
+      error: error.message,
+      query: req.query
+    });
+    throw error;
+  }
 });

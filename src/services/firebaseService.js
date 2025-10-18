@@ -111,16 +111,37 @@ class FirebaseService {
     }
   }
 
-  async createGroup(groupId, groupName, groupMembers) {
+  async createGroup(groupId, groupData) {
     try {
       this.initializeFirebase();
-      await admin.firestore().collection('groups').doc(groupId).set({
-        name: groupName,
-        members: groupMembers,
+
+      // Ensure all values are serializable primitives
+      const sanitizedData = {
+        name: String(groupData.name || ''),
+        description: String(groupData.description || ''),
+        creator: String(groupData.creator || ''),
+        members: {},
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      };
 
+      // Sanitize members object
+      if (groupData.members && typeof groupData.members === 'object') {
+        for (const [key, value] of Object.entries(groupData.members)) {
+          sanitizedData.members[String(key)] = {
+            name: String(value.name || 'Unknown User'),
+            avatar: String(value.avatar || ''),
+            role: String(value.role || 'member')
+          };
+        }
+      }
+
+      await admin.firestore()
+        .collection('groups')
+        .doc(String(groupId))
+        .set(sanitizedData);
+
+      logger.info(`Group created in Firebase: ${groupId}`);
       return { success: true, id: groupId };
     } catch (error) {
       logger.error('Firebase createGroup error:', error);
@@ -163,11 +184,16 @@ class FirebaseService {
     }
   };
 
-  async addMember(groupId, memberId) {
+  async addMember(groupId, memberData) {
     try {
       this.initializeFirebase();
       await admin.firestore().collection('groups').doc(groupId).update({
-        [`members.${memberId}`]: true
+        [`members.${memberData.id}`]: {
+          name: memberData.name || 'Unknown User',
+          avatar: memberData.avatar || '',
+          role: memberData.role || 'member'
+        },
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
     } catch (error) {
       logger.error('Firebase addMember error:', error);

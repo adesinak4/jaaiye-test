@@ -41,15 +41,13 @@ exports.shareCalendar = async (req, res, next) => {
   });
 
   // Send notification
-  await sendNotification({
-    userId,
+  await sendNotification(userId, {
     title: 'Calendar Share Request',
-    body: `${req.user.name} wants to share their calendar with you`,
-    data: {
-      type: 'calendar_share',
-      calendarId,
-      shareId: share._id
-    }
+    body: `${req.user.name} wants to share their calendar with you`
+  }, {
+    type: 'calendar_share',
+    calendarId,
+    shareId: share._id.toString()
   });
 
   // Send email
@@ -89,14 +87,12 @@ exports.acceptShare = async (req, res, next) => {
   const calendar = await Calendar.findById(share.calendar);
   const owner = await User.findById(calendar.owner);
 
-  await sendNotification({
-    userId: owner._id,
+  await sendNotification(owner._id, {
     title: 'Calendar Share Accepted',
-    body: `${req.user.name} accepted your calendar share request`,
-    data: {
-      type: 'calendar_share_accepted',
-      calendarId: calendar._id
-    }
+    body: `${req.user.name} accepted your calendar share request`
+  }, {
+    type: 'calendar_share_accepted',
+    calendarId: calendar._id.toString()
   });
 
   res.json(share);
@@ -124,14 +120,12 @@ exports.declineShare = async (req, res, next) => {
   const calendar = await Calendar.findById(share.calendar);
   const owner = await User.findById(calendar.owner);
 
-  await sendNotification({
-    userId: owner._id,
+  await sendNotification(owner._id, {
     title: 'Calendar Share Declined',
-    body: `${req.user.name} declined your calendar share request`,
-    data: {
-      type: 'calendar_share_declined',
-      calendarId: calendar._id
-    }
+    body: `${req.user.name} declined your calendar share request`
+  }, {
+    type: 'calendar_share_declined',
+    calendarId: calendar._id.toString()
   });
 
   res.json(share);
