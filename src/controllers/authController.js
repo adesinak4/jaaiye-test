@@ -445,6 +445,7 @@ exports.googleSignInViaIdToken = asyncHandler(async (req, res) => {
     // Generate tokens
     const accessToken = generateToken(user);
     const refreshToken = generateRefreshToken(user._id);
+    const firebaseToken = await firebaseService.generateToken(user._id.toString());
 
     // Save refresh token to user
     user.refresh = {
@@ -473,6 +474,7 @@ exports.googleSignInViaIdToken = asyncHandler(async (req, res) => {
     return successResponse(res, {
       accessToken,
       refreshToken,
+      firebaseToken,
       user: {
         id: user._id,
         email: user.email,

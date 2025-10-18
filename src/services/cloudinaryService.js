@@ -28,6 +28,28 @@ class CloudinaryService {
         ...options
       };
 
+      // Support Buffer uploads via upload_stream for better compatibility
+      if (Buffer.isBuffer(file)) {
+        const uploadStream = () => new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(defaultOptions, (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          });
+          stream.end(file);
+        });
+
+        const result = await uploadStream();
+        return {
+          success: true,
+          url: result.secure_url,
+          publicId: result.public_id,
+          width: result.width,
+          height: result.height,
+          format: result.format,
+          bytes: result.bytes
+        };
+      }
+
       const result = await uploadAsync(file, defaultOptions);
 
       return {

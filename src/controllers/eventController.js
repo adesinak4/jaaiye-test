@@ -641,12 +641,17 @@ exports.createEventWithImage = asyncHandler(async (req, res) => {
   }
 
   // Create event
+  // Default endTime to 8 hours after startTime if not provided
+  const computedEndTime = endTime && endTime !== 'null' && endTime !== 'undefined'
+    ? endTime
+    : new Date(new Date(startTime).getTime() + 8 * 60 * 60 * 1000);
+
   const event = await Event.create({
     calendar: calendarId,
     title,
     description,
     startTime,
-    endTime,
+    endTime: computedEndTime,
     location,
     venue,
     category: category || 'event',
