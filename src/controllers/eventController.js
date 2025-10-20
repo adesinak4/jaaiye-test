@@ -1618,7 +1618,6 @@ exports.getJaaiyeEvents = asyncHandler(async (req, res) => {
     const {
       page = 1,
       limit = 20,
-      category,
       upcoming = true,
       sortBy = 'startTime',
       sortOrder = 'asc'
@@ -1626,10 +1625,6 @@ exports.getJaaiyeEvents = asyncHandler(async (req, res) => {
 
     // Build filter
     const filter = { createdBy: 'Jaaiye' };
-
-    if (category) {
-      filter.category = category;
-    }
 
     if (upcoming === 'true') {
       filter.startTime = { $gte: new Date() };
