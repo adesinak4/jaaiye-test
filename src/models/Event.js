@@ -35,10 +35,6 @@ const eventSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  location: {
-    type: String,
-    trim: true
-  },
   category: {
     type: String,
     enum: ['hangout', 'event'],

@@ -53,7 +53,7 @@ async function addParticipantsToEvent(event, calendar, participantsInput, acting
 // @access  Private
 exports.createEvent = async (req, res, next) => {
   try {
-    const { calendarId: inputCalendarId, googleCalendarId: overrideGoogleCalId, title, description, startTime, endTime, location, venue, category, ticketFee, isAllDay, recurrence, participants } = req.body;
+    const { calendarId: inputCalendarId, googleCalendarId: overrideGoogleCalId, title, description, startTime, endTime, venue, category, ticketFee, isAllDay, recurrence, participants } = req.body;
 
     // Resolve calendar: default to user's calendar if not provided
     let calendar;
@@ -74,8 +74,8 @@ exports.createEvent = async (req, res, next) => {
     }
 
     if (!calendar.isPublic &&
-        calendar.owner.toString() !== req.user.id &&
-        !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+      calendar.owner.toString() !== req.user.id &&
+      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
       return errorResponse(res, new Error('Access denied'), 403);
     }
 
@@ -88,18 +88,36 @@ exports.createEvent = async (req, res, next) => {
       return errorResponse(res, new Error('End time must be after start time'), 400);
     }
 
+    // Handle image upload if provided
+    let imageUrl = null;
+    if (req.file) {
+      const uploadResult = await CloudinaryService.uploadImage(req.file.buffer, {
+        folder: 'jaaiye/events',
+        transformation: [
+          { width: 800, height: 600, crop: 'fill', quality: 'auto' }
+        ]
+      });
+
+      if (!uploadResult.success) {
+        throw new ValidationError('Failed to upload image: ' + uploadResult.error);
+      }
+
+      imageUrl = uploadResult.url;
+    }
+
     const event = await Event.create({
       calendar: calendarId,
       title,
       description,
       startTime,
       endTime,
-      location,
+
       venue,
       category: category || 'event',
       ticketFee: ticketFee === 'free' ? 'free' : ticketFee,
       isAllDay,
       recurrence,
+      image: imageUrl,
       creator: req.user.id
     });
 
@@ -161,7 +179,6 @@ exports.createEvent = async (req, res, next) => {
         description: event.description,
         startTime: event.startTime,
         endTime: event.endTime,
-        location: event.location,
         venue: event.venue,
         category: event.category,
         ticketFee: event.ticketFee,
@@ -196,8 +213,8 @@ exports.getEvent = async (req, res, next) => {
     // Check if user has access to the calendar
     const calendar = await Calendar.findById(event.calendar);
     if (!calendar.isPublic &&
-        calendar.owner.toString() !== req.user.id &&
-        !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+      calendar.owner.toString() !== req.user.id &&
+      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
       logger.error('Access denied to event', new Error('Access denied'), 403, {
         eventId: req.params.id,
         userId: req.user.id
@@ -216,7 +233,6 @@ exports.getEvent = async (req, res, next) => {
         description: event.description,
         startTime: event.startTime,
         endTime: event.endTime,
-        location: event.location,
         venue: event.venue,
         category: event.category,
         ticketFee: event.ticketFee,
@@ -230,7 +246,7 @@ exports.getEvent = async (req, res, next) => {
         createdAt: event.createdAt
       }
     });
-  } catch(error) {
+  } catch (error) {
     logger.error('Failed to get event', error, 500, {
       eventId: req.params.id,
       userId: req.user.id
@@ -252,12 +268,12 @@ exports.updateEvent = async (req, res, next) => {
     // Check if user has access to the calendar
     const calendar = await Calendar.findById(event.calendar);
     if (!calendar.isPublic &&
-        calendar.owner.toString() !== req.user.id &&
-        !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+      calendar.owner.toString() !== req.user.id &&
+      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
       return errorResponse(res, new Error('Access denied'), 403);
     }
 
-    const { title, description, startTime, endTime, location, isAllDay, recurrence } = req.body;
+    const { title, description, startTime, endTime, isAllDay, recurrence } = req.body;
     if (title) event.title = title;
     if (description !== undefined) event.description = description;
     if (startTime) event.startTime = startTime;
@@ -294,7 +310,6 @@ exports.updateEvent = async (req, res, next) => {
         description: event.description,
         startTime: event.startTime,
         endTime: event.endTime,
-        location: event.location,
         isAllDay: event.isAllDay,
         recurrence: event.recurrence,
         calendar: event.calendar,
@@ -322,8 +337,8 @@ exports.deleteEvent = async (req, res, next) => {
     // Check if user has access to the calendar
     const calendar = await Calendar.findById(event.calendar);
     if (!calendar.isPublic &&
-        calendar.owner.toString() !== req.user.id &&
-        !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+      calendar.owner.toString() !== req.user.id &&
+      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
       return errorResponse(res, new Error('Access denied'), 403);
     }
 
@@ -369,8 +384,8 @@ exports.listEvents = async (req, res, next) => {
       }
 
       if (!calendar.isPublic &&
-          calendar.owner.toString() !== req.user.id &&
-          !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+        calendar.owner.toString() !== req.user.id &&
+        !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
         logger.error('Access denied to calendar', new Error('Access denied'), 403, {
           calendarId,
           userId: req.user.id
@@ -408,7 +423,6 @@ exports.listEvents = async (req, res, next) => {
         description: event.description,
         startTime: event.startTime,
         endTime: event.endTime,
-        location: event.location,
         isAllDay: event.isAllDay,
         recurrence: event.recurrence,
         calendar: event.calendar,
@@ -416,7 +430,7 @@ exports.listEvents = async (req, res, next) => {
         createdAt: event.createdAt
       }))
     });
-  } catch(error) {
+  } catch (error) {
     logger.error('Failed to list events', error, 500, { error: error.stack });
     next(error);
   }
@@ -583,7 +597,7 @@ exports.createEventWithImage = asyncHandler(async (req, res) => {
     description,
     startTime,
     endTime,
-    location,
+
     venue,
     category,
     ticketFee,
@@ -638,8 +652,8 @@ exports.createEventWithImage = asyncHandler(async (req, res) => {
 
   // Check calendar access
   if (!calendar.isPublic &&
-      calendar.owner.toString() !== req.user.id &&
-      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    calendar.owner.toString() !== req.user.id &&
+    !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
     throw new ForbiddenError('Access denied to calendar');
   }
 
@@ -655,7 +669,7 @@ exports.createEventWithImage = asyncHandler(async (req, res) => {
     description,
     startTime,
     endTime: computedEndTime,
-    location,
+
     venue,
     category: category || 'event',
     ticketFee: ticketFee === 'free' ? 'free' : ticketFee,
@@ -725,7 +739,6 @@ exports.createEventWithImage = asyncHandler(async (req, res) => {
       description: event.description,
       startTime: event.startTime,
       endTime: event.endTime,
-      location: event.location,
       venue: event.venue,
       category: event.category,
       ticketFee: event.ticketFee,
@@ -768,7 +781,6 @@ exports.getAllEvents = asyncHandler(async (req, res) => {
       description: event.description,
       startTime: event.startTime,
       endTime: event.endTime,
-      location: event.location,
       venue: event.venue,
       category: event.category,
       ticketFee: event.ticketFee,
@@ -816,8 +828,8 @@ exports.addTicketType = asyncHandler(async (req, res) => {
   // Check if user has permission to modify this event
   const calendar = await Calendar.findById(event.calendar);
   if (!calendar.isPublic &&
-      calendar.owner.toString() !== req.user.id &&
-      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    calendar.owner.toString() !== req.user.id &&
+    !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
     throw new ForbiddenError('Access denied to event');
   }
 
@@ -866,8 +878,8 @@ exports.updateTicketType = asyncHandler(async (req, res) => {
   // Check if user has permission to modify this event
   const calendar = await Calendar.findById(event.calendar);
   if (!calendar.isPublic &&
-      calendar.owner.toString() !== req.user.id &&
-      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    calendar.owner.toString() !== req.user.id &&
+    !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
     throw new ForbiddenError('Access denied to event');
   }
 
@@ -935,8 +947,8 @@ exports.removeTicketType = asyncHandler(async (req, res) => {
   // Check if user has permission to modify this event
   const calendar = await Calendar.findById(event.calendar);
   if (!calendar.isPublic &&
-      calendar.owner.toString() !== req.user.id &&
-      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    calendar.owner.toString() !== req.user.id &&
+    !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
     throw new ForbiddenError('Access denied to event');
   }
 
@@ -1005,13 +1017,10 @@ exports.createEventWithImageAdmin = asyncHandler(async (req, res) => {
       description,
       startTime,
       endTime,
-      location,
+
       venue,
       category,
       ticketFee,
-      isAllDay,
-      recurrence,
-      participants,
       createdBy = 'Jaaiye'
     } = req.body;
 
@@ -1072,7 +1081,7 @@ exports.createEventWithImageAdmin = asyncHandler(async (req, res) => {
       description,
       startTime,
       endTime: computedEndTime,
-      location,
+
       venue,
       category: category || 'event',
       ticketFee: ticketFee === 'free' ? 'free' : ticketFee,
@@ -1207,7 +1216,6 @@ exports.getEventsByCategory = asyncHandler(async (req, res) => {
       description: event.description,
       startTime: event.startTime,
       endTime: event.endTime,
-      location: event.location,
       venue: event.venue,
       category: event.category,
       ticketFee: event.ticketFee,
@@ -1247,8 +1255,8 @@ exports.updateEventImage = asyncHandler(async (req, res) => {
   }
 
   if (!calendar.isPublic &&
-      calendar.owner.toString() !== req.user.id &&
-      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    calendar.owner.toString() !== req.user.id &&
+    !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
     throw new ForbiddenError('Access denied to calendar');
   }
 
@@ -1315,8 +1323,8 @@ exports.addTicketType = asyncHandler(async (req, res) => {
   // Check if user has permission to modify this event
   const calendar = await Calendar.findById(event.calendar);
   if (!calendar.isPublic &&
-      calendar.owner.toString() !== req.user.id &&
-      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    calendar.owner.toString() !== req.user.id &&
+    !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
     throw new ForbiddenError('Access denied to event');
   }
 
@@ -1365,8 +1373,8 @@ exports.updateTicketType = asyncHandler(async (req, res) => {
   // Check if user has permission to modify this event
   const calendar = await Calendar.findById(event.calendar);
   if (!calendar.isPublic &&
-      calendar.owner.toString() !== req.user.id &&
-      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    calendar.owner.toString() !== req.user.id &&
+    !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
     throw new ForbiddenError('Access denied to event');
   }
 
@@ -1434,8 +1442,8 @@ exports.removeTicketType = asyncHandler(async (req, res) => {
   // Check if user has permission to modify this event
   const calendar = await Calendar.findById(event.calendar);
   if (!calendar.isPublic &&
-      calendar.owner.toString() !== req.user.id &&
-      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+    calendar.owner.toString() !== req.user.id &&
+    !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
     throw new ForbiddenError('Access denied to event');
   }
 
@@ -1504,13 +1512,8 @@ exports.createEventWithImageAdmin = asyncHandler(async (req, res) => {
       description,
       startTime,
       endTime,
-      location,
       venue,
-      category,
       ticketFee,
-      isAllDay,
-      recurrence,
-      participants,
       createdBy = 'Jaaiye'
     } = req.body;
 
@@ -1571,26 +1574,17 @@ exports.createEventWithImageAdmin = asyncHandler(async (req, res) => {
       description,
       startTime,
       endTime: computedEndTime,
-      location,
       venue,
-      category: category || 'event',
+      category: 'event',
       ticketFee: ticketFee === 'free' ? 'free' : ticketFee,
       image: imageUrl,
-      isAllDay,
-      recurrence,
       createdBy: createdBy,
       creator: req.user.id // Admin user as creator
     });
 
-    // Add participants if provided
-    if (participants && participants.length > 0) {
-      await addParticipantsToEvent(event, calendar, participants, req.user.id);
-    }
-
     // Populate the event for response
     const populatedEvent = await Event.findById(event._id)
       .populate('calendar', 'name color')
-      .populate('participants.user', 'username fullName profilePicture');
 
     logger.info('Admin event created with image', {
       eventId: event._id,
