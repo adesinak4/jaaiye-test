@@ -709,6 +709,6 @@ router.post('/admin/create-with-image', protect, admin, upload.single('image'), 
  *                         hasPrevPage:
  *                           type: boolean
  */
-router.get('/jaaiye', protect, getJaaiyeEvents);
+router.get('/brand/jaaiye', protect, getJaaiyeEvents);
 
 module.exports = router;

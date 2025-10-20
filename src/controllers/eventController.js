@@ -1639,8 +1639,6 @@ exports.getJaaiyeEvents = asyncHandler(async (req, res) => {
 
     // Get events
     const events = await Event.find(filter)
-      .populate('calendar', 'name color')
-      .populate('participants.user', 'username fullName profilePicture')
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit));

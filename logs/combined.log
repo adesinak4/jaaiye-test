@@ -2272,3 +2272,26 @@
 {"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-20T09:28:56.237Z","user":"friendnpaldoc@gmail.com"}
 {"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-20T09:29:04.837Z"}
 {"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-20T09:29:15.474Z"}
+{"durationMs":13,"environment":"development","level":"info","message":"Request","method":"GET","path":"/api/v1/events/jaaiye","statusCode":401,"timestamp":"2025-10-20T11:49:07.439Z"}
+{"environment":"development","error":"Cast to ObjectId failed for value \"jaaiye\" (type string) at path \"_id\" for model \"Event\"","level":"error","message":"Failed to get event","name":"CastError","timestamp":"2025-10-20T11:51:36.367Z"}
+{"environment":"development","errorMessage":"Cast to ObjectId failed for value \"jaaiye\" (type string) at path \"_id\" for model \"Event\"","errorName":"CastError","level":"error","message":"Request Error","method":"GET","path":"/api/v1/events/jaaiye","statusCode":500,"timestamp":"2025-10-20T11:51:36.370Z","url":"/api/v1/events/jaaiye","userId":"6863be7e8ca3c96436ba8e4b"}
+{"environment":"development","errorMessage":"Cast to ObjectId failed for value \"jaaiye\" (type string) at path \"_id\" for model \"Event\"","kind":"ObjectId","level":"warn","message":"Cast Error","timestamp":"2025-10-20T11:51:36.371Z","value":"jaaiye"}
+{"durationMs":669,"environment":"development","level":"info","message":"Request","method":"GET","path":"/api/v1/events/jaaiye","statusCode":400,"timestamp":"2025-10-20T11:51:36.372Z","userId":"6863be7e8ca3c96436ba8e4b"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-20T11:53:12.672Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-20T11:53:15.833Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-01.ftf2rnr.mongodb.net","timestamp":"2025-10-20T11:53:17.900Z"}
+{"environment":"development","error":"Cast to ObjectId failed for value \"jaaiye\" (type string) at path \"_id\" for model \"Event\"","level":"error","message":"Failed to get event","name":"CastError","timestamp":"2025-10-20T11:53:54.147Z"}
+{"environment":"development","errorMessage":"Cast to ObjectId failed for value \"jaaiye\" (type string) at path \"_id\" for model \"Event\"","errorName":"CastError","level":"error","message":"Request Error","method":"GET","path":"/api/v1/events/jaaiye","statusCode":500,"timestamp":"2025-10-20T11:53:54.149Z","url":"/api/v1/events/jaaiye?page=1&limit=5","userId":"6863be7e8ca3c96436ba8e4b"}
+{"environment":"development","errorMessage":"Cast to ObjectId failed for value \"jaaiye\" (type string) at path \"_id\" for model \"Event\"","kind":"ObjectId","level":"warn","message":"Cast Error","timestamp":"2025-10-20T11:53:54.150Z","value":"jaaiye"}
+{"durationMs":1401,"environment":"development","level":"info","message":"Request","method":"GET","path":"/api/v1/events/jaaiye","statusCode":400,"timestamp":"2025-10-20T11:53:54.154Z","userId":"6863be7e8ca3c96436ba8e4b"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-20T11:57:45.741Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-20T11:57:47.845Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-20T11:57:56.899Z"}
+{"count":4,"environment":"development","filter":{"createdBy":"Jaaiye"},"level":"info","message":"Jaaiye events retrieved","page":1,"timestamp":"2025-10-20T11:58:09.872Z","totalCount":4,"totalPages":1}
+{"durationMs":865,"environment":"development","level":"info","message":"Request","method":"GET","path":"/brand/jaaiye","statusCode":200,"timestamp":"2025-10-20T11:58:09.891Z","userId":"6863be7e8ca3c96436ba8e4b"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-20T11:58:47.415Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-20T11:58:49.803Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-20T11:58:59.411Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-20T11:59:13.283Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-20T11:59:15.381Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-02.ftf2rnr.mongodb.net","timestamp":"2025-10-20T11:59:16.931Z"}
