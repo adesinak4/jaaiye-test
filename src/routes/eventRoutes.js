@@ -83,7 +83,7 @@ const upload = multer({
  *                 event:
  *                   $ref: '#/components/schemas/Event'
  */
-router.post('/', protect, createEvent);
+router.post('/', protect, upload.single('image'), createEvent);
 /**
  * @swagger
  * /api/v1/events/{id}:
