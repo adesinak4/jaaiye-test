@@ -408,8 +408,8 @@ exports.getFriendRequests = asyncHandler(async (req, res) => {
   const userId = req.user.id;
 
   const query = type === 'sent'
-    ? { requester: userId }
-    : { recipient: userId };
+    ? { requester: userId, status: 'pending' }
+    : { recipient: userId, status: 'pending' };
 
   const requests = await FriendRequest.find(query)
     .populate('requester', 'username fullName profilePicture')
