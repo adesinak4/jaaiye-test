@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
+const { idempotencyMiddleware } = require('../middleware/idempotencyMiddleware');
 const PaymentController = require('../controllers/paymentController');
 
 /**
@@ -24,11 +25,9 @@ const PaymentController = require('../controllers/paymentController');
  *         application/json:
  *           schema:
  *             type: object
- *             required: [eventId, ticketTypeId, email]
+ *             required: [eventId, email]
  *             properties:
  *               eventId:
- *                 type: string
- *               ticketTypeId:
  *                 type: string
  *               quantity:
  *                 type: integer
@@ -57,7 +56,7 @@ const PaymentController = require('../controllers/paymentController');
  *                       type: string
  */
 // Initialize Paystack payment and return authorization URL
-router.post('/paystack/init', protect, PaymentController.initPaystack);
+router.post('/paystack/init', protect, idempotencyMiddleware, PaymentController.initPaystack);
 
 /**
  * @swagger
@@ -67,17 +66,22 @@ router.post('/paystack/init', protect, PaymentController.initPaystack);
  *     tags: [Payments]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: X-Idempotency-Key
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Unique key to prevent duplicate requests
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [eventId, ticketTypeId, email]
+ *             required: [eventId, email]
  *             properties:
  *               eventId:
- *                 type: string
- *               ticketTypeId:
  *                 type: string
  *               quantity:
  *                 type: integer
@@ -104,9 +108,19 @@ router.post('/paystack/init', protect, PaymentController.initPaystack);
  *                       type: string
  *                     reference:
  *                       type: string
+ *                     idempotencyKey:
+ *                       type: string
+ *                     isCachedResponse:
+ *                       type: boolean
+ *         headers:
+ *           X-Idempotency-Cache-Hit:
+ *             description: Indicates if response was cached
+ *             schema:
+ *               type: string
+ *               enum: [true]
  */
 // Initialize Flutterwave payment and return authorization URL
-router.post('/flutterwave/init', protect, PaymentController.initFlutterwave);
+router.post('/flutterwave/init', protect, idempotencyMiddleware, PaymentController.initFlutterwave);
 
 router.post('/verify', PaymentController.verifyPaystack);
 router.post('/verify', PaymentController.verifyFlutterwave);

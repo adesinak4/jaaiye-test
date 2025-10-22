@@ -1,5 +1,6 @@
 const emailQueue = require('./emailQueue');
 const notificationQueue = require('./notificationQueue');
+const paymentPollingQueue = require('./paymentPollingQueue');
 
 const syncQueue = {
   jobs: [],
@@ -17,5 +18,6 @@ const syncQueue = {
 module.exports = {
   emailQueue,
   notificationQueue,
+  paymentPollingQueue,
   syncQueue
 };

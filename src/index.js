@@ -143,6 +143,10 @@ process.on('uncaughtException', (err) => {
 // Connect to MongoDB using existing configuration
 connectDB();
 
+// Start background services
+const { paymentPollingQueue } = require('./queues');
+paymentPollingQueue.start();
+
 // Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

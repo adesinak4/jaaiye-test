@@ -2394,3 +2394,157 @@
 {"durationMs":714,"environment":"development","level":"info","message":"Request","method":"GET","path":"/users","statusCode":200,"timestamp":"2025-10-20T13:28:28.598Z","userId":"6863be7e8ca3c96436ba8e4b"}
 {"durationMs":1698,"environment":"development","level":"info","message":"Request","method":"GET","path":"/users","statusCode":200,"timestamp":"2025-10-20T13:30:22.410Z","userId":"6863be7e8ca3c96436ba8e4b"}
 {"durationMs":613,"environment":"development","level":"info","message":"Request","method":"GET","path":"/users","statusCode":200,"timestamp":"2025-10-20T13:31:40.359Z","userId":"6863be7e8ca3c96436ba8e4b"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-21T21:19:48.328Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-21T21:19:51.786Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-02.ftf2rnr.mongodb.net","timestamp":"2025-10-21T21:20:01.821Z"}
+{"environment":"development","errorMessage":"Request failed with status code 401","errorName":"AxiosError","level":"error","message":"Request Error","method":"POST","path":"/api/v1/payments/paystack/init","statusCode":500,"timestamp":"2025-10-21T21:21:51.546Z","url":"/api/v1/payments/paystack/init","userId":"686bb4853fcc47157790ef8b"}
+{"environment":"development","errorMessage":"Request failed with status code 401","errorName":"AxiosError","level":"error","message":"Server Error","timestamp":"2025-10-21T21:21:51.547Z"}
+{"durationMs":1209,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/payments/paystack/init","statusCode":500,"timestamp":"2025-10-21T21:21:51.553Z","userId":"686bb4853fcc47157790ef8b"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-21T21:22:42.813Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-21T21:22:45.651Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-01.ftf2rnr.mongodb.net","timestamp":"2025-10-21T21:22:54.145Z"}
+{"environment":"development","errorMessage":"Request failed with status code 401","errorName":"AxiosError","level":"error","message":"Request Error","method":"POST","path":"/api/v1/payments/paystack/init","statusCode":500,"timestamp":"2025-10-21T21:25:26.832Z","url":"/api/v1/payments/paystack/init","userId":"686bb4853fcc47157790ef8b"}
+{"environment":"development","errorMessage":"Request failed with status code 401","errorName":"AxiosError","level":"error","message":"Server Error","timestamp":"2025-10-21T21:25:26.833Z"}
+{"durationMs":1026,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/payments/paystack/init","statusCode":500,"timestamp":"2025-10-21T21:25:26.837Z","userId":"686bb4853fcc47157790ef8b"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-21T21:26:25.909Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-21T21:26:28.021Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-21T21:26:30.210Z"}
+{"environment":"development","errorMessage":"Request failed with status code 401","errorName":"AxiosError","level":"error","message":"Request Error","method":"POST","path":"/api/v1/payments/paystack/init","statusCode":500,"timestamp":"2025-10-21T21:26:48.464Z","url":"/api/v1/payments/paystack/init","userId":"686bb4853fcc47157790ef8b"}
+{"environment":"development","errorMessage":"Request failed with status code 401","errorName":"AxiosError","level":"error","message":"Server Error","timestamp":"2025-10-21T21:26:48.465Z"}
+{"durationMs":1199,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/payments/paystack/init","statusCode":500,"timestamp":"2025-10-21T21:26:48.470Z","userId":"686bb4853fcc47157790ef8b"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-21T21:29:44.487Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-21T21:29:48.372Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-01.ftf2rnr.mongodb.net","timestamp":"2025-10-21T21:29:59.021Z"}
+{"environment":"development","errorMessage":"Request failed with status code 401","errorName":"AxiosError","level":"error","message":"Request Error","method":"POST","path":"/api/v1/payments/paystack/init","statusCode":500,"timestamp":"2025-10-21T21:30:02.939Z","url":"/api/v1/payments/paystack/init","userId":"686bb4853fcc47157790ef8b"}
+{"environment":"development","errorMessage":"Request failed with status code 401","errorName":"AxiosError","level":"error","message":"Server Error","timestamp":"2025-10-21T21:30:02.940Z"}
+{"durationMs":1149,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/payments/paystack/init","statusCode":500,"timestamp":"2025-10-21T21:30:02.944Z","userId":"686bb4853fcc47157790ef8b"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-21T21:31:10.392Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-21T21:31:14.482Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-01.ftf2rnr.mongodb.net","timestamp":"2025-10-21T21:31:17.983Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-21T21:31:24.518Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-21T21:31:29.549Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-21T21:31:38.227Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-21T21:31:51.530Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-21T21:31:55.208Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-02.ftf2rnr.mongodb.net","timestamp":"2025-10-21T21:31:57.084Z"}
+{"environment":"development","errorMessage":"Request failed with status code 400","errorName":"AxiosError","level":"error","message":"Request Error","method":"POST","path":"/api/v1/payments/flutterwave/init","statusCode":500,"timestamp":"2025-10-21T21:32:13.480Z","url":"/api/v1/payments/flutterwave/init","userId":"686bb4853fcc47157790ef8b"}
+{"environment":"development","errorMessage":"Request failed with status code 400","errorName":"AxiosError","level":"error","message":"Server Error","timestamp":"2025-10-21T21:32:13.481Z"}
+{"durationMs":1295,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/payments/flutterwave/init","statusCode":500,"timestamp":"2025-10-21T21:32:13.486Z","userId":"686bb4853fcc47157790ef8b"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-21T21:33:01.230Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-21T21:33:04.234Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-01.ftf2rnr.mongodb.net","timestamp":"2025-10-21T21:33:11.407Z"}
+{"environment":"development","errorMessage":"Request failed with status code 400","errorName":"AxiosError","level":"error","message":"Request Error","method":"POST","path":"/api/v1/payments/flutterwave/init","statusCode":500,"timestamp":"2025-10-21T21:34:20.354Z","url":"/api/v1/payments/flutterwave/init","userId":"686bb4853fcc47157790ef8b"}
+{"environment":"development","errorMessage":"Request failed with status code 400","errorName":"AxiosError","level":"error","message":"Server Error","timestamp":"2025-10-21T21:34:20.355Z"}
+{"durationMs":1015,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/payments/flutterwave/init","statusCode":500,"timestamp":"2025-10-21T21:34:20.359Z","userId":"686bb4853fcc47157790ef8b"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-21T21:36:40.805Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-21T21:36:45.065Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-02.ftf2rnr.mongodb.net","timestamp":"2025-10-21T21:36:46.507Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-21T21:39:29.301Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-21T21:39:31.826Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-01.ftf2rnr.mongodb.net","timestamp":"2025-10-21T21:39:33.224Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T10:53:22.517Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T10:53:29.088Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-02.ftf2rnr.mongodb.net","timestamp":"2025-10-22T10:53:30.638Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:49:50.778Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:49:58.637Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-02.ftf2rnr.mongodb.net","timestamp":"2025-10-22T11:50:07.222Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:50:11.286Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:50:24.930Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:50:39.043Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:50:47.177Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-22T11:50:48.980Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:51:28.893Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:51:36.297Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-22T11:51:37.850Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:52:31.650Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T11:52:37.518Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T11:52:37.519Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:52:37.535Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-22T11:52:39.057Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-22T11:52:40.033Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:53:02.092Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T11:53:07.633Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T11:53:07.634Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:53:07.645Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:53:24.851Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T11:53:27.561Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T11:53:27.562Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:53:27.569Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:53:37.043Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T11:53:41.615Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T11:53:41.616Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:53:41.626Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-01.ftf2rnr.mongodb.net","timestamp":"2025-10-22T11:53:43.066Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-22T11:53:44.093Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:53:46.519Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T11:53:49.479Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T11:53:49.480Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:53:49.493Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-22T11:53:50.994Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-22T11:53:51.933Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:55:43.842Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T11:55:50.752Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T11:55:50.753Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:55:50.768Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-22T11:56:00.449Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-22T11:56:01.449Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:56:14.114Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T11:56:20.629Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T11:56:20.630Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:56:20.641Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-22T11:56:30.661Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-02.ftf2rnr.mongodb.net","timestamp":"2025-10-22T11:56:41.404Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:56:48.831Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T11:56:52.727Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T11:56:52.728Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:56:52.740Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-22T11:57:02.764Z"}
+{"environment":"development","level":"error","message":"Error: queryTxt EREFUSED jaaiye.ftf2rnr.mongodb.net","timestamp":"2025-10-22T11:57:16.991Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:57:27.921Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T11:57:32.398Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T11:57:32.399Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:57:32.408Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-02.ftf2rnr.mongodb.net","timestamp":"2025-10-22T11:57:42.279Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-22T11:57:43.390Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:57:55.547Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T11:57:59.903Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T11:57:59.904Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:57:59.923Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-02.ftf2rnr.mongodb.net","timestamp":"2025-10-22T11:58:01.581Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-22T11:58:02.551Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:59:15.526Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T11:59:26.224Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T11:59:26.233Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:59:26.249Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-22T11:59:27.739Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-22T11:59:28.715Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:59:35.269Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T11:59:39.505Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T11:59:39.506Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T11:59:39.519Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-01.ftf2rnr.mongodb.net","timestamp":"2025-10-22T11:59:43.046Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-22T11:59:44.014Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T11:59:54.583Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T12:00:02.877Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T12:00:02.879Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T12:00:02.912Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-22T12:00:04.490Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-22T12:00:05.488Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T12:00:41.583Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T12:00:45.760Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T12:00:45.761Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T12:00:45.776Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-02.ftf2rnr.mongodb.net","timestamp":"2025-10-22T12:00:47.393Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-22T12:00:48.335Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T12:01:14.283Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T12:01:20.727Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T12:01:20.744Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T12:01:20.963Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-22T12:01:23.789Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-22T12:01:24.745Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-10-22T12:02:04.303Z","user":"friendnpaldoc@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","timestamp":"2025-10-22T12:02:08.450Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-22T12:02:08.452Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-22T12:02:08.466Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-02.ftf2rnr.mongodb.net","timestamp":"2025-10-22T12:02:10.411Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-22T12:02:12.508Z"}
