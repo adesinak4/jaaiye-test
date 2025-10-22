@@ -1,6 +1,5 @@
 const Transaction = require('../models/Transaction');
 const { createTicketInternal } = require('./ticketService');
-const { emailQueue } = require('../queues');
 const Ticket = require('../models/Ticket');
 
 async function handleSuccessfulPayment({ provider, reference, amount, currency, metadata, raw }) {
@@ -63,6 +62,7 @@ async function handleSuccessfulPayment({ provider, reference, amount, currency, 
         assignedTo: { name, email }
       });
       createdTickets.push(ticket);
+      const { emailQueue } = require('../queues');
       await emailQueue.sendPaymentConfirmationEmailAsync(email, ticket);
     }
   } else {
@@ -78,6 +78,7 @@ async function handleSuccessfulPayment({ provider, reference, amount, currency, 
     }
 
     // Send confirmation email to buyer (with all QR codes if multiple)
+    const { emailQueue } = require('../queues');
     await emailQueue.sendPaymentConfirmationEmailAsync(metadata.email, createdTickets);
   }
 
