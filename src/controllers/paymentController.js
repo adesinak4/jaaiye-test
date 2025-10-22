@@ -136,7 +136,7 @@ class PaymentController {
 
   // Register transaction for polling backup (for mobile SDK usage)
   static registerTransaction = asyncHandler(async (req, res) => {
-    const { provider, reference, amount, currency = 'NGN', eventId, quantity = 1, metadata = {} } = req.body;
+    const { provider, reference, amount, currency = 'NGN', eventId, quantity = 1 } = req.body;
 
     // Validate required fields
     if (!provider || !reference || !amount || !eventId) {
@@ -181,9 +181,7 @@ class PaymentController {
         currency,
         userId,
         eventId,
-        ticketTypeId: metadata.ticketTypeId || null,
         quantity,
-        metadata: { ...metadata, userId, eventId },
         status: 'pending'
       });
 

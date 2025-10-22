@@ -11,7 +11,6 @@ const transactionSchema = new mongoose.Schema({
   eventId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
   ticketTypeId: { type: mongoose.Schema.Types.ObjectId, required: false },
   quantity: { type: Number, default: 1 },
-  metadata: { type: Object },
   raw: { type: Object },
 }, { timestamps: true });
 
