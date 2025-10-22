@@ -118,6 +118,32 @@ async function initializePayment({ amount, email, metadata, currency = 'NGN', id
 
     const link = (data.data && data.data.link) || (data.meta && data.meta.authorization && data.meta.authorization.redirect);
 
+    // Create transaction record for polling backup
+    try {
+      const Transaction = require('../models/Transaction');
+      await Transaction.create({
+        provider: 'flutterwave',
+        reference: payload.tx_ref,
+        amount,
+        currency,
+        userId: metadata.userId,
+        eventId: metadata.eventId,
+        ticketTypeId: metadata.ticketTypeId || null,
+        quantity: metadata.quantity || 1,
+        metadata,
+        status: 'pending'
+      });
+      console.log('Transaction record created for polling:', payload.tx_ref);
+    } catch (txError) {
+      // If transaction already exists (unique constraint), that's fine
+      if (txError.code === 11000) {
+        console.log('Transaction record already exists:', payload.tx_ref);
+      } else {
+        console.error('Failed to create transaction record:', txError);
+        // Don't fail the payment init if we can't create the record
+      }
+    }
+
     return {
       authorizationUrl: link,
       reference: payload.tx_ref,
@@ -142,7 +168,7 @@ async function pollPendingTransactions() {
     const pendingTransactions = await Transaction.find({
       provider: 'flutterwave',
       status: 'pending',
-      createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
+      createdAt: { $gte: new Date(Date.now() - 2 * 60 * 60 * 1000) } // Last 2 hours
     }).limit(50); // Limit to avoid overwhelming the API
 
     console.log(`Polling ${pendingTransactions.length} pending Flutterwave transactions`);

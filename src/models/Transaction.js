@@ -9,7 +9,7 @@ const transactionSchema = new mongoose.Schema({
   sessionId: { type: String },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   eventId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
-  ticketTypeId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  ticketTypeId: { type: mongoose.Schema.Types.ObjectId, required: false },
   quantity: { type: Number, default: 1 },
   metadata: { type: Object },
   raw: { type: Object },

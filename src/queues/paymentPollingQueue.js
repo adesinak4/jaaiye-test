@@ -6,7 +6,10 @@ class PaymentPollingQueue {
   constructor() {
     this.isRunning = false;
     this.intervalId = null;
-    this.pollingInterval = 60 * 60 * 1000; // 1 hour in milliseconds
+    // Default to 10 minutes; can be overridden via env
+    const defaultInterval = 5 * 60 * 1000;
+    const envInterval = Number(process.env.PAYMENT_POLL_INTERVAL_MS);
+    this.pollingInterval = Number.isFinite(envInterval) && envInterval > 0 ? envInterval : defaultInterval;
   }
 
   // Start the polling job
@@ -17,7 +20,7 @@ class PaymentPollingQueue {
     }
 
     this.isRunning = true;
-    logger.info('Starting payment polling queue');
+    logger.info('Starting payment polling queue', { pollingIntervalMs: this.pollingInterval });
 
     // Run immediately on start
     this.pollPendingTransactions();

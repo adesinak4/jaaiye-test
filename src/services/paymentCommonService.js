@@ -5,7 +5,7 @@ const Ticket = require('../models/Ticket');
 
 async function handleSuccessfulPayment({ provider, reference, amount, currency, metadata, raw }) {
   const { eventId, ticketTypeId, quantity = 1, userId, assignees = [] } = metadata || {};
-  if (!eventId || !ticketTypeId || !userId) {
+  if (!eventId || !userId) {
     return { ok: false, reason: 'missing_metadata' };
   }
 
@@ -23,12 +23,30 @@ async function handleSuccessfulPayment({ provider, reference, amount, currency, 
       currency,
       userId,
       eventId,
-      ticketTypeId,
+      ticketTypeId: ticketTypeId || null,
       quantity,
       metadata,
       raw,
       status: 'pending'
     });
+  }
+
+  // If no ticketTypeId provided, get the first available ticket type
+  let finalTicketTypeId = ticketTypeId;
+  if (!finalTicketTypeId) {
+    const Event = require('../models/Event');
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return { ok: false, reason: 'event_not_found' };
+    }
+
+    const availableTicketTypes = event.getAvailableTicketTypes();
+    if (availableTicketTypes.length === 0) {
+      return { ok: false, reason: 'no_available_ticket_types' };
+    }
+
+    finalTicketTypeId = availableTicketTypes[0]._id;
+    console.log('Using first available ticket type:', finalTicketTypeId);
   }
 
   const createdTickets = [];
@@ -39,7 +57,7 @@ async function handleSuccessfulPayment({ provider, reference, amount, currency, 
       const { name, email } = assignee;
       const ticket = await createTicketInternal({
         eventId,
-        ticketTypeId,
+        ticketTypeId: finalTicketTypeId,
         userId,
         quantity: 1,
         assignedTo: { name, email }
@@ -52,7 +70,7 @@ async function handleSuccessfulPayment({ provider, reference, amount, currency, 
     for (let i = 0; i < quantity; i++) {
       const ticket = await createTicketInternal({
         eventId,
-        ticketTypeId,
+        ticketTypeId: finalTicketTypeId,
         userId,
         quantity: 1
       });

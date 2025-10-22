@@ -56,7 +56,7 @@ const PaymentController = require('../controllers/paymentController');
  *                       type: string
  */
 // Initialize Paystack payment and return authorization URL
-router.post('/paystack/init', protect, idempotencyMiddleware, PaymentController.initPaystack);
+router.post('/paystack/init', protect, PaymentController.initPaystack);
 
 /**
  * @swagger
@@ -125,5 +125,57 @@ router.post('/flutterwave/init', protect, idempotencyMiddleware, PaymentControll
 router.post('/verify', PaymentController.verifyPaystack);
 router.post('/verify', PaymentController.verifyFlutterwave);
 
+/**
+ * @swagger
+ * /api/v1/payments/register:
+ *   post:
+ *     summary: Register transaction for polling backup (mobile SDK usage)
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [provider, reference, amount, eventId]
+ *             properties:
+ *               provider:
+ *                 type: string
+ *                 enum: [paystack, flutterwave, payaza]
+ *               reference:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *                 default: NGN
+ *               eventId:
+ *                 type: string
+ *               quantity:
+ *                 type: integer
+ *                 default: 1
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Transaction registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                     transaction:
+ *                       type: object
+ */
+router.post('/register', protect, PaymentController.registerTransaction);
 
 module.exports = router;
