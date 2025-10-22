@@ -193,9 +193,12 @@ class PaymentController {
         eventId
       });
 
-      return successResponse(res, {
-        message: 'Transaction registered successfully',
-        transaction
+      return res.status(201).json({
+        success: true,
+        data: {
+          message: 'Transaction registered successfully',
+          transaction
+        }
       });
     } catch (error) {
       console.error('Error registering transaction:', error);
