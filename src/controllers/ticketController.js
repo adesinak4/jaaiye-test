@@ -69,8 +69,11 @@ class TicketController {
             name: ticket.eventId.name,
             category: ticket.eventId.category,
             image: ticket.eventId.image,
+            venue: ticket.eventId.venue,
             ticketFee: ticket.eventId.ticketFee,
-            createdAt: ticket.eventId.createdAt
+            createdAt: ticket.eventId.createdAt,
+            date: new Date(ticket.eventId.startTime).toLocaleDateString(),
+            time: new Date(ticket.eventId.startTime).toLocaleTimeString()
           },
           ticketCount: 0,
           tickets: []
