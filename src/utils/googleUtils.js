@@ -206,14 +206,17 @@ exports.formatGoogleCalendarData = (googleCalendars = [], selectedCalendarIds = 
 
     googleCalendars.forEach(calendar => {
       const calendarId = calendar.id;
+      const isPrimary = calendar.primary || false;
+      const isInSelectedArray = selectedCalendarIds.includes(calendarId);
+
       formatted[calendarId] = {
         id: calendarId,
         name: calendar.summary || calendar.name || 'Unknown Calendar',
         description: calendar.description || '',
         color: calendar.backgroundColor || '#4285F4',
         accessRole: calendar.accessRole || 'none',
-        primary: calendar.primary || false,
-        selected: selectedCalendarIds.includes(calendarId),
+        primary: isPrimary,
+        selected: isPrimary && isInSelectedArray,
         timeZone: calendar.timeZone || 'UTC',
         location: calendar.location || '',
         etag: calendar.etag

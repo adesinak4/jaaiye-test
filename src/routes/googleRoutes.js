@@ -152,9 +152,15 @@ const handleListCalendars = async (req, res) => {
  */
 const handleSelectCalendars = async (req, res) => {
   try {
-    const { calendarIds } = req.body;
-    if (!Array.isArray(calendarIds)) {
-      return errorResponse(res, new Error('calendarIds must be an array'), 400);
+    const { action, calendarId } = req.body;
+
+    // Validate required fields
+    if (!action || !calendarId) {
+      return errorResponse(res, new Error('action and calendarId are required'), 400);
+    }
+
+    if (!['add', 'remove'].includes(action)) {
+      return errorResponse(res, new Error('action must be "add" or "remove"'), 400);
     }
 
     const user = await User.findById(req.user._id || req.user.id);
@@ -165,12 +171,42 @@ const handleSelectCalendars = async (req, res) => {
       }, 400);
     }
 
-    user.googleCalendar.selectedCalendarIds = calendarIds;
+    // Initialize selectedCalendarIds if it doesn't exist
+    if (!user.googleCalendar.selectedCalendarIds) {
+      user.googleCalendar.selectedCalendarIds = [];
+    }
+
+    let message = '';
+    let updatedCalendarIds = [...user.googleCalendar.selectedCalendarIds];
+
+    if (action === 'add') {
+      // Add calendar ID if not already present
+      if (!updatedCalendarIds.includes(calendarId)) {
+        updatedCalendarIds.push(calendarId);
+        message = 'Calendar added successfully';
+      } else {
+        message = 'Calendar already selected';
+      }
+    } else if (action === 'remove') {
+      // Remove calendar ID if present
+      const index = updatedCalendarIds.indexOf(calendarId);
+      if (index > -1) {
+        updatedCalendarIds.splice(index, 1);
+        message = 'Calendar removed successfully';
+      } else {
+        message = 'Calendar was not selected';
+      }
+    }
+
+    // Update user's selected calendar IDs
+    user.googleCalendar.selectedCalendarIds = updatedCalendarIds;
     await user.save();
 
     return successResponse(res, {
-      selectedCalendarIds: calendarIds,
-      message: 'Calendar selection updated successfully'
+      selectedCalendarIds: updatedCalendarIds,
+      message,
+      action,
+      calendarId
     });
   } catch (err) {
     console.error('Select calendars error:', err);
@@ -637,7 +673,7 @@ router.get('/calendars', apiLimiter, handleListCalendars);
  * @swagger
  * /api/v1/google/calendars/select:
  *   post:
- *     summary: Select Google calendars for sync
+ *     summary: Add or remove Google calendar from selection
  *     tags: [Google]
  *     security:
  *       - bearerAuth: []
@@ -647,14 +683,38 @@ router.get('/calendars', apiLimiter, handleListCalendars);
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [action, calendarId]
  *             properties:
- *               calendarIds:
- *                 type: array
- *                 items:
- *                   type: string
+ *               action:
+ *                 type: string
+ *                 enum: [add, remove]
+ *                 description: Action to perform on the calendar
+ *               calendarId:
+ *                 type: string
+ *                 description: Google calendar ID to add or remove
  *     responses:
  *       200:
- *         description: Success
+ *         description: Calendar selection updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     selectedCalendarIds:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     message:
+ *                       type: string
+ *                     action:
+ *                       type: string
+ *                     calendarId:
+ *                       type: string
  */
 router.post('/calendars/select', apiLimiter, handleSelectCalendars);
 /**
