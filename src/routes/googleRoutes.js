@@ -226,7 +226,6 @@ const handleListEvents = async (req, res) => {
     const {
       timeMin,
       timeMax,
-      calendarIds,
       includeAllDay = true,
       maxResults = 100,
       viewType = 'monthly'
@@ -245,6 +244,8 @@ const handleListEvents = async (req, res) => {
         message: 'No Google account linked. Please link your Google account first.'
       }, 400);
     }
+
+    const calendarIds = user.googleCalendar.selectedCalendarIds;
 
     const events = await googleSvc.listEvents(user, timeMin, timeMax, calendarIds);
 
