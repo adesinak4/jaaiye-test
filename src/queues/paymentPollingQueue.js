@@ -7,7 +7,7 @@ class PaymentPollingQueue {
     this.isRunning = false;
     this.intervalId = null;
     // Default to 10 minutes; can be overridden via env
-    const defaultInterval = 5 * 60 * 1000;
+    const defaultInterval = 3 * 60 * 1000;
     const envInterval = Number(process.env.PAYMENT_POLL_INTERVAL_MS);
     this.pollingInterval = Number.isFinite(envInterval) && envInterval > 0 ? envInterval : defaultInterval;
   }

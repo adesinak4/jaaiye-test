@@ -136,13 +136,13 @@ class PaymentController {
 
   // Register transaction for polling backup (for mobile SDK usage)
   static registerTransaction = asyncHandler(async (req, res) => {
-    const { provider, reference, amount, currency = 'NGN', eventId, quantity = 1 } = req.body;
+    const { provider, reference, amount, currency = 'NGN', eventId, quantity = 1, transId } = req.body;
 
     // Validate required fields
-    if (!provider || !reference || !amount || !eventId) {
+    if (!provider || !reference || !amount || !eventId || !transId) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: provider, reference, amount, and eventId are required'
+        message: 'Missing required fields: provider, reference, amount, transId and eventId are required'
       });
     }
 
@@ -180,6 +180,7 @@ class PaymentController {
         amount,
         currency,
         userId,
+        transId,
         eventId,
         quantity,
         status: 'pending'
@@ -188,6 +189,7 @@ class PaymentController {
       console.log('Transaction registered for polling:', {
         provider,
         reference,
+        transId,
         amount,
         userId,
         eventId

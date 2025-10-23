@@ -1,12 +1,14 @@
 const Transaction = require('../models/Transaction');
 const { createTicketInternal } = require('./ticketService');
-const Ticket = require('../models/Ticket');
+const User = require('../models/User');
 
 async function handleSuccessfulPayment({ provider, reference, amount, currency, metadata, raw }) {
   const { eventId, ticketTypeId, quantity = 1, userId, assignees = [] } = metadata || {};
   if (!eventId || !userId) {
     return { ok: false, reason: 'missing_metadata' };
   }
+
+  const user = await User.findById(userId);
 
   // Check for existing transaction
   let trx = await Transaction.findOne({ provider, reference });
@@ -31,22 +33,22 @@ async function handleSuccessfulPayment({ provider, reference, amount, currency, 
   }
 
   // If no ticketTypeId provided, get the first available ticket type
-  let finalTicketTypeId = ticketTypeId;
-  if (!finalTicketTypeId) {
-    const Event = require('../models/Event');
-    const event = await Event.findById(eventId);
-    if (!event) {
-      return { ok: false, reason: 'event_not_found' };
-    }
+  // let finalTicketTypeId = ticketTypeId;
+  // if (!finalTicketTypeId) {
+  //   const Event = require('../models/Event');
+  //   const event = await Event.findById(eventId);
+  //   if (!event) {
+  //     return { ok: false, reason: 'event_not_found' };
+  //   }
 
-    const availableTicketTypes = event.getAvailableTicketTypes();
-    if (availableTicketTypes.length === 0) {
-      return { ok: false, reason: 'no_available_ticket_types' };
-    }
+  //   const availableTicketTypes = event.getAvailableTicketTypes();
+  //   if (availableTicketTypes.length === 0) {
+  //     return { ok: false, reason: 'no_available_ticket_types' };
+  //   }
 
-    finalTicketTypeId = availableTicketTypes[0]._id;
-    console.log('Using first available ticket type:', finalTicketTypeId);
-  }
+  //   finalTicketTypeId = availableTicketTypes[0]._id;
+  //   console.log('Using first available ticket type:', finalTicketTypeId);
+  // }
 
   const createdTickets = [];
 
@@ -54,9 +56,9 @@ async function handleSuccessfulPayment({ provider, reference, amount, currency, 
   if (Array.isArray(assignees) && assignees.length > 0) {
     for (const assignee of assignees) {
       const { name, email } = assignee;
+      console.log(assignee)
       const ticket = await createTicketInternal({
         eventId,
-        ticketTypeId: finalTicketTypeId,
         userId,
         quantity: 1,
         assignedTo: { name, email }
@@ -70,7 +72,7 @@ async function handleSuccessfulPayment({ provider, reference, amount, currency, 
     for (let i = 0; i < quantity; i++) {
       const ticket = await createTicketInternal({
         eventId,
-        ticketTypeId: finalTicketTypeId,
+        // ticketTypeId: finalTicketTypeId,
         userId,
         quantity: 1
       });
@@ -79,7 +81,7 @@ async function handleSuccessfulPayment({ provider, reference, amount, currency, 
 
     // Send confirmation email to buyer (with all QR codes if multiple)
     const { emailQueue } = require('../queues');
-    await emailQueue.sendPaymentConfirmationEmailAsync(metadata.email, createdTickets);
+    await emailQueue.sendPaymentConfirmationEmailAsync(user.email, createdTickets);
   }
 
   trx.status = 'successful';

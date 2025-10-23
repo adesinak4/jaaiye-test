@@ -9,6 +9,60 @@ const TEXT = '#0F172A';
 const MUTED = '#64748B';
 const BG = '#F8FAFC';
 const CARD_BG = '#FFFFFF';
+const CURRENCY_SYMBOL = '₦';
+const DEFAULT_LOCALE = 'en-NG';
+
+// Helper function to format currency
+function formatCurrency(amount) {
+  if (amount === null || amount === undefined) return 'N/A';
+  return `${CURRENCY_SYMBOL}${amount.toLocaleString(DEFAULT_LOCALE)}`;
+}
+
+// Helper function to format date range
+function formatEventDate(startTime, endTime) {
+  if (!startTime) return 'Date TBA';
+
+  const start = new Date(startTime);
+  const end = endTime ? new Date(endTime) : null;
+
+  const dateOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  };
+  const timeOptions = {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  };
+
+  const dateStr = start.toLocaleDateString(DEFAULT_LOCALE, dateOptions);
+  const startTimeStr = start.toLocaleTimeString(DEFAULT_LOCALE, timeOptions);
+
+  if (end) {
+    const endTimeStr = end.toLocaleTimeString(DEFAULT_LOCALE, timeOptions);
+    return `${dateStr}, ${startTimeStr} - ${endTimeStr}`;
+  }
+
+  return `${dateStr}, ${startTimeStr}`;
+}
+
+// Helper function to parse ticket data
+function parseTicketData(ticket) {
+  let verifyUrl = null;
+
+  if (ticket.ticketData) {
+    try {
+      const parsed = JSON.parse(ticket.ticketData);
+      verifyUrl = parsed.verifyUrl;
+    } catch (error) {
+      console.error('Failed to parse ticket data:', error);
+    }
+  }
+
+  return { verifyUrl };
+}
 
 function logoTag() {
   if (EMBED_LOGO) {
@@ -114,42 +168,191 @@ function welcomeEmail({ username }) {
   return baseLayout({ title, previewText, bodyHtml, cta: { label: 'Open App', url: APP_URL } });
 }
 
-function paymentConfirmationEmail({ ticket }) {
-  const title = `🎟️ Your Ticket for ${escapeHtml(ticket.eventId?.title || 'the event')}`;
-  const previewText = `Here are your ticket details for ${escapeHtml(ticket.eventId?.title || '')}.`;
+// Generate QR code section for a single ticket
+function generateTicketQRSection(ticket, index, totalTickets) {
+  const ticketId = escapeHtml(ticket._id?.toString() || 'N/A');
+  const { verifyUrl } = parseTicketData(ticket);
+  const ticketNumber = totalTickets > 1 ? ` #${index + 1}` : '';
 
-  const event = ticket.eventId || {};
-  const user = ticket.userId || {};
-  const assigned = ticket.assignedTo || {};
+  return `
+    <div style="margin: 24px 0; padding: 24px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px;">
+      ${totalTickets > 1 ? `
+      <h3 style="margin: 0 0 16px 0; font-size: 16px; color: #0F172A;">
+        Ticket${ticketNumber}
+      </h3>
+      ` : `
+      <h3 style="margin: 0 0 16px 0; font-size: 16px; color: #0F172A;">
+        Your Entry Pass
+      </h3>
+      `}
+
+      <div style="text-align: center; margin-bottom: 16px;">
+        <img
+          src="${ticket.qrCode}"
+          alt="Entry QR code for ticket ${ticketId}"
+          style="width: 200px; height: 200px; border-radius: 8px; border: 2px solid #E2E8F0; display: block; margin: 0 auto;"
+        />
+      </div>
+
+      <div style="text-align: center;">
+        <p style="font-size: 12px; color: #64748B; margin: 0; font-family: 'Courier New', monospace;">
+          Ticket ID: ${ticketId}
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+// Main email generation function
+function paymentConfirmationEmail({ tickets }) {
+  // Normalize input - accept single ticket or array of tickets
+  const ticketArray = Array.isArray(tickets) ? tickets : [tickets];
+
+  if (!ticketArray || ticketArray.length === 0) {
+    throw new Error('Ticket data is required');
+  }
+
+  // Use first ticket for common information (event, user, price)
+  const firstTicket = ticketArray[0];
+  const event = firstTicket.eventId || {};
+  const user = firstTicket.userId || {};
+  const assigned = firstTicket.assignedTo || {};
+
+  const recipientName = escapeHtml(
+    assigned.name || user.username || 'Valued Guest'
+  );
+  const eventTitle = escapeHtml(event.title || 'Upcoming Event');
+  const totalTickets = ticketArray.length;
+  const totalQuantity = ticketArray.reduce((sum, t) => sum + (t.quantity || 1), 0);
+  const totalPrice = ticketArray.reduce((sum, t) => sum + ((t.price || 0) * (t.quantity || 1)), 0);
+
+  const title = `🎟️ Your ${totalTickets > 1 ? 'Tickets' : 'Ticket'} for ${eventTitle}`;
+  const previewText = `Here ${totalTickets > 1 ? 'are' : 'is'} your ${totalTickets} ticket${totalTickets > 1 ? 's' : ''} for ${eventTitle}.`;
 
   const bodyHtml = `
-    <p>Hi ${escapeHtml(assigned.name || user.username || 'there')},</p>
-    <p>You're all set! Here's your ticket for <strong>${escapeHtml(event.title || 'the event')}</strong>.</p>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+      <p style="font-size: 16px; color: #1E293B; margin-bottom: 16px;">
+        Hi ${recipientName},
+      </p>
 
-    <div style="margin:16px 0;padding:16px;border:1px solid #E2E8F0;border-radius:12px;background:#F8FAFC;">
-      <p><strong>Event:</strong> ${escapeHtml(event.title || '')}</p>
-      <p><strong>Date:</strong> ${new Date(event.startTime).toLocaleString()}</p>
-      ${event.venue ? `<p><strong>Venue:</strong> ${escapeHtml(event.venue)}</p>` : ''}
-      <p><strong>Ticket Type:</strong> ${escapeHtml(ticket.ticketTypeName || '')}</p>
-      <p><strong>Ticket ID:</strong> ${escapeHtml(ticket.ticketId || '')}</p>
-      ${ticket.quantity > 1 ? `<p><strong>Quantity:</strong> ${ticket.quantity}</p>` : ''}
+      <p style="font-size: 16px; color: #1E293B; margin-bottom: 24px;">
+        You're all set! Here ${totalTickets > 1 ? 'are' : 'is'} your ${totalTickets > 1 ? `<strong>${totalTickets} tickets</strong>` : 'ticket'} for
+        <strong>${eventTitle}</strong>.
+      </p>
+
+      <!-- Event Details Card -->
+      <div style="margin: 24px 0; padding: 20px; border: 1px solid #E2E8F0; border-radius: 12px; background: #F8FAFC;">
+        <h2 style="margin: 0 0 16px 0; font-size: 18px; color: #0F172A;">
+          Event Details
+        </h2>
+
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 8px 0; color: #64748B; font-size: 14px; width: 120px; vertical-align: top;">
+              Event:
+            </td>
+            <td style="padding: 8px 0; color: #1E293B; font-size: 14px; font-weight: 500;">
+              ${eventTitle}
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 8px 0; color: #64748B; font-size: 14px; vertical-align: top;">
+              Date & Time:
+            </td>
+            <td style="padding: 8px 0; color: #1E293B; font-size: 14px;">
+              ${formatEventDate(event.startTime, event.endTime)}
+            </td>
+          </tr>
+
+          ${event.venue ? `
+          <tr>
+            <td style="padding: 8px 0; color: #64748B; font-size: 14px; vertical-align: top;">
+              Venue:
+            </td>
+            <td style="padding: 8px 0; color: #1E293B; font-size: 14px;">
+              ${escapeHtml(event.venue)}
+            </td>
+          </tr>
+          ` : ''}
+
+          ${totalTickets > 1 ? `
+          <tr>
+            <td style="padding: 8px 0; color: #64748B; font-size: 14px; vertical-align: top;">
+              Total Tickets:
+            </td>
+            <td style="padding: 8px 0; color: #1E293B; font-size: 14px;">
+              ${totalTickets} ticket${totalTickets > 1 ? 's' : ''}
+            </td>
+          </tr>
+          ` : ''}
+
+          ${totalPrice > 0 ? `
+          <tr>
+            <td style="padding: 8px 0; color: #64748B; font-size: 14px; vertical-align: top;">
+              Total Paid:
+            </td>
+            <td style="padding: 8px 0; color: #1E293B; font-size: 14px; font-weight: 600;">
+              ${formatCurrency(totalPrice)}
+            </td>
+          </tr>
+          ` : ''}
+        </table>
+      </div>
+
+      <!-- QR Code Section(s) -->
+      ${totalTickets > 1 ? `
+      <h2 style="margin: 32px 0 16px 0; font-size: 18px; color: #0F172A;">
+        Your Tickets
+      </h2>
+      <p style="font-size: 14px; color: #64748B; margin-bottom: 16px;">
+        Each ticket has a unique QR code. Please present the correct ticket at the event entrance.
+      </p>
+      ` : ''}
+
+      ${ticketArray.map((ticket, index) =>
+        ticket.qrCode ? generateTicketQRSection(ticket, index, totalTickets) : ''
+      ).join('')}
+
+      ${ticketArray.some(t => t.qrCode) ? `
+      <p style="font-size: 13px; color: #64748B; text-align: center; margin: 16px 0; line-height: 1.5;">
+        ${totalTickets > 1
+          ? 'Show these QR codes at the event entrance for seamless check-in.'
+          : 'Show this QR code at the event entrance for seamless check-in.'}
+      </p>
+      ` : ''}
+
+      <!-- Important Information -->
+      <div style="margin: 24px 0; padding: 16px; background: #FEF3C7; border-left: 4px solid #F59E0B; border-radius: 4px;">
+        <p style="margin: 0; font-size: 14px; color: #92400E; line-height: 1.6;">
+          <strong>Important:</strong> Please arrive 15-30 minutes before the event starts.
+          ${totalTickets > 1
+            ? 'Have all QR codes ready on your device or printed for faster entry.'
+            : 'Have this QR code ready on your device or printed for faster entry.'}
+        </p>
+      </div>
+
+      <p style="font-size: 16px; color: #1E293B; margin-top: 32px;">
+        We can't wait to see you there!
+      </p>
+
+      <p style="font-size: 14px; color: #64748B; margin-top: 24px;">
+        Questions? Reply to this email or contact our support team.
+      </p>
     </div>
-
-    <div style="margin-top:20px;text-align:center;">
-      <img src="${ticket.qrCode}" alt="QR Code" style="width:180px;height:180px;border-radius:8px;border:1px solid #E2E8F0;" />
-      <p style="font-size:13px;color:#64748B;margin-top:6px;">Show this QR code at the event entrance.</p>
-    </div>
-
-    <p style="margin-top:20px;">We look forward to seeing you!</p>
   `;
 
   return baseLayout({
     title,
     previewText,
     bodyHtml,
-    cta: { label: 'View Event', url: `${APP_URL}events/${event._id}` }
+    cta: event._id ? {
+      label: 'View Event Details',
+      url: `${APP_URL}events/${event._id}`
+    } : null
   });
 }
+
 
 function reportEmail({ reportData }) {
   const title = 'Your Report';

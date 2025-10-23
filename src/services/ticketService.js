@@ -3,8 +3,8 @@ const Ticket = require('../models/Ticket');
 const Event = require('../models/Event');
 const { ValidationError, NotFoundError, ConflictError } = require('../middleware/errorHandler');
 
-async function createTicketInternal({ eventId, ticketTypeId, quantity = 1, userId, assignedTo = null }) {
-  if (!eventId || !ticketTypeId) {
+async function createTicketInternal({ eventId, quantity = 1, userId, assignedTo = null }) {
+  if (!eventId) {
     throw new ValidationError('Event ID and Ticket Type ID are required');
   }
 
@@ -19,32 +19,30 @@ async function createTicketInternal({ eventId, ticketTypeId, quantity = 1, userI
     throw new ValidationError('Cannot create ticket for cancelled or completed event');
   }
 
-  const ticketType = event.ticketTypes.id(ticketTypeId);
-  if (!ticketType) throw new NotFoundError('Ticket type not found');
+  // const ticketType = event.ticketTypes.id(ticketTypeId);
+  // if (!ticketType) throw new NotFoundError('Ticket type not found');
 
-  const availableTicketTypes = event.getAvailableTicketTypes();
-  const availableTicketType = availableTicketTypes.find(
-    t => t._id.toString() === ticketTypeId.toString()
-  );
-  if (!availableTicketType) {
-    throw new ValidationError('Ticket type is not available for purchase');
-  }
+  // const availableTicketTypes = event.getAvailableTicketTypes();
+  // const availableTicketType = availableTicketTypes.find(
+  //   t => t._id.toString() === ticketTypeId.toString()
+  // );
+  // if (!availableTicketType) {
+  //   throw new ValidationError('Ticket type is not available for purchase');
+  // }
 
   // Avoid duplicate tickets per user for same event type
-  const existingTicket = await Ticket.findOne({ userId, eventId, ticketTypeId });
-  if (existingTicket && !assignedTo) {
-    throw new ConflictError('You already have a ticket of this type for this event');
-  }
+  // const existingTicket = await Ticket.findOne({ userId, eventId });
+  // if (existingTicket && !assignedTo) {
+  //   throw new ConflictError('You already have a ticket for this event');
+  // }
 
   const ticket = await Ticket.create({
     userId,
     eventId,
-    ticketTypeId,
-    ticketTypeName: ticketType.name,
-    price: ticketType.price,
+    // ticketTypeId,
+    // ticketTypeName: ticketType.name,
+    price: event.ticketFee,
     quantity,
-    qrCode,
-    ticketData: qrCodeData,
     assignedTo
   });
 
@@ -54,7 +52,7 @@ async function createTicketInternal({ eventId, ticketTypeId, quantity = 1, userI
   await ticket.save();
 
   // Increment event’s sold ticket count
-  await event.incrementTicketSales(ticketTypeId, quantity);
+  await event.incrementTicketSales(quantity = 1);
 
   await ticket.populate([
     { path: 'eventId', select: 'title startTime endTime venue image ticketTypes' },

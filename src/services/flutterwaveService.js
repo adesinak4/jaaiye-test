@@ -4,13 +4,18 @@ const { v4: uuidv4 } = require('uuid');
 const { handleSuccessfulPayment } = require('./paymentCommonService');
 const API_BASE = 'https://api.flutterwave.com/v3';
 
-async function verify(reference) {
-  const res = await axios.get(`${API_BASE}/transactions/verify_by_reference`, {
-    headers: { Authorization: `Bearer ${process.env.FLW_SECRET_KEY}` },
-    params: { reference }
-  });
-  const data = res.data;
-  return data && data.status === 'success' ? data.data : null;
+async function verify(transactionId) {
+  try {
+    const res = await axios.get(`${API_BASE}/transactions/${transactionId}/verify`, {
+      headers: { Authorization: `Bearer ${process.env.FLW_SECRET_KEY}` }
+    });
+
+    const data = res.data;
+    return data && data.status === 'success' ? data.data : null;
+  } catch (error) {
+    console.error('Error verifying transaction:', error.response?.data || error.message);
+    return null;
+  }
 }
 
 function isValidSignature(headers, body) {
@@ -39,7 +44,7 @@ async function processWebhook(headers, body) {
   // Check for successful payment event
   if (body && body.event === 'charge.completed' && body.data && body.data.status === 'successful') {
     const data = body.data;
-    const reference = data.tx_ref || data.flw_ref || data.reference;
+    const reference = data.id;
 
     if (!reference) {
       console.error('No reference found in Flutterwave webhook');
@@ -48,7 +53,7 @@ async function processWebhook(headers, body) {
 
     try {
       // Verify the transaction with Flutterwave API
-      const verified = await verify(reference);
+      const verified = await verify(transId);
       if (verified && verified.status === 'successful') {
         const metadata = verified.meta || (verified.customer && verified.customer.meta) || {};
 
@@ -175,7 +180,7 @@ async function pollPendingTransactions() {
 
     for (const transaction of pendingTransactions) {
       try {
-        const verified = await verify(transaction.reference);
+        const verified = await verify(transaction.transId);
         if (verified && verified.status === 'successful') {
           console.log(`Processing pending transaction: ${transaction.reference}`);
           const metadata = verified.meta || (verified.customer && verified.customer.meta) || {};

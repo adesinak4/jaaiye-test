@@ -11,6 +11,16 @@ class EmailService {
   createTransporter() {
     // Try different configurations based on environment
     const configs = [
+      // Zoho
+      {
+        host: 'smtppro.zoho.com',
+        port: 465,
+        secure: true, // Use TLS
+        auth: {
+          user: process.env.EMAIL_USER, // e.g., hello@friendnpal.com
+          pass: process.env.EMAIL_PASS  // App-specific password
+        }
+      },
       // Gmail with OAuth2 (recommended)
       {
         service: 'gmail',
@@ -66,10 +76,12 @@ class EmailService {
     // Fallback to basic configuration
     logger.warn('Using fallback email configuration');
     return nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtppro.zoho.com',
+      port: 465,
+      secure: true, // Use TLS
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: process.env.EMAIL_USER, // e.g., hello@friendnpal.com
+        pass: process.env.EMAIL_PASS  // App-specific password
       }
     });
   }
@@ -287,23 +299,62 @@ class EmailService {
     });
   }
 
-  // New method for sending report emails
-  async sendPaymentConfirmationEmail(userOrEmail, ticket) {
+  /**
+   * Send payment confirmation email with ticket(s)
+   * @param {string|object} userOrEmail - User object with email or email string
+   * @param {object|array} ticketsOrTicket - Single ticket object or array of tickets
+   * @returns {Promise} Email send result
+   */
+  async sendPaymentConfirmationEmail(userOrEmail, ticketsOrTicket) {
     const email = typeof userOrEmail === 'object' ? userOrEmail.email : userOrEmail;
 
     if (!email) {
       throw new Error('Email is required');
     }
 
-    const html = templates.paymentConfirmationEmail({ ticket });
-    const text = `Payment Confirmed! Your Tickets are Ready`;
+    // Normalize tickets to always be an array
+    const tickets = Array.isArray(ticketsOrTicket) ? ticketsOrTicket : [ticketsOrTicket];
 
-    return this.sendEmail({
-      to: email,
-      subject: `Payment Confirmed! Your Tickets are Ready`,
-      html,
-      text
-    });
+    if (!tickets || tickets.length === 0) {
+      throw new Error('At least one ticket is required');
+    }
+
+    // Validate that tickets have required data
+    const firstTicket = tickets[0];
+    if (!firstTicket.eventId) {
+      throw new Error('Ticket must have event information');
+    }
+
+    const ticketCount = tickets.length;
+    const eventTitle = firstTicket.eventId?.title || 'Event';
+
+    // Generate email HTML
+    const html = templates.paymentConfirmationEmail({ tickets });
+
+    // Dynamic subject based on ticket count
+    const subject = ticketCount > 1
+      ? `🎟️ Payment Confirmed! Your ${ticketCount} Tickets for ${eventTitle}`
+      : `🎟️ Payment Confirmed! Your Ticket for ${eventTitle}`;
+
+    // Plain text fallback
+    const text = ticketCount > 1
+      ? `Payment Confirmed! Your ${ticketCount} tickets for ${eventTitle} are ready. Check your email for QR codes.`
+      : `Payment Confirmed! Your ticket for ${eventTitle} is ready. Check your email for the QR code.`;
+
+    try {
+      const result = await this.sendEmail({
+        to: email,
+        subject,
+        html,
+        text
+      });
+
+      console.log(`Payment confirmation sent to ${email} for ${ticketCount} ticket(s)`);
+      return result;
+    } catch (error) {
+      console.error(`Failed to send payment confirmation to ${email}:`, error);
+      throw new Error(`Failed to send payment confirmation email: ${error.message}`);
+    }
   }
 
   // Test email configuration

@@ -13,11 +13,9 @@ const ticketSchema = new mongoose.Schema({
   },
   ticketTypeId: {
     type: mongoose.Schema.Types.ObjectId,
-    required: true
   },
   ticketTypeName: {
     type: String,
-    required: true
   },
   price: {
     type: Number,
@@ -32,11 +30,9 @@ const ticketSchema = new mongoose.Schema({
   },
   qrCode: {
     type: String, // Base64 encoded QR code or URL
-    required: true
   },
   ticketData: {
     type: String, // JSON string containing ticket metadata
-    required: true
   },
   publicId: {
     type: String,

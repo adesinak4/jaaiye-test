@@ -13,238 +13,262 @@ const logger = require('../utils/logger');
 const { createTicketInternal, verifyAndUseTicket } = require('../services/ticketService');
 const { verifyQRToken } = require('../utils/qrGenerator');
 
-  class TicketController {
-    /**
-     * Create a new ticket for an event
-     * @route POST /api/v1/tickets
-     * @access Private
-     */
-    static createTicket = asyncHandler(async (req, res) => {
-      const { eventId, ticketTypeId, quantity = 1 } = req.body;
-      const userId = req.user && req.user._id ? req.user._id : req.body.userId;
+class TicketController {
+  /**
+   * Create a new ticket for an event
+   * @route POST /api/v1/tickets
+   * @access Private
+   */
+  static createTicket = asyncHandler(async (req, res) => {
+    const { eventId, ticketTypeId, quantity = 1 } = req.body;
+    const userId = req.user && req.user._id ? req.user._id : req.body.userId;
 
-      const ticket = await createTicketInternal({ eventId, ticketTypeId, quantity, userId });
+    const ticket = await createTicketInternal({ eventId, ticketTypeId, quantity, userId });
 
-      logger.info('Ticket created successfully', {
-        ticketId: ticket._id,
-        userId,
-        eventId,
-        ticketTypeId,
-        quantity
-      });
-
-      return successResponse(res, {
-        ticket: {
-          id: ticket._id,
-          qrCode: ticket.qrCode,
-          ticketData: JSON.parse(ticket.ticketData),
-          ticketTypeName: ticket.ticketTypeName,
-          price: ticket.price,
-          quantity: ticket.quantity,
-          status: ticket.status,
-          createdAt: ticket.createdAt,
-          event: ticket.eventId,
-          user: ticket.userId
-        }
-      }, 201, 'Ticket created successfully');
+    logger.info('Ticket created successfully', {
+      ticketId: ticket._id,
+      userId,
+      eventId,
+      ticketTypeId,
+      quantity
     });
 
-    /**
-     * Get all tickets for the authenticated user
-     * @route GET /api/v1/tickets/my-tickets
-     * @access Private
-     */
-    static getMyTickets = asyncHandler(async (req, res) => {
-      const userId = req.user._id;
+    return successResponse(res, {
+      ticket: {
+        id: ticket._id,
+        qrCode: ticket.qrCode,
+        ticketData: JSON.parse(ticket.ticketData),
+        ticketTypeName: ticket.ticketTypeName,
+        price: ticket.price,
+        quantity: ticket.quantity,
+        status: ticket.status,
+        createdAt: ticket.createdAt,
+        event: ticket.eventId,
+        user: ticket.userId
+      }
+    }, 201, 'Ticket created successfully');
+  });
 
-      const tickets = await Ticket.findByUser(userId);
+  /**
+   * Get all tickets for the authenticated user
+   * @route GET /api/v1/tickets/my-tickets
+   * @access Private
+   */
+  static getMyTickets = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
 
-      return successResponse(res, {
-        tickets: tickets.map(ticket => ({
-          id: ticket._id,
-          qrCode: ticket.qrCode,
-          ticketTypeName: ticket.ticketTypeName,
-          price: ticket.price,
-          quantity: ticket.quantity,
-          status: ticket.status,
-          usedAt: ticket.usedAt,
-          createdAt: ticket.createdAt,
-          event: ticket.eventId
-        }))
-      });
-    });
+    const tickets = await Ticket.findByUser(userId).populate('eventId');
 
-    /**
-     * Get all tickets for a specific event (admin only)
-     * @route GET /api/v1/tickets/event/:eventId
-     * @access Private (Admin)
-     */
-    static getEventTickets = asyncHandler(async (req, res) => {
-      const { eventId } = req.params;
+    const grouped = tickets.reduce((acc, ticket) => {
+      const eventId = ticket.eventId._id?.toString?.() || ticket.eventId.toString();
 
-      // Check if event exists
-      const event = await Event.findById(eventId);
-      if (!event) {
-        throw new NotFoundError('Event not found');
+      if (!acc[eventId]) {
+        acc[eventId] = {
+          event: {
+            id: ticket.eventId._id,
+            name: ticket.eventId.name,
+            category: ticket.eventId.category,
+            image: ticket.eventId.image,
+            ticketFee: ticket.eventId.ticketFee,
+            createdAt: ticket.eventId.createdAt
+          },
+          ticketCount: 0,
+          tickets: []
+        };
       }
 
-      const tickets = await Ticket.findByEvent(eventId);
-
-      return successResponse(res, {
-        event: {
-          id: event._id,
-          title: event.title,
-          attendeeCount: event.attendeeCount,
-          ticketTypes: event.ticketTypes.map(tt => ({
-            id: tt._id,
-            name: tt.name,
-            price: tt.price,
-            soldCount: tt.soldCount,
-            capacity: tt.capacity
-          }))
-        },
-        tickets: tickets.map(ticket => ({
-          id: ticket._id,
-          qrCode: ticket.qrCode,
-          ticketTypeName: ticket.ticketTypeName,
-          price: ticket.price,
-          quantity: ticket.quantity,
-          status: ticket.status,
-          usedAt: ticket.usedAt,
-          createdAt: ticket.createdAt,
-          user: ticket.userId
-        }))
+      acc[eventId].tickets.push({
+        id: ticket._id,
+        qrCode: ticket.qrCode,
+        ticketTypeName: ticket.ticketTypeName,
+        price: ticket.price,
+        quantity: ticket.quantity,
+        status: ticket.status,
+        usedAt: ticket.usedAt,
+        createdAt: ticket.createdAt
       });
+
+      acc[eventId].ticketCount += ticket.quantity || 1;
+
+      return acc;
+    }, {});
+
+    return successResponse(res, {
+      ticketsByEvent: Object.values(grouped)
     });
+  });
 
-    /**
-     * Get active tickets for the authenticated user
-     * @route GET /api/v1/tickets/active
-     * @access Private
-     */
-    static getActiveTickets = asyncHandler(async (req, res) => {
-      const userId = req.user._id;
+  /**
+   * Get all tickets for a specific event (admin only)
+   * @route GET /api/v1/tickets/event/:eventId
+   * @access Private (Admin)
+   */
+  static getEventTickets = asyncHandler(async (req, res) => {
+    const { eventId } = req.params;
 
-      const tickets = await Ticket.findActiveByUser(userId);
+    // Check if event exists
+    const event = await Event.findById(eventId);
+    if (!event) {
+      throw new NotFoundError('Event not found');
+    }
 
-      return successResponse(res, {
-        tickets: tickets.map(ticket => ({
-          id: ticket._id,
-          qrCode: ticket.qrCode,
-          ticketTypeName: ticket.ticketTypeName,
-          price: ticket.price,
-          quantity: ticket.quantity,
-          createdAt: ticket.createdAt,
-          event: ticket.eventId
+    const tickets = await Ticket.findByEvent(eventId);
+
+    return successResponse(res, {
+      event: {
+        id: event._id,
+        title: event.title,
+        attendeeCount: event.attendeeCount,
+        ticketTypes: event.ticketTypes.map(tt => ({
+          id: tt._id,
+          name: tt.name,
+          price: tt.price,
+          soldCount: tt.soldCount,
+          capacity: tt.capacity
         }))
-      });
+      },
+      tickets: tickets.map(ticket => ({
+        id: ticket._id,
+        qrCode: ticket.qrCode,
+        ticketTypeName: ticket.ticketTypeName,
+        price: ticket.price,
+        quantity: ticket.quantity,
+        status: ticket.status,
+        usedAt: ticket.usedAt,
+        createdAt: ticket.createdAt,
+        user: ticket.userId
+      }))
     });
+  });
 
-    static scanTicket = asyncHandler(async (req, res) => {
-      try {
+  /**
+   * Get active tickets for the authenticated user
+   * @route GET /api/v1/tickets/active
+   * @access Private
+   */
+  static getActiveTickets = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+
+    const tickets = await Ticket.findActiveByUser(userId);
+
+    return successResponse(res, {
+      tickets: tickets.map(ticket => ({
+        id: ticket._id,
+        qrCode: ticket.qrCode,
+        ticketTypeName: ticket.ticketTypeName,
+        price: ticket.price,
+        quantity: ticket.quantity,
+        createdAt: ticket.createdAt,
+        event: ticket.eventId
+      }))
+    });
+  });
+
+  static scanTicket = asyncHandler(async (req, res) => {
+    try {
       const token = req.query.t;
-        if (!token) return res.status(400).json({ error: 'Missing token' });
+      if (!token) return res.status(400).json({ error: 'Missing token' });
 
-        const decoded = await verifyQRToken(token);
-        if (!decoded) return res.status(400).json({ error: 'Invalid or expired token' });
+      const decoded = await verifyQRToken(token);
+      if (!decoded) return res.status(400).json({ error: 'Invalid or expired token' });
 
-        const scannerUser = req.user || null; // null = public access
+      const scannerUser = req.user || null; // null = public access
 
-        const result = await verifyAndUseTicket(decoded.ticketId, scannerUser);
-        res.json(result);
-      } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: err.message });
-      }
+      const result = await verifyAndUseTicket(decoded.ticketId, scannerUser);
+      res.json(result);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * Cancel a ticket
+   * @route PATCH /api/v1/tickets/:ticketId/cancel
+   * @access Private
+   */
+  static cancelTicket = asyncHandler(async (req, res) => {
+    const { ticketId } = req.params;
+    const userId = req.user._id;
+
+    const ticket = await Ticket.findById(ticketId);
+    if (!ticket) {
+      throw new NotFoundError('Ticket not found');
+    }
+
+    // Check if user owns the ticket
+    if (ticket.userId.toString() !== userId.toString()) {
+      throw new ValidationError('You can only cancel your own tickets');
+    }
+
+    if (ticket.status === 'used') {
+      throw new ValidationError('Cannot cancel a used ticket');
+    }
+
+    if (ticket.status === 'cancelled') {
+      throw new ValidationError('Ticket is already cancelled');
+    }
+
+    await ticket.cancel();
+
+    // Decrement event ticket sales
+    const event = await Event.findById(ticket.eventId);
+    if (event) {
+      await event.decrementTicketSales(ticket.ticketTypeId, ticket.quantity);
+    }
+
+    logger.info('Ticket cancelled', {
+      ticketId: ticket._id,
+      userId: ticket.userId,
+      eventId: ticket.eventId
     });
 
-    /**
-     * Cancel a ticket
-     * @route PATCH /api/v1/tickets/:ticketId/cancel
-     * @access Private
-     */
-    static cancelTicket = asyncHandler(async (req, res) => {
-      const { ticketId } = req.params;
-      const userId = req.user._id;
-
-      const ticket = await Ticket.findById(ticketId);
-      if (!ticket) {
-        throw new NotFoundError('Ticket not found');
+    return successResponse(res, {
+      ticket: {
+        id: ticket._id,
+        status: ticket.status
       }
+    }, 200, 'Ticket cancelled successfully');
+  });
 
-      // Check if user owns the ticket
-      if (ticket.userId.toString() !== userId.toString()) {
-        throw new ValidationError('You can only cancel your own tickets');
+  /**
+   * Get ticket details by ID
+   * @route GET /api/v1/tickets/:ticketId
+   * @access Private
+   */
+  static getTicketById = asyncHandler(async (req, res) => {
+    const { ticketId } = req.params;
+    const userId = req.user._id;
+
+    const ticket = await Ticket.findById(ticketId)
+      .populate('eventId', 'title startTime endTime venue image')
+      .populate('userId', 'fullName email');
+
+    if (!ticket) {
+      throw new NotFoundError('Ticket not found');
+    }
+
+    // Check if user owns the ticket or is admin
+    if (ticket.userId._id.toString() !== userId.toString() && req.user.role === 'user') {
+      throw new ValidationError('You can only view your own tickets');
+    }
+
+    return successResponse(res, {
+      ticket: {
+        id: ticket._id,
+        qrCode: ticket.qrCode,
+        ticketData: JSON.parse(ticket.ticketData),
+        ticketTypeName: ticket.ticketTypeName,
+        price: ticket.price,
+        quantity: ticket.quantity,
+        status: ticket.status,
+        usedAt: ticket.usedAt,
+        createdAt: ticket.createdAt,
+        event: ticket.eventId,
+        user: ticket.userId
       }
-
-      if (ticket.status === 'used') {
-        throw new ValidationError('Cannot cancel a used ticket');
-      }
-
-      if (ticket.status === 'cancelled') {
-        throw new ValidationError('Ticket is already cancelled');
-      }
-
-      await ticket.cancel();
-
-      // Decrement event ticket sales
-      const event = await Event.findById(ticket.eventId);
-      if (event) {
-        await event.decrementTicketSales(ticket.ticketTypeId, ticket.quantity);
-      }
-
-      logger.info('Ticket cancelled', {
-        ticketId: ticket._id,
-        userId: ticket.userId,
-        eventId: ticket.eventId
-      });
-
-      return successResponse(res, {
-        ticket: {
-          id: ticket._id,
-          status: ticket.status
-        }
-      }, 200, 'Ticket cancelled successfully');
     });
-
-    /**
-     * Get ticket details by ID
-     * @route GET /api/v1/tickets/:ticketId
-     * @access Private
-     */
-    static getTicketById = asyncHandler(async (req, res) => {
-      const { ticketId } = req.params;
-      const userId = req.user._id;
-
-      const ticket = await Ticket.findById(ticketId)
-        .populate('eventId', 'title startTime endTime venue image')
-        .populate('userId', 'fullName email');
-
-      if (!ticket) {
-        throw new NotFoundError('Ticket not found');
-      }
-
-      // Check if user owns the ticket or is admin
-      if (ticket.userId._id.toString() !== userId.toString() && req.user.role === 'user') {
-        throw new ValidationError('You can only view your own tickets');
-      }
-
-      return successResponse(res, {
-        ticket: {
-          id: ticket._id,
-          qrCode: ticket.qrCode,
-          ticketData: JSON.parse(ticket.ticketData),
-          ticketTypeName: ticket.ticketTypeName,
-          price: ticket.price,
-          quantity: ticket.quantity,
-          status: ticket.status,
-          usedAt: ticket.usedAt,
-          createdAt: ticket.createdAt,
-          event: ticket.eventId,
-          user: ticket.userId
-        }
-      });
-    });
-  }
+  });
+}
 
 module.exports = TicketController;

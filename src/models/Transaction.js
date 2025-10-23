@@ -6,6 +6,7 @@ const transactionSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   currency: { type: String, default: 'NGN' },
   status: { type: String, enum: ['pending', 'successful', 'failed', 'cancelled', 'completed'], default: 'pending' },
+  transId: { type: Number },
   sessionId: { type: String },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   eventId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },

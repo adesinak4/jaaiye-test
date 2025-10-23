@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const QRCode = require('qrcode');
 
 const JWT_SECRET = process.env.QR_TOKEN_SECRET || 'supersecretkey'; // store securely
-const APP_URL = process.env.BASE_URL || 'https://api.jaaiye.com'; // your base API URL
+const APP_URL = process.env.ADMIN_ORIGIN || 'https://api.jaaiye.com'; // your base API URL
 
 /**
  * Generates a signed JWT and QR code for a ticket
