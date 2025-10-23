@@ -204,10 +204,23 @@ exports.formatGoogleCalendarData = (googleCalendars = [], selectedCalendarIds = 
   try {
     const formatted = {};
 
+    // Check if 'primary' is in the selected array
+    const hasPrimarySelected = selectedCalendarIds.includes('primary');
+
     googleCalendars.forEach(calendar => {
       const calendarId = calendar.id;
       const isPrimary = calendar.primary || false;
       const isInSelectedArray = selectedCalendarIds.includes(calendarId);
+
+      // Determine if this calendar should be selected
+      let isSelected = false;
+      if (isPrimary && hasPrimarySelected) {
+        // Primary calendar is selected via 'primary' string
+        isSelected = true;
+      } else if (isInSelectedArray) {
+        // Calendar is explicitly selected by ID
+        isSelected = true;
+      }
 
       formatted[calendarId] = {
         id: calendarId,
@@ -216,7 +229,7 @@ exports.formatGoogleCalendarData = (googleCalendars = [], selectedCalendarIds = 
         color: calendar.backgroundColor || '#4285F4',
         accessRole: calendar.accessRole || 'none',
         primary: isPrimary,
-        selected: isPrimary && isInSelectedArray,
+        selected: isSelected,
         timeZone: calendar.timeZone || 'UTC',
         location: calendar.location || '',
         etag: calendar.etag
