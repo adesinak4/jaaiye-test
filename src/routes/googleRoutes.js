@@ -133,7 +133,8 @@ const handleListCalendars = async (req, res) => {
     }
 
     const calendars = await googleSvc.listCalendars(user);
-    const formattedCalendars = googleUtils.formatGoogleCalendarData(calendars);
+    const selectedCalendarIds = user.googleCalendar.selectedCalendarIds || [];
+    const formattedCalendars = googleUtils.formatGoogleCalendarData(calendars, selectedCalendarIds);
 
     return successResponse(res, {
       calendars: Object.values(formattedCalendars),

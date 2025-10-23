@@ -5,7 +5,7 @@ const logger = require('./logger');
  */
 exports.handleGoogleOAuthError = (err, res) => {
   const errorMessage = err.message || err.toString();
-  
+
   // Handle specific Google OAuth errors
   if (errorMessage.includes('invalid_grant')) {
     return {
@@ -15,7 +15,7 @@ exports.handleGoogleOAuthError = (err, res) => {
       statusCode: 401
     };
   }
-  
+
   if (errorMessage.includes('unauthorized_client')) {
     return {
       error: 'unauthorized_client',
@@ -24,7 +24,7 @@ exports.handleGoogleOAuthError = (err, res) => {
       statusCode: 401
     };
   }
-  
+
   if (errorMessage.includes('invalid_client')) {
     return {
       error: 'invalid_client',
@@ -33,7 +33,7 @@ exports.handleGoogleOAuthError = (err, res) => {
       statusCode: 401
     };
   }
-  
+
   if (errorMessage.includes('access_denied')) {
     return {
       error: 'access_denied',
@@ -42,7 +42,7 @@ exports.handleGoogleOAuthError = (err, res) => {
       statusCode: 403
     };
   }
-  
+
   if (errorMessage.includes('insufficient authentication scopes')) {
     return {
       error: 'insufficient_scopes',
@@ -51,7 +51,7 @@ exports.handleGoogleOAuthError = (err, res) => {
       statusCode: 403
     };
   }
-  
+
   // Generic Google API error
   return {
     error: 'google_api_error',
@@ -69,33 +69,33 @@ exports.validateGoogleTokens = (tokens) => {
     if (!tokens) {
       throw new Error('No tokens provided');
     }
-    
+
     if (!tokens.access_token) {
       throw new Error('Access token is required');
     }
-    
+
     if (!tokens.refresh_token) {
       throw new Error('Refresh token is required');
     }
-    
+
     if (!tokens.scope) {
       throw new Error('Token scope is required');
     }
-    
+
     // Check if tokens have required scopes
     const requiredScopes = [
       'https://www.googleapis.com/auth/calendar',
       'https://www.googleapis.com/auth/calendar.events'
     ];
-    
-    const hasRequiredScopes = requiredScopes.some(scope => 
+
+    const hasRequiredScopes = requiredScopes.some(scope =>
       tokens.scope.includes(scope)
     );
-    
+
     if (!hasRequiredScopes) {
       throw new Error('Tokens do not have required Google Calendar scopes');
     }
-    
+
     logger.info('Google tokens validated successfully');
     return true;
   } catch (error) {
@@ -112,20 +112,20 @@ exports.validateCalendarScopes = (tokens) => {
     if (!tokens.scope) {
       throw new Error('Token scope is required');
     }
-    
+
     const requiredScopes = [
       'https://www.googleapis.com/auth/calendar',
       'https://www.googleapis.com/auth/calendar.events'
     ];
-    
-    const hasRequiredScopes = requiredScopes.some(scope => 
+
+    const hasRequiredScopes = requiredScopes.some(scope =>
       tokens.scope.includes(scope)
     );
-    
+
     if (!hasRequiredScopes) {
       throw new Error('Insufficient authentication scopes. Required: calendar and calendar.events');
     }
-    
+
     logger.info('Calendar scopes validated successfully');
     return true;
   } catch (error) {
@@ -145,7 +145,7 @@ exports.createGoogleOAuthClient = (tokens) => {
       process.env.GOOGLE_CLIENT_SECRET,
       process.env.GOOGLE_REDIRECT_URI
     );
-    
+
     if (tokens) {
       client.setCredentials({
         access_token: tokens.access_token,
@@ -154,7 +154,7 @@ exports.createGoogleOAuthClient = (tokens) => {
         expiry_date: tokens.expiry_date ? new Date(tokens.expiry_date).getTime() : undefined
       });
     }
-    
+
     return client;
   } catch (error) {
     logger.error('Failed to create Google OAuth client', { error: error.message });
@@ -170,12 +170,12 @@ exports.getGoogleCalendarName = (calendarId, googleCalendars = {}) => {
     if (calendarId === 'primary') {
       return 'Primary Calendar';
     }
-    
+
     const calendar = googleCalendars[calendarId];
     if (calendar) {
       return calendar.summary || calendar.name || 'Unknown Calendar';
     }
-    
+
     return calendarId;
   } catch (error) {
     logger.error('Failed to get Google calendar name', { calendarId, error: error.message });
@@ -188,8 +188,8 @@ exports.getGoogleCalendarName = (calendarId, googleCalendars = {}) => {
  */
 exports.isGoogleCalendarAccessible = (user) => {
   try {
-    return !!(user?.googleCalendar?.refreshToken && 
-              user?.googleCalendar?.accessToken && 
+    return !!(user?.googleCalendar?.refreshToken &&
+              user?.googleCalendar?.accessToken &&
               user?.googleCalendar?.scope);
   } catch (error) {
     logger.error('Failed to check Google Calendar accessibility', { error: error.message });
@@ -200,10 +200,10 @@ exports.isGoogleCalendarAccessible = (user) => {
 /**
  * Format Google Calendar data for consistent structure
  */
-exports.formatGoogleCalendarData = (googleCalendars = []) => {
+exports.formatGoogleCalendarData = (googleCalendars = [], selectedCalendarIds = []) => {
   try {
     const formatted = {};
-    
+
     googleCalendars.forEach(calendar => {
       const calendarId = calendar.id;
       formatted[calendarId] = {
@@ -213,13 +213,13 @@ exports.formatGoogleCalendarData = (googleCalendars = []) => {
         color: calendar.backgroundColor || '#4285F4',
         accessRole: calendar.accessRole || 'none',
         primary: calendar.primary || false,
-        selected: calendar.selected || false,
+        selected: selectedCalendarIds.includes(calendarId),
         timeZone: calendar.timeZone || 'UTC',
         location: calendar.location || '',
         etag: calendar.etag
       };
     });
-    
+
     return formatted;
   } catch (error) {
     logger.error('Failed to format Google calendar data', { error: error.message });
@@ -235,11 +235,11 @@ exports.isTokenExpired = (expiryDate, bufferMinutes = 5) => {
     if (!expiryDate) {
       return true; // No expiry date means expired
     }
-    
+
     const now = new Date();
     const expiry = new Date(expiryDate);
     const bufferMs = bufferMinutes * 60 * 1000;
-    
+
     return now >= (expiry.getTime() - bufferMs);
   } catch (error) {
     logger.error('Failed to check token expiration', { error: error.message });
@@ -269,22 +269,22 @@ exports.logGoogleOperation = (operation, details = {}) => {
 exports.sanitizeGoogleResponse = (response) => {
   try {
     if (!response) return response;
-    
+
     const sanitized = { ...response };
-    
+
     // Remove sensitive fields
     if (sanitized.access_token) {
       sanitized.access_token = '[REDACTED]';
     }
-    
+
     if (sanitized.refresh_token) {
       sanitized.refresh_token = '[REDACTED]';
     }
-    
+
     if (sanitized.id_token) {
       sanitized.id_token = '[REDACTED]';
     }
-    
+
     return sanitized;
   } catch (error) {
     logger.error('Failed to sanitize Google response', { error: error.message });
