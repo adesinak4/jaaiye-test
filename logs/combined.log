@@ -4302,3 +4302,25 @@
 {"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-23T21:44:31.178Z"}
 {"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-02.ftf2rnr.mongodb.net","timestamp":"2025-10-23T21:44:32.665Z"}
 {"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-23T21:44:33.609Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"smtppro.zoho.com","timestamp":"2025-10-24T20:54:59.593Z","user":"hello@friendnpal.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","pollingIntervalMs":180000,"timestamp":"2025-10-24T20:55:03.326Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-24T20:55:03.327Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-24T20:55:03.344Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-24T20:55:06.154Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-24T20:55:07.609Z"}
+{"environment":"development","level":"info","message":"Access token expired, refreshing...","timestamp":"2025-10-24T20:56:17.008Z","userId":{}}
+{"environment":"development","level":"info","message":"Refreshed Google access token successfully","timestamp":"2025-10-24T20:56:17.985Z"}
+{"durationMs":4769,"environment":"development","level":"info","message":"Request","method":"GET","path":"/calendars","statusCode":200,"timestamp":"2025-10-24T20:56:19.577Z","userId":"686bb4853fcc47157790ef8b"}
+{"durationMs":2236,"environment":"development","level":"info","message":"Request","method":"POST","path":"/events","statusCode":200,"timestamp":"2025-10-24T20:57:10.555Z","userId":"686bb4853fcc47157790ef8b"}
+{"durationMs":2520,"environment":"development","level":"info","message":"Request","method":"POST","path":"/events","statusCode":200,"timestamp":"2025-10-24T20:57:47.903Z","userId":"686bb4853fcc47157790ef8b"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-24T20:58:03.333Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-24T20:58:03.483Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-24T21:01:03.334Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-24T21:01:03.667Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"smtppro.zoho.com","timestamp":"2025-10-24T21:01:43.378Z","user":"hello@friendnpal.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","pollingIntervalMs":180000,"timestamp":"2025-10-24T21:01:46.305Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-10-24T21:01:46.307Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-10-24T21:01:46.316Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-00.ftf2rnr.mongodb.net","timestamp":"2025-10-24T21:01:50.234Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-10-24T21:01:51.797Z"}
+{"durationMs":3934,"environment":"development","level":"info","message":"Request","method":"POST","path":"/events","statusCode":200,"timestamp":"2025-10-24T21:02:28.665Z","userId":"686bb4853fcc47157790ef8b"}

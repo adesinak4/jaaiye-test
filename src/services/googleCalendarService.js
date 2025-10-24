@@ -266,8 +266,16 @@ exports.listEvents = async function listEvents(user, timeMin, timeMax, calendarI
         summary: ev.summary,
         description: ev.description,
         location: ev.location,
-        start: ev.start?.dateTime || ev.start?.date,
-        end: ev.end?.dateTime || ev.end?.date
+        start: ev.start,
+        end: ev.end,
+        organizer: ev.organizer,
+        attendees: ev.attendees,
+        etag: ev.etag,
+        htmlLink: ev.htmlLink,
+        recurringEventId: ev.recurringEventId,
+        originalStartTime: ev.originalStartTime,
+        created: ev.created,
+        updated: ev.updated
       });
     }
   }
