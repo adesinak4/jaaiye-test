@@ -31,7 +31,7 @@ exports.getFirebaseToken = asyncHandler(async (req, res) => {
 // @route   GET /api/users/profile
 // @access  Private
 exports.getProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user.id).select('+googleCalendar.refreshToken');
 
   if (!user) {
     throw new NotFoundError('User not found');
@@ -43,6 +43,7 @@ exports.getProfile = asyncHandler(async (req, res) => {
   });
 
   const userResponse = formatUserResponse(user);
+  console.log(user)
   userResponse.isGoogleCalendarLinked = !!(user.googleCalendar && user.googleCalendar.refreshToken);
 
   return successResponse(res, { user: userResponse });

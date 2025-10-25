@@ -103,6 +103,6 @@ async function pollPendingTransactions() {
 //   return { authorizationUrl: data.data.authorization_url, reference: data.data.reference };
 // }
 
-module.exports = { processWebhook, verify, pollPendingTransactions, initializePayment };
+module.exports = { verify, pollPendingTransactions };
 
 
