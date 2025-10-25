@@ -42,7 +42,10 @@ exports.getProfile = asyncHandler(async (req, res) => {
     email: user.email
   });
 
-  return successResponse(res, { user: formatUserResponse(user) });
+  const userResponse = formatUserResponse(user);
+  userResponse.isGoogleCalendarLinked = !!(user.googleCalendar && user.googleCalendar.refreshToken);
+
+  return successResponse(res, { user: userResponse });
 });
 
 // @desc    Update user profile

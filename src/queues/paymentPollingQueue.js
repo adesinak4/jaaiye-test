@@ -1,6 +1,8 @@
 const logger = require('../utils/logger');
 const flutterwaveService = require('../services/flutterwaveService');
 const paystackService = require('../services/paystackService');
+const payazaService = require('../services/payazaService');
+const monnifyService = require('../services/monnifyService');
 
 class PaymentPollingQueue {
   constructor() {
@@ -56,6 +58,12 @@ class PaymentPollingQueue {
 
       // Poll Paystack pending transactions (if similar function exists)
       // await paystackService.pollPendingTransactions();
+
+      // Poll Payaza pending transactions (if similar function exists)
+      await payazaService.pollPendingTransactions();
+
+      // Poll Monnify pending transactions (if similar function exists)
+      await monnifyService.pollPendingTransactions();
 
       logger.info('Payment polling job completed successfully');
     } catch (error) {

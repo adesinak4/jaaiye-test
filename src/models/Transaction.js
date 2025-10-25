@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 
 const transactionSchema = new mongoose.Schema({
-  provider: { type: String, enum: ['paystack', 'flutterwave', 'payaza'], required: true },
-  reference: { type: String, required: true },
+  provider: { type: String, enum: ['paystack', 'flutterwave', 'payaza', 'monnify'], required: true },
+  reference: { type: String, required: true }, // jaaiye generated
+  transReference: { type: String }, // payment gateway generated
   amount: { type: Number, required: true },
   currency: { type: String, default: 'NGN' },
   status: { type: String, enum: ['pending', 'successful', 'failed', 'cancelled', 'completed'], default: 'pending' },

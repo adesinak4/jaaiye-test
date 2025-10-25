@@ -146,7 +146,7 @@ class PaymentController {
       });
     }
 
-    if (!['paystack', 'flutterwave', 'payaza'].includes(provider)) {
+    if (!['paystack', 'flutterwave', 'payaza', 'monnify'].includes(provider)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid provider. Must be paystack, flutterwave, or payaza'
