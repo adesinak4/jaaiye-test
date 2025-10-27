@@ -42,7 +42,7 @@ exports.getProfile = asyncHandler(async (req, res) => {
     email: user.email
   });
 
-  const userResponse = formatUserResponse(user);
+  const userResponse = formatUserResponse(user)
   console.log(user)
   userResponse.isGoogleCalendarLinked = !!(user.googleCalendar && user.googleCalendar.refreshToken);
 
@@ -70,9 +70,9 @@ exports.updateProfile = asyncHandler(async (req, res) => {
   }
 
   // Validate color format
-  const colorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+  const colorRegex = /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$/;
   if (!colorRegex.test(color)) {
-    throw new ValidationError('Invalid color format. Please use hex color code (e.g., #FF0000)');
+    throw new ValidationError('Invalid color format. Please use 3, 6, or 8-digit hex color code (e.g., #FF0000 or #FFE91E63)');
   }
 
   // If changing full name

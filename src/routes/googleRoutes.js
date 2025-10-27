@@ -43,6 +43,26 @@ const handleGoogleLink = async (req, res) => {
     // Ensure the Jaaiye calendar exists using fresh tokens
     await googleSvc.ensureJaaiyeCalendar(user, tokens);
 
+    // If this is a new link (not updating), sync existing events
+    if (!isUpdating) {
+      try {
+        const { syncExistingEventsToCalendar } = require('../services/calendarSyncService');
+        const syncResult = await syncExistingEventsToCalendar(user._id);
+
+        console.log('Retroactive calendar sync completed', {
+          userId: user._id,
+          eventsSynced: syncResult.eventsSynced,
+          ticketsSynced: syncResult.ticketsSynced
+        });
+      } catch (syncError) {
+        console.error('Failed to sync existing events to calendar', {
+          userId: user._id,
+          error: syncError.message
+        });
+        // Don't fail the linking process if sync fails
+      }
+    }
+
     const message = isUpdating
       ? 'Google account link updated successfully'
       : 'Google account linked successfully';
@@ -211,6 +231,21 @@ const handleSelectCalendars = async (req, res) => {
   } catch (err) {
     console.error('Select calendars error:', err);
     return errorResponse(res, err, 500);
+  }
+};
+
+/**
+ * Manually sync existing events to Google Calendar
+ */
+const handleManualSync = async (req, res) => {
+  try {
+    const { syncExistingEventsToCalendar } = require('../services/calendarSyncService');
+    const syncResult = await syncExistingEventsToCalendar(req.user._id || req.user.id);
+
+    return successResponse(res, syncResult, 200, 'Calendar sync completed');
+  } catch (error) {
+    console.error('Manual calendar sync error:', error);
+    return errorResponse(res, error, 500);
   }
 };
 
@@ -628,6 +663,32 @@ const handleOAuthCallback = (req, res) => {
  *         description: Linked/Updated
  */
 router.post('/link', apiLimiter, handleGoogleLink);
+/**
+ * @swagger
+ * /api/v1/google/sync:
+ *   post:
+ *     summary: Manually sync existing events to Google Calendar
+ *     tags: [Google]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Sync completed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 eventsSynced:
+ *                   type: number
+ *                 ticketsSynced:
+ *                   type: number
+ *                 totalSynced:
+ *                   type: number
+ */
+router.post('/sync', apiLimiter, handleManualSync);
 /**
  * @swagger
  * /api/v1/google/refresh:

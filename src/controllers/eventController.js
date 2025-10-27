@@ -8,6 +8,7 @@ const { successResponse, errorResponse } = require('../utils/response');
 const googleSvc = require('../services/googleCalendarService');
 const CloudinaryService = require('../services/cloudinaryService');
 const { asyncHandler } = require('../utils/asyncHandler');
+const { addCalendarGuidanceToResponse } = require('../utils/calendarGuidance');
 
 // Internal helper to add participants with permission checks and notifications
 async function addParticipantsToEvent(event, calendar, participantsInput, actingUserId) {
@@ -43,6 +44,42 @@ async function addParticipantsToEvent(event, calendar, participantsInput, acting
         eventId: event._id.toString()
       })
     )
+  );
+
+  // Add event to participants' Google Calendars if they have it linked
+  await Promise.all(
+    normalized.map(async (participant) => {
+      try {
+        const participantUser = await User.findById(participant.user).select('+googleCalendar.refreshToken +googleCalendar.accessToken');
+
+        if (participantUser && participantUser.googleCalendar && participantUser.googleCalendar.refreshToken) {
+          const eventBody = {
+            summary: event.title,
+            description: event.description || `You've been invited to ${event.title}`,
+            start: { dateTime: new Date(event.startTime).toISOString() },
+            end: { dateTime: new Date(event.endTime || event.startTime).toISOString() },
+            location: event.venue || undefined
+          };
+
+          const googleEvent = await googleSvc.insertEvent(participantUser, eventBody);
+
+          logger.info('Event added to participant Google Calendar', {
+            participantId: participant.user,
+            eventId: event._id,
+            googleEventId: googleEvent.id
+          });
+        } else {
+          logger.info('Participant does not have Google Calendar linked', { participantId: participant.user });
+        }
+      } catch (error) {
+        logger.error('Failed to add event to participant calendar', {
+          participantId: participant.user,
+          eventId: event._id,
+          error: error.message
+        });
+        // Don't fail the participant addition if calendar integration fails
+      }
+    })
   );
 
   return event;
@@ -172,7 +209,7 @@ exports.createEvent = async (req, res, next) => {
       await Promise.all(notificationPromises);
     }
 
-    return successResponse(res, {
+    const responseData = {
       event: {
         id: event._id,
         title: event.title,
@@ -189,7 +226,13 @@ exports.createEvent = async (req, res, next) => {
         external: event.external,
         createdAt: event.createdAt
       }
-    }, 201, 'Event created');
+    };
+
+    // Add calendar guidance if user doesn't have calendar linked
+    const user = await User.findById(req.user.id);
+    const enhancedResponse = addCalendarGuidanceToResponse(responseData, user, 'event_creation');
+
+    return successResponse(res, enhancedResponse, 201, 'Event created');
   } catch (error) {
     logger.error('Failed to create event', error, { calendarId: req.body.calendarId, userId: req.user.id });
     return errorResponse(res, error, 500);
@@ -471,7 +514,44 @@ exports.addParticipant = async (req, res, next) => {
       eventId: event._id.toString()
     });
 
-    res.json(event);
+    // Add event to participant's Google Calendar if they have it linked
+    try {
+      const participantUser = await User.findById(userId).select('+googleCalendar.refreshToken +googleCalendar.accessToken');
+
+      if (participantUser && participantUser.googleCalendar && participantUser.googleCalendar.refreshToken) {
+        const eventBody = {
+          summary: event.title,
+          description: event.description || `You've been invited to ${event.title}`,
+          start: { dateTime: new Date(event.startTime).toISOString() },
+          end: { dateTime: new Date(event.endTime || event.startTime).toISOString() },
+          location: event.venue || undefined
+        };
+
+        const googleEvent = await googleSvc.insertEvent(participantUser, eventBody);
+
+        logger.info('Event added to participant Google Calendar', {
+          participantId: userId,
+          eventId: event._id,
+          googleEventId: googleEvent.id
+        });
+      } else {
+        logger.info('Participant does not have Google Calendar linked', { participantId: userId });
+      }
+    } catch (error) {
+      logger.error('Failed to add event to participant calendar', {
+        participantId: userId,
+        eventId: event._id,
+        error: error.message
+      });
+      // Don't fail the participant addition if calendar integration fails
+    }
+
+    // Add calendar guidance if user doesn't have calendar linked
+    const user = await User.findById(req.user.id);
+    const responseData = { event };
+    const enhancedResponse = addCalendarGuidanceToResponse(responseData, user, 'participant_addition');
+
+    res.json(enhancedResponse);
   } catch (err) {
     next(err);
   }
