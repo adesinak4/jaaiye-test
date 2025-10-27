@@ -53,6 +53,12 @@ class PaymentPollingQueue {
     try {
       logger.info('Starting payment polling job');
 
+      // ⚠️ IMPORTANT: These polling calls make external API requests
+      // but DO NOT count against user rate limits since they:
+      // 1. Run server-side (not via user HTTP requests)
+      // 2. Use server IP (not user IP)
+      // 3. Call payment provider APIs (not our API endpoints)
+
       // Poll Flutterwave pending transactions
       await flutterwaveService.pollPendingTransactions();
 

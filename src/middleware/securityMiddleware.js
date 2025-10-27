@@ -1,5 +1,6 @@
 const rateLimit = require('express-rate-limit');
 const { generateDeviceFingerprint, rateLimitKey } = require('../services/authService');
+const User = require('../models/User');
 
 // Rate limiting
 exports.apiLimiter = rateLimit({
