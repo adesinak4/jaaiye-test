@@ -115,7 +115,7 @@ exports.register = asyncHandler(async (req, res) => {
   try {
     const existing = await Calendar.findOne({ owner: user._id });
     if (!existing) {
-      await Calendar.create({ owner: user._id, name: 'My Calendar', isDefault: true });
+      await Calendar.create({ owner: user._id, name: `${user.username}'s Calendar`, isDefault: true });
       logger.info('Default calendar created on registration', { userId: user._id });
     }
   } catch (e) {

@@ -148,7 +148,6 @@ exports.createEvent = async (req, res, next) => {
       description,
       startTime,
       endTime,
-
       venue,
       category: category || 'event',
       ticketFee: ticketFee === 'free' ? 'free' : ticketFee,
@@ -172,7 +171,7 @@ exports.createEvent = async (req, res, next) => {
           description,
           start: { dateTime: new Date(startTime).toISOString() },
           end: { dateTime: new Date(endTime).toISOString() },
-          location
+          location: venue
         };
 
         const googleEvent = await googleSvc.insertEvent(dbUser, eventBody, targetGoogleCalId);
