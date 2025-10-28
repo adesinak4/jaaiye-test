@@ -51,6 +51,7 @@ class CloudinaryService {
       }
 
       const result = await uploadAsync(file, defaultOptions);
+      console.log("2. ", result)
 
       return {
         success: true,

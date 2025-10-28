@@ -211,3 +211,5 @@
 {"environment":"development","level":"error","maxRetries":3,"message":"Email task failed permanently","timestamp":"2025-10-22T21:02:04.509Z","to":"[REDACTED]","type":"ticket"}
 {"environment":"development","error":"Cannot read properties of undefined (reading 'buffer')","level":"error","message":"Failed to create event","name":"TypeError","timestamp":"2025-10-27T13:11:32.117Z"}
 {"environment":"development","errorMessage":"Cannot read properties of undefined (reading 'buffer')","level":"error","message":"Error Response","statusCode":500,"timestamp":"2025-10-27T13:11:32.119Z"}
+{"environment":"development","error":"location is not defined","level":"error","message":"Failed to update event","name":"ReferenceError","timestamp":"2025-10-28T14:57:35.863Z"}
+{"environment":"development","errorMessage":"location is not defined","level":"error","message":"Error Response","statusCode":500,"timestamp":"2025-10-28T14:57:35.883Z"}

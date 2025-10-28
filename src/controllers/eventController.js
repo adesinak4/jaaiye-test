@@ -92,6 +92,10 @@ exports.createEvent = async (req, res, next) => {
   try {
     const { calendarId: inputCalendarId, googleCalendarId: overrideGoogleCalId, title, description, startTime, endTime, venue, category, ticketFee, isAllDay, recurrence, participants } = req.body;
 
+    // Normalize dates
+    const normalizedStart = new Date(startTime);
+    const normalizedEnd = endTime ? new Date(endTime) : null;
+
     // Resolve calendar: default to user's calendar if not provided
     let calendar;
     let calendarId = inputCalendarId;
@@ -118,10 +122,10 @@ exports.createEvent = async (req, res, next) => {
 
     // Validate start/end times: cannot be in the past
     const now = new Date();
-    if (new Date(startTime) < now) {
+    if (normalizedStart < now) {
       return errorResponse(res, new Error('Start time cannot be in the past'), 400);
     }
-    if (endTime && new Date(endTime) < new Date(startTime)) {
+    if (normalizedEnd && normalizedEnd < normalizedStart) {
       return errorResponse(res, new Error('End time must be after start time'), 400);
     }
 
@@ -146,8 +150,8 @@ exports.createEvent = async (req, res, next) => {
       calendar: calendarId,
       title,
       description,
-      startTime,
-      endTime,
+      startTime: normalizedStart,
+      endTime: normalizedEnd,
       venue,
       category: category || 'event',
       ticketFee: ticketFee === 'free' ? 'free' : ticketFee,
@@ -169,8 +173,8 @@ exports.createEvent = async (req, res, next) => {
         const eventBody = {
           summary: title,
           description,
-          start: { dateTime: new Date(startTime).toISOString() },
-          end: { dateTime: new Date(endTime).toISOString() },
+          start: { dateTime: normalizedStart.toISOString() },
+          end: { dateTime: (normalizedEnd || normalizedStart).toISOString() },
           location: venue
         };
 
@@ -243,7 +247,7 @@ exports.createEvent = async (req, res, next) => {
 // @access  Private
 exports.getEvent = async (req, res, next) => {
   try {
-    const event = await Event.findById(req.params.id);
+    const event = await Event.findById(req.params.id).lean();
     if (!event) {
       logger.error('Event not found', new Error('Event not found'), 404, { eventId: req.params.id });
       return res.status(404).json({
@@ -315,12 +319,12 @@ exports.updateEvent = async (req, res, next) => {
       return errorResponse(res, new Error('Access denied'), 403);
     }
 
-    const { title, description, startTime, endTime, isAllDay, recurrence } = req.body;
+    const { title, description, startTime, venue, endTime, isAllDay, recurrence } = req.body;
     if (title) event.title = title;
     if (description !== undefined) event.description = description;
     if (startTime) event.startTime = startTime;
     if (endTime) event.endTime = endTime;
-    if (location !== undefined) event.location = location;
+    if (venue !== undefined) event.venue = venue;
     if (isAllDay !== undefined) event.isAllDay = isAllDay;
     if (recurrence !== undefined) event.recurrence = recurrence;
 
@@ -337,7 +341,7 @@ exports.updateEvent = async (req, res, next) => {
             description: event.description,
             start: { dateTime: new Date(event.startTime).toISOString() },
             end: { dateTime: new Date(event.endTime).toISOString() },
-            location: event.location
+            location: event.venue
           });
         }
       }
@@ -455,7 +459,9 @@ exports.listEvents = async (req, res, next) => {
       query.endTime = { $lte: new Date(endDate) };
     }
 
-    const events = await Event.find(query);
+    const events = await Event.find(query)
+      .select('title description startTime endTime isAllDay recurrence calendar creator createdAt')
+      .lean();
 
     res.json({
       success: true,
@@ -746,9 +752,8 @@ exports.createEventWithImage = asyncHandler(async (req, res) => {
     calendar: calendarId,
     title,
     description,
-    startTime,
-    endTime: computedEndTime,
-
+    startTime: new Date(startTime),
+    endTime: new Date(computedEndTime),
     venue,
     category: category || 'event',
     ticketFee: ticketFee === 'free' ? 'free' : ticketFee,
@@ -768,8 +773,8 @@ exports.createEventWithImage = asyncHandler(async (req, res) => {
         summary: title,
         description,
         start: { dateTime: new Date(startTime).toISOString() },
-        end: { dateTime: new Date(endTime).toISOString() },
-        location: location || venue
+        end: { dateTime: new Date(computedEndTime).toISOString() },
+        location: venue
       };
 
       const googleEvent = await googleSvc.insertEvent(dbUser, eventBody, targetGoogleCalId);
@@ -846,10 +851,12 @@ exports.getAllEvents = asyncHandler(async (req, res) => {
   }
 
   const events = await Event.find(query)
+    .select('title description startTime endTime venue category ticketFee attendeeCount image isAllDay calendar createdAt')
     .populate('calendar', 'name')
     .sort({ startTime: 1 })
     .limit(parseInt(limit))
-    .skip((parseInt(page) - 1) * parseInt(limit));
+    .skip((parseInt(page) - 1) * parseInt(limit))
+    .lean();
 
   const totalEvents = await Event.countDocuments(query);
 
@@ -1233,11 +1240,13 @@ exports.getJaaiyeEvents = asyncHandler(async (req, res) => {
 
     // Get events
     const events = await Event.find(filter)
+      .select('title description startTime endTime venue category ticketFee image isAllDay calendar participants createdAt')
       .populate('calendar', 'name color')
       .populate('participants.user', 'username fullName profilePicture')
       .sort(sort)
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .lean();
 
     // Get total count for pagination
     const totalCount = await Event.countDocuments(filter);
@@ -1282,9 +1291,11 @@ exports.getEventsByCategory = asyncHandler(async (req, res) => {
   }
 
   const events = await Event.findByCategory(category)
+    .select('title description startTime endTime venue category ticketFee image isAllDay calendar createdAt')
     .populate('calendar', 'name')
     .limit(parseInt(limit))
-    .skip((parseInt(page) - 1) * parseInt(limit));
+    .skip((parseInt(page) - 1) * parseInt(limit))
+    .lean();
 
   const totalEvents = await Event.countDocuments({ category, status: 'scheduled' });
 
@@ -1608,6 +1619,7 @@ exports.createEventWithImageAdmin = asyncHandler(async (req, res) => {
 
     // Handle image upload if provided
     let imageUrl = null;
+    console.log("1. ", req.file)
     if (req.file) {
       const uploadResult = await CloudinaryService.uploadImage(req.file.buffer, {
         folder: 'jaaiye/events',
