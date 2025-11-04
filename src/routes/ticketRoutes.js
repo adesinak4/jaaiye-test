@@ -79,7 +79,7 @@ const TicketController = require('../controllers/ticketController');
  *       409:
  *         description: User already has a ticket for this event
  */
-router.post('/', admin, TicketController.createTicket);
+router.post('/', protect, admin, TicketController.createTicket);
 
 /**
  * @swagger

@@ -20,10 +20,25 @@ class TicketController {
    * @access Private
    */
   static createTicket = asyncHandler(async (req, res) => {
-    const { eventId, ticketTypeId, quantity = 1 } = req.body;
-    const userId = req.user && req.user._id ? req.user._id : req.body.userId;
+    const { eventId, ticketTypeId, quantity = 1, username, userId: userIdBody, complimentary = false, bypassCapacity = false } = req.body;
 
-    const ticket = await createTicketInternal({ eventId, ticketTypeId, quantity, userId });
+    // Admin route: require explicit user target via userId or username (no fallback to req.user)
+    let userId = null;
+    if (userIdBody) {
+      userId = userIdBody;
+    } else if (username) {
+      const targetUser = await User.findOne({ username }).select('_id email fullName username');
+      if (!targetUser) {
+        throw new NotFoundError('User not found');
+      }
+      userId = targetUser._id;
+    }
+
+    if (!userId) {
+      throw new ValidationError('Target user is required (provide userId or username)');
+    }
+
+    const ticket = await createTicketInternal({ eventId, ticketTypeId, quantity, userId, complimentary, bypassCapacity });
 
     logger.info('Ticket created successfully', {
       ticketId: ticket._id,
@@ -32,6 +47,18 @@ class TicketController {
       ticketTypeId,
       quantity
     });
+
+    // Try to send email notification to the ticket owner
+    try {
+      const targetUser = await User.findById(userId).select('email fullName username');
+      if (targetUser && targetUser.email) {
+        const emailService = require('../services/emailService');
+        // Send full ticket so template can render QR and IDs
+        await emailService.sendPaymentConfirmationEmail(targetUser, ticket);
+      }
+    } catch (e) {
+      logger.warn('Failed to send ticket email', { error: e.message, userId, ticketId: ticket._id });
+    }
 
     return successResponse(res, {
       ticket: {

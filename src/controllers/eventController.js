@@ -133,10 +133,7 @@ exports.createEvent = async (req, res, next) => {
     let imageUrl = null;
     if (req.file) {
       const uploadResult = await CloudinaryService.uploadImage(req.file.buffer, {
-        folder: 'jaaiye/events',
-        transformation: [
-          { width: 800, height: 600, crop: 'fill', quality: 'auto' }
-        ]
+        folder: 'jaaiye/events'
       });
 
       if (!uploadResult.success) {
@@ -289,7 +286,17 @@ exports.getEvent = async (req, res, next) => {
         calendar: event.calendar,
         creator: event.creator,
         external: event.external,
-        createdAt: event.createdAt
+        createdAt: event.createdAt,
+        ticketTypes: Array.isArray(event.ticketTypes) ? event.ticketTypes.map(tt => ({
+          id: tt._id,
+          name: tt.name,
+          price: tt.price,
+          capacity: tt.capacity ?? null,
+          soldCount: tt.soldCount ?? 0,
+          isActive: tt.isActive,
+          salesStartDate: tt.salesStartDate || null,
+          salesEndDate: tt.salesEndDate || null
+        })) : []
       }
     });
   } catch (error) {
@@ -705,10 +712,7 @@ exports.createEventWithImage = asyncHandler(async (req, res) => {
   let imageUrl = null;
   if (req.file) {
     const uploadResult = await CloudinaryService.uploadImage(req.file.buffer, {
-      folder: 'jaaiye/events',
-      transformation: [
-        { width: 800, height: 600, crop: 'fill', quality: 'auto' }
-      ]
+      folder: 'jaaiye/events'
     });
 
     if (!uploadResult.success) {
@@ -851,7 +855,7 @@ exports.getAllEvents = asyncHandler(async (req, res) => {
   }
 
   const events = await Event.find(query)
-    .select('title description startTime endTime venue category ticketFee attendeeCount image isAllDay calendar createdAt')
+    // .select('title description startTime endTime venue category ticketFee attendeeCount image isAllDay calendar createdAt')
     .populate('calendar', 'name')
     .sort({ startTime: 1 })
     .limit(parseInt(limit))
@@ -861,21 +865,7 @@ exports.getAllEvents = asyncHandler(async (req, res) => {
   const totalEvents = await Event.countDocuments(query);
 
   return successResponse(res, {
-    events: events.map(event => ({
-      id: event._id,
-      title: event.title,
-      description: event.description,
-      startTime: event.startTime,
-      endTime: event.endTime,
-      venue: event.venue,
-      category: event.category,
-      ticketFee: event.ticketFee,
-      attendeeCount: event.attendeeCount,
-      image: event.image,
-      isAllDay: event.isAllDay,
-      calendar: event.calendar,
-      createdAt: event.createdAt
-    })),
+    events,
     pagination: {
       page: parseInt(page),
       limit: parseInt(limit),
@@ -1160,20 +1150,54 @@ exports.createEventWithImageAdmin = asyncHandler(async (req, res) => {
       ? endTime
       : new Date(new Date(startTime).getTime() + 8 * 60 * 60 * 1000);
 
-    // Create event with createdBy field
+    // Parse ticket type payloads (single endpoint)
+    const now = new Date();
+    const parsedRegular = req.body.regularTicket ? (() => { try { return JSON.parse(req.body.regularTicket); } catch { return null; } })() : null;
+    const parsedEarly = req.body.earlyBirdTicket ? (() => { try { return JSON.parse(req.body.earlyBirdTicket); } catch { return null; } })() : null;
+
+    const ticketTypes = [];
+    if (parsedRegular && typeof parsedRegular.price === 'number') {
+      ticketTypes.push({
+        name: 'Regular',
+        price: parsedRegular.price,
+        capacity: parsedRegular.capacity ?? null,
+        isActive: true
+      });
+    }
+    if (parsedEarly && typeof parsedEarly.price === 'number') {
+      ticketTypes.push({
+        name: 'Early Bird',
+        price: parsedEarly.price,
+        capacity: parsedEarly.capacity ?? null,
+        isActive: true,
+        salesStartDate: parsedEarly.salesStartDate || null,
+        salesEndDate: parsedEarly.salesEndDate || null
+      });
+    }
+
+    const isAvailable = (tt) => {
+      if (!tt.isActive) return false;
+      if (tt.salesStartDate && now < new Date(tt.salesStartDate)) return false;
+      if (tt.salesEndDate && now > new Date(tt.salesEndDate)) return false;
+      return true;
+    };
+
+    const earlyActive = ticketTypes.find(tt => /early\s*bird/i.test(tt.name) && isAvailable(tt));
+    const regularActive = ticketTypes.find(tt => /regular/i.test(tt.name) && isAvailable(tt));
+    const computedTicketFee = ticketTypes.length > 0 ? (earlyActive?.price ?? regularActive?.price ?? null) : (ticketFee === 'free' ? 'free' : ticketFee);
+
+    // Create event with createdBy field and inline ticket types
     const event = await Event.create({
       calendar: calendarId,
       title,
       description,
       startTime,
       endTime: computedEndTime,
-
       venue,
       category: category || 'event',
-      ticketFee: ticketFee === 'free' ? 'free' : ticketFee,
+      ticketFee: computedTicketFee,
       image: imageUrl,
-      isAllDay,
-      recurrence,
+      ticketTypes,
       createdBy: createdBy,
       creator: req.user.id // Admin user as creator
     });
@@ -1352,10 +1376,7 @@ exports.updateEventImage = asyncHandler(async (req, res) => {
 
   // Upload new image
   const uploadResult = await CloudinaryService.uploadImage(req.file.buffer, {
-    folder: 'jaaiye/events',
-    transformation: [
-      { width: 1200, height: 630, crop: 'fill', quality: 'auto' }
-    ]
+    folder: 'jaaiye/events'
   });
 
   if (!uploadResult.success) {
@@ -1622,10 +1643,7 @@ exports.createEventWithImageAdmin = asyncHandler(async (req, res) => {
     console.log("1. ", req.file)
     if (req.file) {
       const uploadResult = await CloudinaryService.uploadImage(req.file.buffer, {
-        folder: 'jaaiye/events',
-        transformation: [
-          { width: 800, height: 600, crop: 'fill', quality: 'auto' }
-        ]
+        folder: 'jaaiye/events'
       });
 
       if (!uploadResult.success) {

@@ -170,7 +170,8 @@ function welcomeEmail({ username }) {
 
 // Generate QR code section for a single ticket
 function generateTicketQRSection(ticket, index, totalTickets) {
-  const ticketId = escapeHtml(ticket._id?.toString() || 'N/A');
+  const readableId = ticket.publicId || ticket._id?.toString();
+  const ticketId = escapeHtml(readableId || 'N/A');
   const { verifyUrl } = parseTicketData(ticket);
   const ticketNumber = totalTickets > 1 ? ` #${index + 1}` : '';
 

@@ -163,29 +163,33 @@ eventSchema.methods.removeTicketType = function(ticketTypeId) {
   return this.save();
 };
 
-eventSchema.methods.incrementTicketSales = function(quantity = 1) {
-  // const ticketType = this.ticketTypes.id(ticketTypeId);
-  // if (!ticketType) {
-  //   throw new Error('Ticket type not found');
-  // }
+eventSchema.methods.incrementTicketSales = function(ticketTypeId = null, quantity = 1, bypassCapacity = false) {
+  if (ticketTypeId) {
+    const ticketType = this.ticketTypes.id(ticketTypeId);
+    if (!ticketType) {
+      throw new Error('Ticket type not found');
+    }
 
-  // // Check capacity
-  // if (ticketType.capacity && (ticketType.soldCount + quantity) > ticketType.capacity) {
-  //   throw new Error('Ticket capacity exceeded');
-  // }
+    if (!bypassCapacity && ticketType.capacity && (ticketType.soldCount + quantity) > ticketType.capacity) {
+      throw new Error('Ticket capacity exceeded');
+    }
 
-  // ticketType.soldCount += quantity;
+    ticketType.soldCount += quantity;
+  }
+
   this.attendeeCount += quantity;
   return this.save();
 };
 
-eventSchema.methods.decrementTicketSales = function(quantity = 1) {
-  // const ticketType = this.ticketTypes.id(ticketTypeId);
-  // if (!ticketType) {
-  //   throw new Error('Ticket type not found');
-  // }
+eventSchema.methods.decrementTicketSales = function(ticketTypeId = null, quantity = 1) {
+  if (ticketTypeId) {
+    const ticketType = this.ticketTypes.id(ticketTypeId);
+    if (!ticketType) {
+      throw new Error('Ticket type not found');
+    }
+    ticketType.soldCount = Math.max(0, ticketType.soldCount - quantity);
+  }
 
-  // ticketType.soldCount = Math.max(0, ticketType.soldCount - quantity);
   this.attendeeCount = Math.max(0, this.attendeeCount - quantity);
   return this.save();
 };
