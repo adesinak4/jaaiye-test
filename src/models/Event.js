@@ -79,10 +79,6 @@ const eventSchema = new mongoose.Schema({
       type: Boolean,
       default: true
     },
-    salesStartDate: {
-      type: Date,
-      default: null
-    },
     salesEndDate: {
       type: Date,
       default: null

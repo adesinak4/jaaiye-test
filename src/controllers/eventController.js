@@ -254,18 +254,20 @@ exports.getEvent = async (req, res, next) => {
     }
 
     // Check if user has access to the calendar
-    const calendar = await Calendar.findById(event.calendar);
-    if (!calendar.isPublic &&
-      calendar.owner.toString() !== req.user.id &&
-      !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
-      logger.error('Access denied to event', new Error('Access denied'), 403, {
-        eventId: req.params.id,
-        userId: req.user.id
-      });
-      return res.status(403).json({
-        success: false,
-        error: 'Access denied'
-      });
+    if (req.user?.id) {
+      const calendar = await Calendar.findById(event.calendar);
+      if (!calendar.isPublic &&
+        calendar.owner.toString() !== req.user.id &&
+        !calendar.sharedWith.some(share => share.user.toString() === req.user.id)) {
+        logger.error('Access denied to event', new Error('Access denied'), 403, {
+          eventId: req.params.id,
+          userId: req.user.id
+        });
+        return res.status(403).json({
+          success: false,
+          error: 'Access denied'
+        });
+      }
     }
 
     res.json({
@@ -1170,7 +1172,6 @@ exports.createEventWithImageAdmin = asyncHandler(async (req, res) => {
         price: parsedEarly.price,
         capacity: parsedEarly.capacity ?? null,
         isActive: true,
-        salesStartDate: parsedEarly.salesStartDate || null,
         salesEndDate: parsedEarly.salesEndDate || null
       });
     }

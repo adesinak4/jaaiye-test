@@ -258,7 +258,7 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
       emailVerified: user.emailVerified,
       profilePicture: user.profilePicture
     }
-  }, 200,  SUCCESS_MESSAGES.USER.EMAIL_VERIFIED);
+  }, 200, SUCCESS_MESSAGES.USER.EMAIL_VERIFIED);
 });
 
 // @desc    Forgot password
@@ -399,6 +399,7 @@ exports.googleSignInViaIdToken = asyncHandler(async (req, res) => {
 
       if (user) {
         // Link existing user account to Google
+        user.emailVerified = true;
         user.googleId = payload.sub;
         user.providerLinks.google = true;
         user.providerProfiles.google = {
@@ -480,7 +481,7 @@ exports.googleSignInViaIdToken = asyncHandler(async (req, res) => {
         email: user.email,
         username: user.username,
         fullName: user.fullName,
-      role: user.role,
+        role: user.role,
         emailVerified: user.emailVerified,
         profilePicture: user.profilePicture,
         googleId: user.googleId
@@ -499,4 +500,35 @@ exports.googleSignInViaIdToken = asyncHandler(async (req, res) => {
 
     throw new AuthenticationError('Google authentication failed. Please try again.');
   }
+});
+
+exports.createUser = asyncHandler(async (req, res) => {
+  const { email, fullName } = req.body;
+  const randomPassword = generateRandomPassword();
+
+  const userExists = await User.findOne({ email });
+  if (userExists) {
+    const accessToken = generateToken(user);
+    return successResponse(res, {
+      accessToken,
+    }, 200);
+  }
+
+  const user = await User.create({
+    email,
+    password: randomPassword,
+    username: email.split('@')[0],
+    fullName
+  });
+
+  const accessToken = generateToken(user);
+  return successResponse(res, {
+    accessToken,
+    user: {
+      id: user._id,
+      email: user.email,
+      username: user.username,
+      fullName: user.fullName,
+    }
+  }, 200, SUCCESS_MESSAGES.USER.CREATED);
 });

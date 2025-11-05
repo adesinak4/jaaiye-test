@@ -111,7 +111,7 @@ router.post('/', protect, upload.single('image'), createEvent);
  *       404:
  *         description: Not found
  */
-router.get('/:id', protect, getEvent);
+router.get('/:id', getEvent);
 /**
  * @swagger
  * /api/v1/events/{id}:
@@ -709,6 +709,6 @@ router.post('/admin/create-with-image', protect, admin, upload.single('image'), 
  *                         hasPrevPage:
  *                           type: boolean
  */
-router.get('/brand/jaaiye', protect, getJaaiyeEvents);
+router.get('/brand/jaaiye', getJaaiyeEvents);
 
 module.exports = router;

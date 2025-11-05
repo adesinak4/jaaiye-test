@@ -183,7 +183,7 @@ async function pollPendingTransactions() {
         const verified = await verify(transaction.transId);
         if (verified && verified.status === 'successful') {
           console.log(`Processing pending transaction: ${transaction.reference}`);
-          const metadata = verified.meta || (verified.customer && verified.customer.meta) || {};
+          const metadata = { userId: transaction.userId, eventId: transaction.eventId, quantity: transaction.quantity } || {};
 
           await handleSuccessfulPayment({
             provider: 'flutterwave',

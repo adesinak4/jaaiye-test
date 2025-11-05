@@ -85,6 +85,7 @@ class TicketController {
     const userId = req.user._id;
 
     const tickets = await Ticket.findByUser(userId).populate('eventId');
+    console.log('tickets', tickets);
 
     const grouped = tickets.reduce((acc, ticket) => {
       const eventId = ticket.eventId._id?.toString?.() || ticket.eventId.toString();

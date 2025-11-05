@@ -262,7 +262,7 @@ function paymentConfirmationEmail({ tickets }) {
               Date & Time:
             </td>
             <td style="padding: 8px 0; color: #1E293B; font-size: 14px;">
-              ${formatEventDate(event.startTime, event.endTime)}
+              ${formatEventDate(event.startTime)}
             </td>
           </tr>
 

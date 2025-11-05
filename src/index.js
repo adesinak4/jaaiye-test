@@ -43,7 +43,8 @@ const allowedOrigins = [
   process.env.ADMIN_ORIGIN,
   process.env.FRONTEND_ORIGIN,
   'https://jaaiye-admin.vercel.app',
-  'http://localhost:3000'
+  'http://localhost:3000',
+  'http://localhost:3030',
 ].filter(Boolean);
 
 const corsOptions = {
@@ -84,6 +85,11 @@ app.get('/health', (req, res, next) => {
     uptime: process.uptime()
   });
 });
+
+app.get('/test-cors', (req, res) => {
+  res.json({ message: 'CORS is working!' });
+});
+
 app.use('/webhooks', require('./routes/webhookRoutes'));
 
 // Swagger docs (mounted before API key enforcement)

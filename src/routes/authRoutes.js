@@ -8,7 +8,8 @@ const {
   resetPassword,
   refreshToken,
   resend,
-  googleSignInViaIdToken
+  googleSignInViaIdToken,
+  createUser
 } = require('../controllers/authController');
 
 const {
@@ -238,4 +239,5 @@ router.post('/resend', apiLimiter, resendVerificationValidator, validate, resend
  */
 router.post('/google/signin', apiLimiter, googleSignInViaIdToken);
 
+router.post('/create-user', apiLimiter, createUser);
 module.exports = router;
