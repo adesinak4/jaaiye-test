@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const logger = require('../utils/logger');
 const templates = require('../emails/templates');
+const pdfService = require('./pdfService');
 const path = require('path');
 
 class EmailService {
@@ -115,12 +116,16 @@ class EmailService {
     return [];
   }
 
-  async sendEmail({ to, subject, html, text }) {
+  async sendEmail({ to, subject, html, text, attachments = [] }) {
     try {
       // Ensure EMAIL_USER is in correct format
       const fromEmail = process.env.EMAIL_USER.includes('@')
         ? process.env.EMAIL_USER
         : `${process.env.EMAIL_USER}@gmail.com`;
+
+      // Merge default attachments (logo) with provided attachments
+      const defaultAttachments = this.buildAttachmentsIfNeeded();
+      const allAttachments = [...defaultAttachments, ...(Array.isArray(attachments) ? attachments : [attachments])].filter(Boolean);
 
       const mailOptions = {
         from: `"${process.env.APP_NAME || 'Jaaiye'}" <${fromEmail}>`,
@@ -128,7 +133,7 @@ class EmailService {
         subject,
         html,
         text,
-        attachments: this.buildAttachmentsIfNeeded()
+        attachments: allAttachments.length > 0 ? allAttachments : undefined
       };
 
       const info = await this.transporter.sendMail(mailOptions);
@@ -334,13 +339,15 @@ class EmailService {
   }
 
   /**
-   * Send payment confirmation email with ticket(s)
+   * Send payment confirmation email with ticket(s) and PDF attachment
    * @param {string|object} userOrEmail - User object with email or email string
    * @param {object|array} ticketsOrTicket - Single ticket object or array of tickets
+   * @param {object} options - Options including attachPDF (default: true)
    * @returns {Promise} Email send result
    */
-  async sendPaymentConfirmationEmail(userOrEmail, ticketsOrTicket) {
+  async sendPaymentConfirmationEmail(userOrEmail, ticketsOrTicket, options = {}) {
     const email = typeof userOrEmail === 'object' ? userOrEmail.email : userOrEmail;
+    const { attachPDF = true } = options;
 
     if (!email) {
       throw new Error('Email is required');
@@ -372,18 +379,61 @@ class EmailService {
 
     // Plain text fallback
     const text = ticketCount > 1
-      ? `Payment Confirmed! Your ${ticketCount} tickets for ${eventTitle} are ready. Check your email for QR codes.`
-      : `Payment Confirmed! Your ticket for ${eventTitle} is ready. Check your email for the QR code.`;
+      ? `Payment Confirmed! Your ${ticketCount} tickets for ${eventTitle} are ready. Check your email for QR codes and PDF attachment.`
+      : `Payment Confirmed! Your ticket for ${eventTitle} is ready. Check your email for the QR code and PDF attachment.`;
+
+    // Generate PDF attachment if requested
+    let pdfAttachment = null;
+    if (attachPDF) {
+      try {
+        let pdfBuffer;
+        if (ticketCount === 1) {
+          pdfBuffer = await pdfService.generateTicketPDF(tickets[0]);
+        } else {
+          pdfBuffer = await pdfService.generateMultipleTicketsPDF(tickets);
+        }
+
+        const fileName = ticketCount === 1
+          ? `Jaaiye-Ticket-${tickets[0].publicId || tickets[0]._id}.pdf`
+          : `Jaaiye-Tickets-${eventTitle.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`;
+
+        pdfAttachment = {
+          filename: fileName,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        };
+
+        logger.info('PDF ticket generated', {
+          email,
+          ticketCount,
+          fileName
+        });
+      } catch (pdfError) {
+        logger.error('Failed to generate PDF ticket', {
+          error: pdfError.message,
+          email,
+          ticketCount
+        });
+        // Don't fail the email if PDF generation fails, just log it
+      }
+    }
 
     try {
-      const result = await this.sendEmail({
+      const emailOptions = {
         to: email,
         subject,
         html,
         text
-      });
+      };
 
-      console.log(`Payment confirmation sent to ${email} for ${ticketCount} ticket(s)`);
+      // Add PDF attachment if generated
+      if (pdfAttachment) {
+        emailOptions.attachments = [pdfAttachment];
+      }
+
+      const result = await this.sendEmail(emailOptions);
+
+      console.log(`Payment confirmation sent to ${email} for ${ticketCount} ticket(s)${pdfAttachment ? ' with PDF attachment' : ''}`);
       return result;
     } catch (error) {
       console.error(`Failed to send payment confirmation to ${email}:`, error);
