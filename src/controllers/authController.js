@@ -521,6 +521,18 @@ exports.createUser = asyncHandler(async (req, res) => {
     fullName
   });
 
+  // Auto-create default Jaaiye calendar (enforce one-per-user)
+  try {
+    const existing = await Calendar.findOne({ owner: user._id });
+    if (!existing) {
+      await Calendar.create({ owner: user._id, name: `${user.username}'s Calendar`, isDefault: true });
+      logger.info('Default calendar created on registration', { userId: user._id });
+    }
+  } catch (e) {
+    logger.error('Failed to auto-create default calendar on register', { userId: user._id, error: e.message });
+    // do not fail registration
+  }
+
   const accessToken = generateToken(user);
   return successResponse(res, {
     accessToken,
