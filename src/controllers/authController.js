@@ -508,7 +508,7 @@ exports.createUser = asyncHandler(async (req, res) => {
 
   const userExists = await User.findOne({ email });
   if (userExists) {
-    const accessToken = generateToken(user);
+    const accessToken = generateToken(userExists);
     return successResponse(res, {
       accessToken,
     }, 200);
@@ -524,11 +524,5 @@ exports.createUser = asyncHandler(async (req, res) => {
   const accessToken = generateToken(user);
   return successResponse(res, {
     accessToken,
-    user: {
-      id: user._id,
-      email: user.email,
-      username: user.username,
-      fullName: user.fullName,
-    }
   }, 200, SUCCESS_MESSAGES.USER.CREATED);
 });
