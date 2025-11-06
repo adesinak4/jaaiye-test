@@ -19,6 +19,13 @@ const eventSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  slug: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+    lowercase: true
+  },
   description: {
     type: String,
     trim: true
@@ -211,12 +218,54 @@ eventSchema.statics.findByCategory = function(category) {
   return this.find({ category, status: 'scheduled' }).sort({ startTime: 1 });
 };
 
+// Generate slug from title before saving
+eventSchema.pre('save', async function(next) {
+  if (this.isModified('title') || !this.slug) {
+    // Generate slug from title
+    let slug = this.title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '') // Remove special characters
+      .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
+      .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+
+    // If slug is empty, use a fallback
+    if (!slug) {
+      slug = `event-${this._id || Date.now()}`;
+    }
+
+    // Make it unique by appending a counter if needed
+    const baseSlug = slug;
+    const Event = this.constructor;
+    let uniqueSlug = baseSlug;
+    let counter = 1;
+
+    while (true) {
+      const existing = await Event.findOne({ slug: uniqueSlug, _id: { $ne: this._id } });
+      if (!existing) {
+        break;
+      }
+      uniqueSlug = `${baseSlug}-${counter}`;
+      counter++;
+      if (counter > 100) {
+        // Fallback to timestamp if too many collisions
+        uniqueSlug = `${baseSlug}-${Date.now()}`;
+        break;
+      }
+    }
+
+    this.slug = uniqueSlug;
+  }
+  next();
+});
+
 // Indexes for faster queries
 eventSchema.index({ calendar: 1, startTime: 1 });
 eventSchema.index({ calendar: 1, endTime: 1 });
 eventSchema.index({ status: 1 });
 eventSchema.index({ category: 1 });
 eventSchema.index({ attendeeCount: 1 });
+eventSchema.index({ slug: 1 });
 
 const Event = mongoose.model('Event', eventSchema);
 

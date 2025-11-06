@@ -239,14 +239,24 @@ exports.createEvent = async (req, res, next) => {
   }
 };
 
-// @desc    Get single event
+// @desc    Get single event (by ID or slug)
 // @route   GET /api/events/:id
-// @access  Private
+// @access  Public (for Jaaiye events) / Private (for user events)
 exports.getEvent = async (req, res, next) => {
   try {
-    const event = await Event.findById(req.params.id).lean();
+    const { id } = req.params;
+    // Check if it's a valid MongoDB ObjectId, otherwise treat as slug
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+    let event;
+
+    if (isObjectId) {
+      event = await Event.findById(id).lean();
+    } else {
+      event = await Event.findOne({ slug: id }).lean();
+    }
+
     if (!event) {
-      logger.error('Event not found', new Error('Event not found'), 404, { eventId: req.params.id });
+      logger.error('Event not found', new Error('Event not found'), 404, { identifier: id });
       return res.status(404).json({
         success: false,
         error: 'Event not found'
@@ -298,13 +308,14 @@ exports.getEvent = async (req, res, next) => {
           isActive: tt.isActive,
           salesStartDate: tt.salesStartDate || null,
           salesEndDate: tt.salesEndDate || null
-        })) : []
+        })) : [],
+        slug: event.slug
       }
     });
   } catch (error) {
     logger.error('Failed to get event', error, 500, {
-      eventId: req.params.id,
-      userId: req.user.id
+      identifier: req.params.id,
+      userId: req.user?.id || 'anonymous'
     });
     next(error);
   }

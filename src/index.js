@@ -45,7 +45,9 @@ const allowedOrigins = [
   'https://jaaiye-admin.vercel.app',
   'http://localhost:3000',
   'http://localhost:3030',
-  'https://jaaiye-checkout.vercel.app'
+  'https://jaaiye-checkout.vercel.app',
+  'https://tickets.jaaiye.com',
+  'https://admin.jaaiye.com'
 ].filter(Boolean);
 
 const corsOptions = {
