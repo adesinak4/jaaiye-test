@@ -7696,3 +7696,76 @@
 {"environment":"development","level":"info","message":"Starting payment polling queue","pollingIntervalMs":180000,"timestamp":"2025-11-06T19:14:09.888Z"}
 {"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:14:09.890Z"}
 {"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-11-06T19:14:09.914Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-eiouswk-shard-00-02.ftf2rnr.mongodb.net","timestamp":"2025-11-06T19:14:13.456Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:14:15.867Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:17:09.908Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:17:10.388Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:20:09.910Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:20:10.380Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:23:09.929Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:23:11.131Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:26:09.931Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:26:10.389Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:29:09.932Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:29:10.296Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:32:09.946Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:32:10.677Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:35:09.952Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:35:10.382Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:38:09.957Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:38:10.853Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:41:09.963Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:41:12.992Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:44:09.971Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:44:10.852Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-11-06T19:47:04.794Z","user":"hello@friendnpal.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","pollingIntervalMs":180000,"timestamp":"2025-11-06T19:47:14.567Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:47:14.568Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-11-06T19:47:14.589Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-j9olfnx-shard-00-01.jrtynq8.mongodb.net","timestamp":"2025-11-06T19:47:17.254Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:47:19.358Z"}
+{"durationMs":14,"environment":"development","level":"info","message":"Request","method":"GET","path":"/health","statusCode":200,"timestamp":"2025-11-06T19:48:12.068Z"}
+{"durationMs":268,"environment":"development","level":"info","message":"Request","method":"POST","path":"/api/v1/auth/register","statusCode":401,"timestamp":"2025-11-06T19:48:25.982Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-11-06T19:48:49.422Z","user":"hello@friendnpal.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","pollingIntervalMs":180000,"timestamp":"2025-11-06T19:48:53.727Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:48:53.727Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-11-06T19:48:53.736Z"}
+{"environment":"development","level":"error","message":"Error: querySrv EREFUSED _mongodb._tcp.jaaiye-test.jrtynq8.mongodb.net","timestamp":"2025-11-06T19:49:00.064Z"}
+{"environment":"development","level":"info","message":"Email transporter created successfully","service":"gmail","timestamp":"2025-11-06T19:49:11.458Z","user":"hello@friendnpal.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","pollingIntervalMs":180000,"timestamp":"2025-11-06T19:49:16.906Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:49:16.907Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-11-06T19:49:16.925Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-j9olfnx-shard-00-00.jrtynq8.mongodb.net","timestamp":"2025-11-06T19:49:22.051Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:49:26.234Z"}
+{"environment":"development","level":"info","message":"Processing email task","queueLength":0,"retries":0,"timestamp":"2025-11-06T19:50:02.462Z","to":"[REDACTED]","type":"verification"}
+{"environment":"development","level":"info","message":"Email added to queue","queueLength":0,"timestamp":"2025-11-06T19:50:02.479Z","to":"[REDACTED]","type":"verification"}
+{"email":"[REDACTED]","environment":"development","level":"info","message":"User registered successfully","timestamp":"2025-11-06T19:50:02.480Z","userId":{}}
+{"environment":"development","level":"info","message":"Default calendar created on registration","timestamp":"2025-11-06T19:50:02.760Z","userId":{}}
+{"durationMs":1439,"environment":"development","level":"info","message":"Request","method":"POST","path":"/register","statusCode":201,"timestamp":"2025-11-06T19:50:02.772Z"}
+{"code":"[REDACTED]","command":"AUTH PLAIN","environment":"development","error":"Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5b1f17b1804b1-4775cdc33bdsm124481585e9.1 - gsmtp","level":"error","message":"Error sending email","stack":"Error: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5b1f17b1804b1-4775cdc33bdsm124481585e9.1 - gsmtp\n    at SMTPConnection._formatError (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:809:19)\n    at SMTPConnection._actionAUTHComplete (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:1588:34)\n    at SMTPConnection.<anonymous> (C:\\Code\\Jaaiye\\v1\\nod...(636 more chars)","subject":"[REDACTED]","timestamp":"2025-11-06T19:50:03.273Z","to":"[REDACTED]"}
+{"environment":"development","error":"Email authentication failed. Please check your email credentials and ensure you're using an App Password for Gmail.","level":"error","message":"Email task failed","retries":0,"timestamp":"2025-11-06T19:50:03.274Z","to":"[REDACTED]","type":"verification"}
+{"environment":"development","level":"info","message":"Email task queued for retry","retries":1,"retryAt":"2025-11-06T19:50:05.275Z","timestamp":"2025-11-06T19:50:03.275Z","to":"[REDACTED]","type":"verification"}
+{"environment":"development","level":"info","message":"Processing email task","queueLength":0,"retries":1,"timestamp":"2025-11-06T19:50:03.275Z","to":"[REDACTED]","type":"verification"}
+{"code":"[REDACTED]","command":"AUTH PLAIN","environment":"development","error":"Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials ffacd0b85a97d-42abe62b28asm873479f8f.6 - gsmtp","level":"error","message":"Error sending email","stack":"Error: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials ffacd0b85a97d-42abe62b28asm873479f8f.6 - gsmtp\n    at SMTPConnection._formatError (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:809:19)\n    at SMTPConnection._actionAUTHComplete (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:1588:34)\n    at SMTPConnection.<anonymous> (C:\\Code\\Jaaiye\\v1\\node_...(634 more chars)","subject":"[REDACTED]","timestamp":"2025-11-06T19:50:03.969Z","to":"[REDACTED]"}
+{"environment":"development","error":"Email authentication failed. Please check your email credentials and ensure you're using an App Password for Gmail.","level":"error","message":"Email task failed","retries":1,"timestamp":"2025-11-06T19:50:03.970Z","to":"[REDACTED]","type":"verification"}
+{"environment":"development","level":"info","message":"Email task queued for retry","retries":2,"retryAt":"2025-11-06T19:50:07.973Z","timestamp":"2025-11-06T19:50:03.973Z","to":"[REDACTED]","type":"verification"}
+{"environment":"development","level":"info","message":"Processing email task","queueLength":0,"retries":2,"timestamp":"2025-11-06T19:50:03.976Z","to":"[REDACTED]","type":"verification"}
+{"code":"[REDACTED]","command":"AUTH PLAIN","environment":"development","error":"Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials ffacd0b85a97d-42ac675c9fdsm855984f8f.28 - gsmtp","level":"error","message":"Error sending email","stack":"Error: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials ffacd0b85a97d-42ac675c9fdsm855984f8f.28 - gsmtp\n    at SMTPConnection._formatError (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:809:19)\n    at SMTPConnection._actionAUTHComplete (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:1588:34)\n    at SMTPConnection.<anonymous> (C:\\Code\\Jaaiye\\v1\\node...(635 more chars)","subject":"[REDACTED]","timestamp":"2025-11-06T19:50:04.674Z","to":"[REDACTED]"}
+{"environment":"development","error":"Email authentication failed. Please check your email credentials and ensure you're using an App Password for Gmail.","level":"error","message":"Email task failed","retries":2,"timestamp":"2025-11-06T19:50:04.675Z","to":"[REDACTED]","type":"verification"}
+{"environment":"development","level":"info","message":"Email task queued for retry","retries":3,"retryAt":"2025-11-06T19:50:12.675Z","timestamp":"2025-11-06T19:50:04.675Z","to":"[REDACTED]","type":"verification"}
+{"environment":"development","level":"info","message":"Processing email task","queueLength":0,"retries":3,"timestamp":"2025-11-06T19:50:04.676Z","to":"[REDACTED]","type":"verification"}
+{"code":"[REDACTED]","command":"AUTH PLAIN","environment":"development","error":"Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials ffacd0b85a97d-42ac679c5dcsm916888f8f.44 - gsmtp","level":"error","message":"Error sending email","stack":"Error: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials ffacd0b85a97d-42ac679c5dcsm916888f8f.44 - gsmtp\n    at SMTPConnection._formatError (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:809:19)\n    at SMTPConnection._actionAUTHComplete (C:\\Code\\Jaaiye\\v1\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:1588:34)\n    at SMTPConnection.<anonymous> (C:\\Code\\Jaaiye\\v1\\node...(635 more chars)","subject":"[REDACTED]","timestamp":"2025-11-06T19:50:06.099Z","to":"[REDACTED]"}
+{"environment":"development","error":"Email authentication failed. Please check your email credentials and ensure you're using an App Password for Gmail.","level":"error","message":"Email task failed","retries":3,"timestamp":"2025-11-06T19:50:06.101Z","to":"[REDACTED]","type":"verification"}
+{"environment":"development","level":"error","maxRetries":3,"message":"Email task failed permanently","timestamp":"2025-11-06T19:50:06.104Z","to":"[REDACTED]","type":"verification"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:52:16.916Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:52:17.577Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:55:16.971Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-06T19:55:19.683Z"}
+{"environment":"development","level":"info","message":"Email transporter created","port":465,"service":"smtp.gmail.com","timestamp":"2025-11-06T19:56:26.604Z","user":"hello@friendnpal.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","pollingIntervalMs":180000,"timestamp":"2025-11-06T19:57:02.688Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:57:02.709Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-11-06T19:57:03.188Z"}
+{"environment":"development","level":"info","message":"Email transporter created","port":465,"service":"smtp.gmail.com","timestamp":"2025-11-06T19:58:26.669Z","user":"letsjaaiye@gmail.com"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","pollingIntervalMs":180000,"timestamp":"2025-11-06T19:58:36.340Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-06T19:58:36.348Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-11-06T19:58:36.379Z"}

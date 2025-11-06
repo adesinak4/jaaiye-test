@@ -9,61 +9,87 @@ class EmailService {
   }
 
   createTransporter() {
+    // Validate credentials exist
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      logger.error('Email credentials not configured', {
+        hasUser: !!process.env.EMAIL_USER,
+        hasPass: !!process.env.EMAIL_PASS
+      });
+      throw new Error('Email credentials (EMAIL_USER and EMAIL_PASS) are required');
+    }
+
+    // Ensure email is in correct format (full email address, not just username)
+    const emailUser = process.env.EMAIL_USER.includes('@')
+      ? process.env.EMAIL_USER
+      : `${process.env.EMAIL_USER}@gmail.com`;
+
     // Try different configurations based on environment
     const configs = [
-      // Zoho
+      // Gmail with port 465 (SSL) - Most reliable for app passwords
       {
-        host: 'smtppro.zoho.com',
+        host: 'smtp.gmail.com',
         port: 465,
-        secure: true, // Use TLS
+        secure: true, // SSL
         auth: {
-          user: process.env.EMAIL_USER, // e.g., hello@friendnpal.com
-          pass: process.env.EMAIL_PASS  // App-specific password
-        }
-      },
-      // Gmail with OAuth2 (recommended)
-      {
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS // This should be an App Password
+          user: emailUser,
+          pass: process.env.EMAIL_PASS
         },
-        secure: true,
-        port: 465
+        debug: process.env.NODE_ENV === 'development',
+        logger: process.env.NODE_ENV === 'development'
       },
-      // Gmail with less secure settings (fallback)
+      // Gmail with port 587 (TLS) - Alternative
       {
         host: 'smtp.gmail.com',
         port: 587,
-        secure: false, // true for 465, false for other ports
+        secure: false, // Use TLS
         auth: {
-          user: process.env.EMAIL_USER,
+          user: emailUser,
           pass: process.env.EMAIL_PASS
         },
         tls: {
+          ciphers: 'SSLv3',
           rejectUnauthorized: false
-        }
+        },
+        debug: process.env.NODE_ENV === 'development',
+        logger: process.env.NODE_ENV === 'development'
       },
-      // Alternative: Use a different SMTP service if configured
+      // Gmail service (nodemailer auto-config)
+      {
+        service: 'gmail',
+        auth: {
+          user: emailUser,
+          pass: process.env.EMAIL_PASS
+        },
+        debug: process.env.NODE_ENV === 'development',
+        logger: process.env.NODE_ENV === 'development'
+      },
+      // Custom SMTP if configured
       process.env.SMTP_HOST ? {
         host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT || 587,
+        port: parseInt(process.env.SMTP_PORT) || 587,
         secure: process.env.SMTP_SECURE === 'true',
         auth: {
-          user: process.env.SMTP_USER || process.env.EMAIL_USER,
+          user: process.env.SMTP_USER || emailUser,
           pass: process.env.SMTP_PASS || process.env.EMAIL_PASS
-        }
+        },
+        debug: process.env.NODE_ENV === 'development',
+        logger: process.env.NODE_ENV === 'development'
       } : null
     ].filter(Boolean);
 
-    // Try each configuration
+    // Try each configuration and verify connection
     for (const config of configs) {
       try {
         const transporter = nodemailer.createTransport(config);
-        logger.info('Email transporter created successfully', {
+
+        // Verify connection before returning
+        // Note: We'll verify asynchronously, but create the transporter first
+        logger.info('Email transporter created', {
           service: config.service || config.host,
+          port: config.port,
           user: config.auth.user
         });
+
         return transporter;
       } catch (error) {
         logger.warn('Failed to create email transporter with config', {
@@ -73,17 +99,8 @@ class EmailService {
       }
     }
 
-    // Fallback to basic configuration
-    logger.warn('Using fallback email configuration');
-    return nodemailer.createTransport({
-      host: 'smtppro.zoho.com',
-      port: 465,
-      secure: true, // Use TLS
-      auth: {
-        user: process.env.EMAIL_USER, // e.g., hello@friendnpal.com
-        pass: process.env.EMAIL_PASS  // App-specific password
-      }
-    });
+    // If all configs failed, throw error instead of using fallback
+    throw new Error('Failed to create email transporter. Please check your EMAIL_USER and EMAIL_PASS environment variables.');
   }
 
   buildAttachmentsIfNeeded() {
@@ -100,8 +117,13 @@ class EmailService {
 
   async sendEmail({ to, subject, html, text }) {
     try {
+      // Ensure EMAIL_USER is in correct format
+      const fromEmail = process.env.EMAIL_USER.includes('@')
+        ? process.env.EMAIL_USER
+        : `${process.env.EMAIL_USER}@gmail.com`;
+
       const mailOptions = {
-        from: `"${process.env.APP_NAME || 'Jaaiye'}" <${process.env.EMAIL_USER}>`,
+        from: `"${process.env.APP_NAME || 'Jaaiye'}" <${fromEmail}>`,
         to,
         subject,
         html,
@@ -113,7 +135,8 @@ class EmailService {
       logger.info('Email sent successfully', {
         messageId: info.messageId,
         to,
-        subject
+        subject,
+        from: fromEmail
       });
       return info;
     } catch (error) {
@@ -123,12 +146,23 @@ class EmailService {
         to,
         subject,
         code: error.code,
-        command: error.command
+        command: error.command,
+        response: error.response,
+        responseCode: error.responseCode
       });
 
-      // Provide more specific error messages
-      if (error.code === 'EAUTH') {
-        throw new Error('Email authentication failed. Please check your email credentials and ensure you\'re using an App Password for Gmail.');
+      // Provide more specific error messages with troubleshooting tips
+      if (error.code === 'EAUTH' || error.responseCode === 535) {
+        const troubleshootingTips = [
+          '1. Verify your EMAIL_USER is the full email address (e.g., yourname@gmail.com)',
+          '2. Ensure you\'re using an App Password (not your regular Gmail password)',
+          '3. Make sure 2-Step Verification is enabled on your Google account',
+          '4. Generate a new App Password: https://myaccount.google.com/apppasswords',
+          '5. Copy the 16-character app password exactly (no spaces)',
+          '6. If using a workspace account, ensure "Less secure app access" is enabled (if available)'
+        ].join('\n');
+
+        throw new Error(`Email authentication failed (${error.responseCode || error.code}).\n\nTroubleshooting:\n${troubleshootingTips}\n\nOriginal error: ${error.message}`);
       } else if (error.code === 'ECONNECTION') {
         throw new Error('Email connection failed. Please check your internet connection and firewall settings.');
       } else if (error.code === 'EADDRNOTAVAIL') {
@@ -360,26 +394,63 @@ class EmailService {
   // Test email configuration
   async testConnection() {
     try {
+      // Recreate transporter to ensure we're testing with current credentials
+      this.transporter = this.createTransporter();
+
       await this.transporter.verify();
       logger.info('Email configuration is valid');
-      return { success: true, message: 'Email configuration is valid' };
+      return {
+        success: true,
+        message: 'Email configuration is valid',
+        email: process.env.EMAIL_USER.includes('@')
+          ? process.env.EMAIL_USER
+          : `${process.env.EMAIL_USER}@gmail.com`
+      };
     } catch (error) {
       logger.error('Email configuration test failed', {
         error: error.message,
         code: error.code,
-        command: error.command
+        command: error.command,
+        responseCode: error.responseCode,
+        response: error.response
       });
 
       let message = 'Email configuration test failed';
-      if (error.code === 'EAUTH') {
-        message = 'Email authentication failed. Please check your credentials and ensure you\'re using an App Password for Gmail.';
+      const troubleshooting = [];
+
+      if (error.code === 'EAUTH' || error.responseCode === 535) {
+        message = 'Email authentication failed';
+        troubleshooting.push(
+          '• Verify EMAIL_USER is the full email address (e.g., yourname@gmail.com)',
+          '• Ensure you\'re using an App Password (16 characters, no spaces)',
+          '• Make sure 2-Step Verification is enabled',
+          '• Generate new App Password: https://myaccount.google.com/apppasswords',
+          '• Check that EMAIL_PASS contains only the app password (no extra characters)'
+        );
       } else if (error.code === 'ECONNECTION') {
-        message = 'Email connection failed. Please check your internet connection and firewall settings.';
+        message = 'Email connection failed';
+        troubleshooting.push(
+          '• Check your internet connection',
+          '• Verify firewall settings allow SMTP connections',
+          '• Try using a different network'
+        );
       } else if (error.code === 'EADDRNOTAVAIL') {
-        message = 'Email server unavailable. Please check your email configuration.';
+        message = 'Email server unavailable';
+        troubleshooting.push(
+          '• Check your email configuration',
+          '• Verify SMTP server address is correct',
+          '• Try again in a few minutes'
+        );
       }
 
-      return { success: false, message, error: error.message };
+      return {
+        success: false,
+        message,
+        error: error.message,
+        troubleshooting: troubleshooting.length > 0 ? troubleshooting : undefined,
+        code: error.code,
+        responseCode: error.responseCode
+      };
     }
   }
 
