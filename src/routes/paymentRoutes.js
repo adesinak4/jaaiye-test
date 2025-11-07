@@ -178,4 +178,35 @@ router.post('/verify', PaymentController.verifyFlutterwave);
  */
 router.post('/register', protect, PaymentController.registerTransaction);
 
+/**
+ * @swagger
+ * /api/v1/payments/update:
+ *   put:
+ *     summary: Update transaction with payment gateway details
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [reference]
+ *             properties:
+ *               reference:
+ *                 type: string
+ *               transId:
+ *                 type: number
+ *               transReference:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *                 enum: [pending, successful, failed, cancelled, completed]
+ *     responses:
+ *       200:
+ *         description: Transaction updated successfully
+ */
+router.put('/update', protect, PaymentController.updateTransaction);
+
 module.exports = router;
