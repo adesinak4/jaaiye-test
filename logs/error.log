@@ -269,3 +269,4 @@
 {"environment":"development","level":"error","maxRetries":3,"message":"Email task failed permanently","timestamp":"2025-11-06T19:50:06.104Z","to":"[REDACTED]","type":"verification"}
 {"environment":"development","level":"error","message":"Error: queryTxt EREFUSED jaaiye-test.jrtynq8.mongodb.net","timestamp":"2025-11-06T23:05:32.342Z"}
 {"environment":"development","level":"error","message":"Error: queryTxt EREFUSED jaaiye-test.jrtynq8.mongodb.net","timestamp":"2025-11-06T23:06:43.035Z"}
+{"environment":"development","level":"error","message":"Error: queryTxt EREFUSED jaaiye-test.jrtynq8.mongodb.net","timestamp":"2025-11-09T23:02:21.657Z"}

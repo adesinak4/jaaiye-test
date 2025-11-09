@@ -105,6 +105,7 @@ app.use(validateMobileApiKey);
 app.use('/api/v1/auth', require('./routes/authRoutes'));
 app.use('/api/v1/users', require('./routes/userRoutes'));
 app.use('/api/v1/admin', require('./routes/adminRoutes'));
+app.use('/api/v1/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/v1/calendars', require('./routes/calendarRoutes'));
 app.use('/api/v1/events', require('./routes/eventRoutes'));
 app.use('/api/v1/notifications', require('./routes/notificationRoutes'));
