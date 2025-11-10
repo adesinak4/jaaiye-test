@@ -182,7 +182,7 @@ class PaymentController {
         userId,
         eventId,
         quantity,
-        status: 'pending'
+        status: 'created'
       };
 
       // Only include transId if provided
@@ -224,7 +224,7 @@ class PaymentController {
 
   // Update transaction with Flutterwave payment details
   static updateTransaction = asyncHandler(async (req, res) => {
-    const { reference, transId, transReference, status } = req.body;
+    const { reference, transId, transReference, status = 'pending' } = req.body;
 
     // Validate required fields
     if (!reference) {
@@ -250,12 +250,8 @@ class PaymentController {
       const updateData = {};
       if (transId !== undefined && transId !== null) {
         updateData.transId = transId;
-      }
-      if (transReference !== undefined && transReference !== null) {
-        updateData.transReference = transReference;
-      }
-      if (status && ['pending', 'successful', 'failed', 'cancelled', 'completed'].includes(status)) {
-        updateData.status = status;
+        updateData.status = 'pending';
+        if (transReference !== undefined && transReference !== null) updateData.transReference = transReference;
       }
 
       // Update transaction

@@ -6,7 +6,7 @@ const transactionSchema = new mongoose.Schema({
   transReference: { type: String }, // payment gateway generated
   amount: { type: Number, required: true },
   currency: { type: String, default: 'NGN' },
-  status: { type: String, enum: ['pending', 'successful', 'failed', 'cancelled', 'completed'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'successful', 'failed', 'cancelled', 'completed', 'created'], default: 'created' },
   transId: { type: Number },
   sessionId: { type: String },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
