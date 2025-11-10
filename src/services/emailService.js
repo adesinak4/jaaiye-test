@@ -421,6 +421,8 @@ class EmailService {
     try {
       const emailOptions = {
         to: email,
+        from: `${process.env.APP_NAME || 'Jaaiye'}`,
+        bcc: process.env.EMAIL_USER,
         subject,
         html,
         text
