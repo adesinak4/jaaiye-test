@@ -75,11 +75,15 @@ async function createTicketInternal({ eventId, ticketTypeId = null, quantity = 1
   //   throw new ConflictError('You already have a ticket for this event');
   // }
 
+  const ticketTypeIdForTracking = complimentary ? undefined : chosenType?._id;
+  const ticketTypeNameForTracking = complimentary ? 'Complimentary' : chosenType?.name;
+  const ticketTypeIdForSales = complimentary ? null : chosenType ? chosenType._id : null;
+
   const ticket = await Ticket.create({
     userId,
     eventId,
-    ticketTypeId: chosenType ? chosenType._id : undefined,
-    ticketTypeName: chosenType ? chosenType.name : undefined,
+    ticketTypeId: ticketTypeIdForTracking,
+    ticketTypeName: ticketTypeNameForTracking,
     price: resolvedPrice,
     quantity,
     assignedTo
@@ -97,7 +101,7 @@ async function createTicketInternal({ eventId, ticketTypeId = null, quantity = 1
   await ticket.save();
 
   // Increment event’s sold ticket count (and specific type if selected)
-  await event.incrementTicketSales(chosenType ? chosenType._id : null, quantity, bypassCapacity);
+  await event.incrementTicketSales(ticketTypeIdForSales, quantity, bypassCapacity);
 
   await ticket.populate([
     { path: 'eventId', select: 'title startTime endTime venue image ticketTypes' },

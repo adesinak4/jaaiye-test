@@ -136,7 +136,7 @@ class PaymentController {
 
   // Register transaction for polling backup (for mobile SDK usage)
   static registerTransaction = asyncHandler(async (req, res) => {
-    const { provider, reference, amount, currency = 'NGN', eventId, quantity = 1, transId, ticketTypeId } = req.body;
+    const { provider, reference, amount, currency = 'NGN', eventId, status, quantity = 1, transId, ticketTypeId } = req.body;
 
     // Validate required fields (transId is now optional - can be set later)
     if (!provider || !reference || !amount || !eventId) {
@@ -182,7 +182,7 @@ class PaymentController {
         userId,
         eventId,
         quantity,
-        status: 'created'
+        status: status || 'created'
       };
 
       // Only include transId if provided

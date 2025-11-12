@@ -172,7 +172,7 @@ async function pollPendingTransactions() {
     const Transaction = require('../models/Transaction');
     const pendingTransactions = await Transaction.find({
       provider: 'flutterwave',
-      status: 'pending',
+      status: ['pending'],
       createdAt: { $gte: new Date(Date.now() - 2 * 60 * 60 * 1000) } // Last 2 hours
     }).limit(50); // Limit to avoid overwhelming the API
 
