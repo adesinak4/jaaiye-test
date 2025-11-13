@@ -185,6 +185,7 @@ class PaymentController {
         status: status || 'created'
       };
 
+
       // Only include transId if provided
       if (transId !== undefined && transId !== null) {
         transactionData.transId = transId;
@@ -197,14 +198,7 @@ class PaymentController {
 
       const transaction = await Transaction.create(transactionData);
 
-      console.log('Transaction registered for polling:', {
-        provider,
-        reference,
-        transId,
-        amount,
-        userId,
-        eventId
-      });
+      console.log('Transaction registered for polling:', transaction);
 
       return res.status(201).json({
         success: true,
