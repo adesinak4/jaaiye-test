@@ -182,7 +182,7 @@ class PaymentController {
         userId,
         eventId,
         quantity,
-        status: status || 'created'
+        status: status
       };
 
 
@@ -195,6 +195,8 @@ class PaymentController {
       if (ticketTypeId) {
         transactionData.ticketTypeId = ticketTypeId;
       }
+
+      console.log("data: ", transactionData)
 
       const transaction = await Transaction.create(transactionData);
 
