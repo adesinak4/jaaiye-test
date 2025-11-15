@@ -440,6 +440,8 @@ exports.googleSignInViaIdToken = asyncHandler(async (req, res) => {
           email: payload.email,
           googleId: payload.sub
         });
+
+        await emailQueue.sendWelcomeEmailAsync(user);
       }
     }
 

@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 const APP_NAME = process.env.APP_NAME || 'Jaaiye';
 const APP_URL = process.env.APP_URL || 'https://www.jaaiye.com/';
 const APP_LOGO_URL = process.env.APP_LOGO_URL || '';
@@ -11,6 +14,21 @@ const BG = '#F8FAFC';
 const CARD_BG = '#FFFFFF';
 const CURRENCY_SYMBOL = '₦';
 const DEFAULT_LOCALE = 'en-NG';
+const EMAIL_ASSETS_DIR = path.join(__dirname, 'assets');
+const DEFAULT_LOGO_FILE = process.env.APP_LOGO_FILE || 'IMG_8264.PNG';
+
+let embeddedLogoDataUrl = '';
+if (EMBED_LOGO) {
+  try {
+    const logoPath = path.join(EMAIL_ASSETS_DIR, DEFAULT_LOGO_FILE);
+    const logoBuffer = fs.readFileSync(logoPath);
+    const ext = DEFAULT_LOGO_FILE.split('.').pop().toLowerCase();
+    const mimeType = ext === 'svg' ? 'image/svg+xml' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png';
+    embeddedLogoDataUrl = `data:${mimeType};base64,${logoBuffer.toString('base64')}`;
+  } catch (error) {
+    console.error('Failed to load embedded logo asset:', error.message);
+  }
+}
 
 // Helper function to format currency
 function formatCurrency(amount) {
@@ -65,8 +83,8 @@ function parseTicketData(ticket) {
 }
 
 function logoTag() {
-  if (EMBED_LOGO) {
-    return `<img src="cid:${LOGO_CID}" alt="${escapeHtml(APP_NAME)} Logo" height="32" style="display:block;height:32px;width:auto;" />`;
+  if (embeddedLogoDataUrl) {
+    return `<img src="${embeddedLogoDataUrl}" alt="${escapeHtml(APP_NAME)} Logo" height="32" style="display:block;height:32px;width:auto;" />`;
   }
   if (APP_LOGO_URL) {
     return `<img src="${APP_LOGO_URL}" alt="${escapeHtml(APP_NAME)} Logo" height="32" style="display:block;height:32px;width:auto;" />`;

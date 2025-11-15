@@ -63,25 +63,6 @@ class EmailService {
   }
 
   buildAttachmentsIfNeeded() {
-    if (process.env.APP_EMBED_LOGO === 'true') {
-      const logoFile = 'IMG_8264.PNG';
-      const logoPath = path.join(__dirname, '../emails', 'assets', logoFile);
-      try {
-        const logoBuffer = fs.readFileSync(logoPath);
-        return [{
-          filename: logoFile,
-          content: logoBuffer,
-          contentType: 'image/png',
-          cid: templates.LOGO_CID
-        }];
-      } catch (error) {
-        logger.warn('Failed to load embedded logo for email', {
-          logoPath,
-          error: error.message
-        });
-        return [];
-      }
-    }
     return [];
   }
 
@@ -124,25 +105,10 @@ class EmailService {
   async sendEmail({ to, subject, html, text, attachments = [], cc, bcc, replyTo }) {
     try {
       const sender = this.resolveSender();
-      const emailUserAddress = this.normalizeEmailUser();
 
       const defaultAttachments = this.buildAttachmentsIfNeeded();
       const allAttachments = [...defaultAttachments, ...(Array.isArray(attachments) ? attachments : [attachments])].filter(Boolean);
       const normalizedAttachments = this.normalizeAttachments(allAttachments);
-
-      const arrayify = value => {
-        if (!value) return [];
-        if (Array.isArray(value)) {
-          return value.filter(Boolean);
-        }
-        if (typeof value === 'string' && value.includes(',')) {
-          return value.split(',').map(entry => entry.trim()).filter(Boolean);
-        }
-        return [value];
-      };
-
-      const desiredBcc = Array.from(new Set([...arrayify(bcc), ...arrayify(emailUserAddress)])).filter(Boolean);
-      const desiredReplyTo = replyTo || emailUserAddress;
 
       const payload = {
         from: `${sender.name} <${sender.email}>`,
@@ -151,8 +117,8 @@ class EmailService {
         html,
         text,
         ...(cc ? { cc } : {}),
-        ...(desiredBcc.length > 0 ? { bcc: desiredBcc } : {}),
-        ...(desiredReplyTo ? { reply_to: desiredReplyTo } : {}),
+        ...(bcc ? { bcc } : {}),
+        ...(replyTo ? { reply_to: replyTo } : {}),
         attachments: normalizedAttachments.length > 0 ? normalizedAttachments : undefined
       };
 
@@ -421,8 +387,7 @@ class EmailService {
         to: email,
         subject,
         html,
-        text,
-        bcc: process.env.RESEND_FROM_EMAIL || process.env.EMAIL_USER
+        text
       };
 
       if (pdfAttachment) {
