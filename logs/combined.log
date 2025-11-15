@@ -9626,3 +9626,541 @@
 {"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T17:06:16.850Z"}
 {"durationMs":585,"environment":"development","level":"info","message":"Request","method":"POST","path":"/register","statusCode":200,"timestamp":"2025-11-13T17:06:16.960Z","userId":"690f77279d823b8b23b8499d"}
 {"durationMs":708,"environment":"development","level":"info","message":"Request","method":"POST","path":"/register","statusCode":201,"timestamp":"2025-11-13T17:06:36.460Z","userId":"690f77279d823b8b23b8499d"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","pollingIntervalMs":180000,"timestamp":"2025-11-13T20:58:18.214Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T20:58:18.218Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-11-13T20:58:18.225Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-j9olfnx-shard-00-01.jrtynq8.mongodb.net","timestamp":"2025-11-13T20:58:21.925Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T20:58:24.264Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:01:18.227Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:01:18.657Z"}
+{"environment":"development","level":"info","message":"Processing email task","queueLength":0,"retries":0,"timestamp":"2025-11-13T21:03:26.702Z","to":"[REDACTED]","type":"verification"}
+{"environment":"development","level":"info","message":"Email added to queue","queueLength":0,"timestamp":"2025-11-13T21:03:26.718Z","to":"[REDACTED]","type":"verification"}
+{"email":"[REDACTED]","environment":"development","level":"info","message":"User registered successfully","timestamp":"2025-11-13T21:03:26.721Z","userId":{}}
+{"environment":"development","level":"info","message":"Default calendar created on registration","timestamp":"2025-11-13T21:03:26.959Z","userId":{}}
+{"durationMs":1164,"environment":"development","level":"info","message":"Request","method":"POST","path":"/register","statusCode":201,"timestamp":"2025-11-13T21:03:26.966Z"}
+{"environment":"development","level":"info","message":"Verification email sent via template","timestamp":"2025-11-13T21:03:27.785Z","to":"[REDACTED]"}
+{"environment":"development","level":"info","message":"Email sent successfully","retries":0,"timestamp":"2025-11-13T21:03:27.785Z","to":"[REDACTED]","type":"verification"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:04:18.239Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:04:18.577Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:07:18.248Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:07:18.610Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:10:18.260Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:10:18.613Z"}
+{"environment":"development","level":"info","message":"Starting payment polling queue","pollingIntervalMs":180000,"timestamp":"2025-11-13T21:12:38.004Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:12:38.008Z"}
+{"environment":"development","level":"info","message":"Server running on port 5000","port":"5000","timestamp":"2025-11-13T21:12:38.017Z"}
+{"environment":"development","level":"info","message":"MongoDB Connected: ac-j9olfnx-shard-00-00.jrtynq8.mongodb.net","timestamp":"2025-11-13T21:12:40.387Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:12:44.425Z"}
+{"environment":"development","level":"info","message":"Processing email task","queueLength":0,"retries":0,"timestamp":"2025-11-13T21:12:49.457Z","to":"[REDACTED]","type":"verification"}
+{"environment":"development","level":"info","message":"Email added to queue","queueLength":0,"timestamp":"2025-11-13T21:12:49.468Z","to":"[REDACTED]","type":"verification"}
+{"email":"[REDACTED]","environment":"development","level":"info","message":"User registered successfully","timestamp":"2025-11-13T21:12:49.471Z","userId":{}}
+{"environment":"development","level":"info","message":"Default calendar created on registration","timestamp":"2025-11-13T21:12:49.820Z","userId":{}}
+{"durationMs":1366,"environment":"development","level":"info","message":"Request","method":"POST","path":"/register","statusCode":201,"timestamp":"2025-11-13T21:12:49.827Z"}
+{"environment":"development","level":"info","message":"Verification email sent via template","timestamp":"2025-11-13T21:12:50.291Z","to":"[REDACTED]"}
+{"environment":"development","level":"info","message":"Email sent successfully","retries":0,"timestamp":"2025-11-13T21:12:50.292Z","to":"[REDACTED]","type":"verification"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:15:38.026Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:15:39.153Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:18:38.033Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:18:38.392Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:21:38.047Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:21:38.606Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:24:38.062Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:24:39.528Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:27:38.076Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:27:38.533Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:30:38.083Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:30:38.703Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:33:38.089Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:33:39.732Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:36:38.099Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:36:38.741Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:39:38.104Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:39:40.089Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:42:38.120Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:42:38.472Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:45:38.131Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:45:38.481Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:48:38.142Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:48:38.497Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:51:38.157Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:51:38.510Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:54:38.161Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:54:38.506Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T21:57:38.167Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T21:57:38.644Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:00:38.173Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:00:38.509Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:03:38.174Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:03:38.505Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:06:38.180Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:06:38.902Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:09:38.182Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:09:38.523Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:12:38.189Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:12:38.567Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:15:38.201Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:15:38.616Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:18:38.211Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:18:38.567Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:21:38.211Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:21:38.543Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:24:38.214Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:24:38.571Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:27:38.215Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:27:38.544Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:30:38.226Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:30:38.557Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:33:38.241Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:33:38.612Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:36:38.247Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:36:38.610Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:39:38.255Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:39:38.593Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:42:38.259Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:42:38.615Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:45:38.272Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:45:39.849Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:48:38.279Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:48:38.630Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:51:38.294Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:51:38.678Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:54:38.295Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:54:38.624Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T22:57:38.306Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T22:57:39.204Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:00:38.307Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:00:38.641Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:03:38.311Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:03:38.644Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:06:38.317Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:06:38.653Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:09:38.319Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:09:38.650Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:12:38.329Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:12:38.659Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:15:38.345Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:15:38.705Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:18:38.355Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:18:38.719Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:21:38.369Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:21:38.727Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:24:38.383Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:24:39.090Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:27:38.388Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:27:38.767Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:30:38.387Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:30:38.723Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:33:38.397Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:33:39.131Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:36:38.409Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:36:39.435Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:39:38.414Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:39:38.775Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:42:38.419Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:42:38.756Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:45:38.434Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:45:38.774Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:48:38.441Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:48:38.778Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:51:38.451Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:51:39.030Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:54:38.453Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:54:38.816Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-13T23:57:38.455Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-13T23:57:38.822Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:00:38.468Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:00:38.823Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:03:38.479Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:03:38.874Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:06:38.483Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:06:38.931Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:09:38.486Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:09:38.843Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:12:38.491Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:12:38.830Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:15:38.491Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:15:38.882Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:18:38.500Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:18:38.855Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:21:38.502Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:21:38.850Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:24:38.510Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:24:38.864Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:27:38.516Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:27:39.186Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:30:38.520Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:30:38.857Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:33:38.530Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:33:38.885Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:36:38.541Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:36:38.892Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:39:38.550Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:39:38.892Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:42:38.565Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:42:38.899Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:45:38.580Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:45:38.922Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:48:38.587Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:48:38.939Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:51:38.592Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:51:39.418Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:54:38.602Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:54:38.953Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T00:57:38.614Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T00:57:38.958Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:00:38.615Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:00:40.559Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:03:38.617Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:03:38.955Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:06:38.617Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:06:38.958Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:09:38.618Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:09:39.005Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:12:38.632Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:12:39.393Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:15:38.638Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:15:38.980Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:18:38.640Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:18:39.038Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:21:38.653Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:21:39.176Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:24:38.667Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:24:39.003Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:27:38.674Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:27:39.009Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:30:38.676Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:30:39.858Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:33:38.685Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:33:39.016Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:36:38.693Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:36:39.020Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:39:38.703Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:39:39.036Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:42:38.706Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:42:39.037Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:45:38.707Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:45:39.033Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:48:38.717Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:48:39.050Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:51:38.730Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:51:39.060Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:54:38.742Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:54:40.774Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T01:57:38.751Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T01:57:39.081Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:00:38.761Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:00:39.524Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:03:38.774Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:03:39.143Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:06:38.783Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:06:40.055Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:09:38.796Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:09:39.903Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:12:38.797Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:12:40.015Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:15:38.798Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:15:39.535Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:18:38.813Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:18:39.139Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:21:38.823Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:21:39.153Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:24:38.824Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:24:39.158Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:27:38.826Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:27:39.155Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:30:38.838Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:30:39.164Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:33:38.847Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:33:39.172Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:36:38.854Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:36:39.196Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:39:38.855Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:39:39.226Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:42:38.860Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:42:39.191Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:45:38.864Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:45:39.450Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:48:38.872Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:48:39.220Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:51:38.877Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:51:39.216Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:54:38.890Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:54:39.219Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T02:57:38.890Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T02:57:39.222Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:00:38.892Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:00:39.225Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:03:38.906Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:03:39.251Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:06:38.907Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:06:39.234Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:09:38.921Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:09:39.277Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:12:38.931Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:12:39.261Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:15:38.944Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:15:39.289Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:18:38.945Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:18:39.281Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:21:38.950Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:21:39.294Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:24:38.954Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:24:39.290Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:27:38.955Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:27:39.291Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:30:38.964Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:30:39.289Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:33:38.968Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:33:39.305Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:36:38.971Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:36:39.320Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:39:38.972Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:39:39.308Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:42:38.985Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:42:39.328Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:45:38.987Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:45:39.322Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:48:38.992Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:48:39.325Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:51:38.996Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:51:39.340Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:54:39.010Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:54:39.354Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T03:57:39.014Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T03:57:39.351Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:00:39.022Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:00:39.356Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:03:39.028Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:03:39.360Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:06:39.038Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:06:39.369Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:09:39.040Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:09:39.378Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:12:39.042Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:12:39.378Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:15:39.041Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:15:39.373Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:18:39.044Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:18:39.375Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:21:39.050Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:21:39.495Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:24:39.055Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:24:39.390Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:27:39.055Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:27:39.392Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:30:39.066Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:30:39.400Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:33:39.077Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:33:39.412Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:36:39.089Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:36:39.430Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:39:39.097Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:39:39.429Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:42:39.104Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:42:40.070Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:45:39.105Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:45:39.433Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:48:39.105Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:48:39.441Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:51:39.118Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:51:39.460Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:54:39.127Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:54:39.479Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T04:57:39.129Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T04:57:39.471Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:00:39.140Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:00:39.471Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:03:39.142Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:03:39.475Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:06:39.148Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:06:39.474Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:09:39.151Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:09:39.492Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:12:39.152Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:12:39.480Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:15:39.161Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:15:39.513Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:18:39.173Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:18:39.529Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:21:39.175Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:21:39.520Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:24:39.184Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:24:39.509Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:27:39.194Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:27:39.519Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:30:39.207Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:30:39.535Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:33:39.210Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:33:39.537Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:36:39.219Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:36:39.549Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:39:39.229Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:39:39.561Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:42:39.235Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:42:40.023Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:45:39.243Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:45:39.880Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:48:39.252Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:48:39.606Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:51:39.255Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:51:39.583Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:54:39.263Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:54:39.831Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T05:57:39.272Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T05:57:39.597Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:00:39.273Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:00:39.606Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:03:39.281Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:03:39.614Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:06:39.284Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:06:41.063Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:09:39.291Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:09:39.632Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:12:39.301Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:12:39.640Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:15:39.310Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:15:39.644Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:18:39.311Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:18:39.774Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:21:39.319Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:21:39.652Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:24:39.325Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:24:39.828Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:27:39.337Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:27:39.679Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:30:39.340Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:30:39.890Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:33:39.346Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:33:39.679Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:36:39.352Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:36:39.701Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:39:39.353Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:39:39.675Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:42:39.358Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:42:39.689Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:45:39.359Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:45:39.689Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:48:39.366Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:48:39.695Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:51:39.378Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:51:39.703Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:54:39.381Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:54:39.712Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T06:57:39.390Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T06:57:39.716Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:00:39.400Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:00:39.728Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:03:39.408Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:03:39.735Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:06:39.409Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:06:39.732Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:09:43.731Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:09:44.127Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:12:43.735Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:12:44.060Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:15:43.740Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:15:44.063Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:18:43.745Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:18:44.072Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:21:43.747Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:21:44.080Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:24:43.754Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:24:44.085Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:27:43.756Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:27:44.083Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:30:43.764Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:30:44.089Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:36:21.948Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:36:38.279Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:39:21.959Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:39:23.189Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:42:21.966Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:42:22.623Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:45:21.978Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:45:22.313Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T07:48:21.987Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T07:48:22.326Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T09:25:17.603Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T09:25:53.019Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T09:28:17.612Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T09:28:19.727Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T09:31:17.661Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T09:31:18.244Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T09:34:17.668Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T09:34:18.212Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T09:37:17.672Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T09:37:18.852Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T09:40:17.683Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T09:40:18.255Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T09:43:17.694Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T09:43:18.363Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T09:46:17.703Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T09:46:18.238Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T09:49:17.702Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T09:49:18.299Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T09:57:29.163Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T09:57:38.173Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:00:29.169Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:00:30.004Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:03:29.185Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:03:34.011Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:06:29.194Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:06:32.290Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:09:29.207Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:09:30.519Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:12:29.212Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:12:29.796Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:15:29.225Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:15:30.140Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:18:29.239Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:18:30.732Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:21:29.245Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:21:33.823Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:24:29.245Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:24:29.997Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:27:29.257Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:27:29.828Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:30:29.258Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:30:38.012Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:33:29.263Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:33:30.772Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:36:29.268Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:36:29.986Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:39:29.276Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:40:03.192Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:42:29.283Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:42:44.158Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:45:29.289Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:45:31.721Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:48:29.302Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:48:32.274Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:51:29.310Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:51:32.119Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:54:29.320Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:54:30.577Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T10:57:29.334Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T10:57:30.444Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T11:00:29.341Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T11:01:34.536Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T11:03:29.346Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T11:03:33.928Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T11:06:29.347Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T11:06:37.723Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T11:09:29.354Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T11:09:34.511Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T16:49:13.805Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T16:49:57.313Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T16:52:13.819Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T16:52:14.155Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T16:55:13.823Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T16:55:14.169Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T16:58:13.823Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T16:58:14.156Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T17:01:13.831Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T17:01:14.187Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T17:04:13.834Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T17:04:14.173Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T17:07:13.845Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T17:07:14.178Z"}
+{"environment":"development","level":"info","message":"Starting payment polling job","timestamp":"2025-11-14T17:10:13.850Z"}
+{"environment":"development","level":"info","message":"Payment polling job completed successfully","timestamp":"2025-11-14T17:10:14.201Z"}

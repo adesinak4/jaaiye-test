@@ -44,6 +44,7 @@
     "protobufjs": "^7.5.4",
     "qrcode": "^1.5.4",
     "redis": "^4.6.7",
+    "resend": "^6.4.2",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "winston": "^3.10.0",

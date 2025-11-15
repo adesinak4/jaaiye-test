@@ -1,177 +1,186 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+const fs = require('fs');
 const logger = require('../utils/logger');
 const templates = require('../emails/templates');
 const pdfService = require('./pdfService');
 const path = require('path');
 
+
 class EmailService {
   constructor() {
-    this.transporter = this.createTransporter();
+    this.client = this.createClient();
   }
 
-  createTransporter() {
-    // Validate credentials exist
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      logger.error('Email credentials not configured', {
-        hasUser: !!process.env.EMAIL_USER,
-        hasPass: !!process.env.EMAIL_PASS
-      });
-      throw new Error('Email credentials (EMAIL_USER and EMAIL_PASS) are required');
+
+  normalizeEmailUser() {
+    if (!process.env.EMAIL_USER) {
+      return undefined;
     }
 
-    // Ensure email is in correct format (full email address, not just username)
-    const emailUser = process.env.EMAIL_USER.includes('@')
+    return process.env.EMAIL_USER.includes('@')
       ? process.env.EMAIL_USER
       : `${process.env.EMAIL_USER}@gmail.com`;
+  }
 
-    // Try different configurations based on environment
-    const configs = [
-      // Gmail with port 465 (SSL) - Most reliable for app passwords
-      {
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, // SSL
-        auth: {
-          user: emailUser,
-          pass: process.env.EMAIL_PASS
-        },
-        debug: process.env.NODE_ENV === 'development',
-        logger: process.env.NODE_ENV === 'development'
-      },
-      // Gmail with port 587 (TLS) - Alternative
-      {
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false, // Use TLS
-        auth: {
-          user: emailUser,
-          pass: process.env.EMAIL_PASS
-        },
-        tls: {
-          ciphers: 'SSLv3',
-          rejectUnauthorized: false
-        },
-        debug: process.env.NODE_ENV === 'development',
-        logger: process.env.NODE_ENV === 'development'
-      },
-      // Gmail service (nodemailer auto-config)
-      {
-        service: 'gmail',
-        auth: {
-          user: emailUser,
-          pass: process.env.EMAIL_PASS
-        },
-        debug: process.env.NODE_ENV === 'development',
-        logger: process.env.NODE_ENV === 'development'
-      },
-      // Custom SMTP if configured
-      process.env.SMTP_HOST ? {
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT) || 587,
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: {
-          user: process.env.SMTP_USER || emailUser,
-          pass: process.env.SMTP_PASS || process.env.EMAIL_PASS
-        },
-        debug: process.env.NODE_ENV === 'development',
-        logger: process.env.NODE_ENV === 'development'
-      } : null
-    ].filter(Boolean);
+  createClient() {
+    const apiKey = process.env.RESEND_API_KEY;
 
-    // Try each configuration and verify connection
-    for (const config of configs) {
-      try {
-        const transporter = nodemailer.createTransport(config);
-
-        // Verify connection before returning
-        // Note: We'll verify asynchronously, but create the transporter first
-        logger.info('Email transporter created', {
-          service: config.service || config.host,
-          port: config.port,
-          user: config.auth.user
-        });
-
-        return transporter;
-      } catch (error) {
-        logger.warn('Failed to create email transporter with config', {
-          config: config.service || config.host,
-          error: error.message
-        });
-      }
+    if (!apiKey) {
+      logger.error('Resend API key not configured', {
+        hasResendApiKey: !!apiKey
+      });
+      throw new Error('Resend API key (RESEND_API_KEY) is required');
     }
 
-    // If all configs failed, throw error instead of using fallback
-    throw new Error('Failed to create email transporter. Please check your EMAIL_USER and EMAIL_PASS environment variables.');
+    return new Resend(apiKey);
+  }
+
+  resolveSender(customSender = {}) {
+    const fallbackEmail = this.normalizeEmailUser();
+
+    const fromEmail = customSender.fromEmail
+      || process.env.RESEND_FROM_EMAIL
+      || fallbackEmail;
+
+    if (!fromEmail || !fromEmail.includes('@')) {
+      logger.error('Sender email not configured', {
+        fromEmail,
+        hasResendFromEmail: !!process.env.RESEND_FROM_EMAIL,
+        hasEmailUser: !!process.env.EMAIL_USER
+      });
+      throw new Error('A valid sender email (RESEND_FROM_EMAIL) is required');
+    }
+
+    const fromName = customSender.fromName
+      || process.env.RESEND_FROM_NAME
+      || process.env.APP_NAME
+      || 'Jaaiye';
+
+    return {
+      email: fromEmail,
+      name: fromName
+    };
   }
 
   buildAttachmentsIfNeeded() {
     if (process.env.APP_EMBED_LOGO === 'true') {
-      const logoPath = path.join(__dirname, '../..', 'assets', 'logo.png');
-      return [{
-        filename: 'logo.png',
-        path: logoPath,
-        cid: templates.LOGO_CID
-      }];
+      const logoFile = 'IMG_8264.PNG';
+      const logoPath = path.join(__dirname, '../emails', 'assets', logoFile);
+      try {
+        const logoBuffer = fs.readFileSync(logoPath);
+        return [{
+          filename: logoFile,
+          content: logoBuffer,
+          contentType: 'image/png',
+          cid: templates.LOGO_CID
+        }];
+      } catch (error) {
+        logger.warn('Failed to load embedded logo for email', {
+          logoPath,
+          error: error.message
+        });
+        return [];
+      }
     }
     return [];
   }
 
-  async sendEmail({ to, subject, html, text, attachments = [] }) {
-    try {
-      // Ensure EMAIL_USER is in correct format
-      const fromEmail = process.env.EMAIL_USER.includes('@')
-        ? process.env.EMAIL_USER
-        : `${process.env.EMAIL_USER}@gmail.com`;
+  normalizeAttachments(attachments = []) {
+    return attachments
+      .filter(Boolean)
+      .map(attachment => {
+        const filename = attachment.filename || 'attachment';
+        const contentType = attachment.contentType || attachment.type;
 
-      // Merge default attachments (logo) with provided attachments
+        let content = attachment.content;
+        if (!content && attachment.path) {
+          content = fs.readFileSync(attachment.path);
+        }
+
+        if (!content) {
+          throw new Error(`Attachment "${filename}" is missing content or path`);
+        }
+
+        let base64Content;
+        if (Buffer.isBuffer(content)) {
+          base64Content = content.toString('base64');
+        } else if (typeof content === 'string') {
+          base64Content = attachment.encoding === 'base64'
+            ? content
+            : Buffer.from(content).toString('base64');
+        } else {
+          throw new Error(`Unsupported attachment content type for "${filename}"`);
+        }
+
+        return {
+          filename,
+          content: base64Content,
+          ...(contentType ? { type: contentType } : {}),
+          ...(attachment.cid ? { cid: attachment.cid } : {})
+        };
+      });
+  }
+
+  async sendEmail({ to, subject, html, text, attachments = [], cc, bcc, replyTo }) {
+    try {
+      const sender = this.resolveSender();
+      const emailUserAddress = this.normalizeEmailUser();
+
       const defaultAttachments = this.buildAttachmentsIfNeeded();
       const allAttachments = [...defaultAttachments, ...(Array.isArray(attachments) ? attachments : [attachments])].filter(Boolean);
+      const normalizedAttachments = this.normalizeAttachments(allAttachments);
 
-      const mailOptions = {
-        from: `"${process.env.APP_NAME || 'Jaaiye'}" <${fromEmail}>`,
+      const arrayify = value => {
+        if (!value) return [];
+        if (Array.isArray(value)) {
+          return value.filter(Boolean);
+        }
+        if (typeof value === 'string' && value.includes(',')) {
+          return value.split(',').map(entry => entry.trim()).filter(Boolean);
+        }
+        return [value];
+      };
+
+      const desiredBcc = Array.from(new Set([...arrayify(bcc), ...arrayify(emailUserAddress)])).filter(Boolean);
+      const desiredReplyTo = replyTo || emailUserAddress;
+
+      const payload = {
+        from: `${sender.name} <${sender.email}>`,
         to,
         subject,
         html,
         text,
-        attachments: allAttachments.length > 0 ? allAttachments : undefined
+        ...(cc ? { cc } : {}),
+        ...(desiredBcc.length > 0 ? { bcc: desiredBcc } : {}),
+        ...(desiredReplyTo ? { reply_to: desiredReplyTo } : {}),
+        attachments: normalizedAttachments.length > 0 ? normalizedAttachments : undefined
       };
 
-      const info = await this.transporter.sendMail(mailOptions);
+      const info = await this.client.emails.send(payload);
       logger.info('Email sent successfully', {
-        messageId: info.messageId,
+        messageId: info.id,
         to,
         subject,
-        from: fromEmail
+        from: sender.email
       });
       return info;
     } catch (error) {
-      logger.error('Error sending email', {
-        error: error.message,
+      logger.error('Error sending email via Resend', {
+        name: error.name,
+        message: error.message,
+        statusCode: error.statusCode,
         stack: error.stack,
+        body: error.response?.body,
         to,
-        subject,
-        code: error.code,
-        command: error.command,
-        response: error.response,
-        responseCode: error.responseCode
+        subject
       });
 
-      // Provide more specific error messages with troubleshooting tips
-      if (error.code === 'EAUTH' || error.responseCode === 535) {
-        const troubleshootingTips = [
-          '1. Verify your EMAIL_USER is the full email address (e.g., yourname@gmail.com)',
-          '2. Ensure you\'re using an App Password (not your regular Gmail password)',
-          '3. Make sure 2-Step Verification is enabled on your Google account',
-          '4. Generate a new App Password: https://myaccount.google.com/apppasswords',
-          '5. Copy the 16-character app password exactly (no spaces)',
-          '6. If using a workspace account, ensure "Less secure app access" is enabled (if available)'
-        ].join('\n');
+      if (error.statusCode === 401) {
+        throw new Error('Invalid Resend API key. Please verify RESEND_API_KEY.');
+      }
 
-        throw new Error(`Email authentication failed (${error.responseCode || error.code}).\n\nTroubleshooting:\n${troubleshootingTips}\n\nOriginal error: ${error.message}`);
-      } else if (error.code === 'ECONNECTION') {
-        throw new Error('Email connection failed. Please check your internet connection and firewall settings.');
-      } else if (error.code === 'EADDRNOTAVAIL') {
-        throw new Error('Email server unavailable. Please check your email configuration and try again later.');
+      if (error.statusCode === 422) {
+        throw new Error(`Resend rejected the request: ${error.message}`);
       }
 
       throw error; // Re-throw for proper error handling
@@ -182,13 +191,10 @@ class EmailService {
   async sendVerificationEmail(userOrEmail, verificationCode = null) {
     let email, code;
 
-    // Handle both user object and individual parameters
     if (typeof userOrEmail === 'object' && userOrEmail.email) {
-      // Called with user object: sendVerificationEmail(user)
       email = userOrEmail.email;
       code = userOrEmail.verificationCode || verificationCode;
     } else {
-      // Called with individual parameters: sendVerificationEmail(email, code)
       email = userOrEmail;
       code = verificationCode;
     }
@@ -211,7 +217,6 @@ class EmailService {
   async sendPasswordResetEmail(userOrEmail, resetCode = null) {
     let email, code;
 
-    // Handle both user object and individual parameters
     if (typeof userOrEmail === 'object' && userOrEmail.email) {
       email = userOrEmail.email;
       code = userOrEmail.resetPasswordCode || resetCode;
@@ -353,14 +358,12 @@ class EmailService {
       throw new Error('Email is required');
     }
 
-    // Normalize tickets to always be an array
     const tickets = Array.isArray(ticketsOrTicket) ? ticketsOrTicket : [ticketsOrTicket];
 
     if (!tickets || tickets.length === 0) {
       throw new Error('At least one ticket is required');
     }
 
-    // Validate that tickets have required data
     const firstTicket = tickets[0];
     if (!firstTicket.eventId) {
       throw new Error('Ticket must have event information');
@@ -369,20 +372,16 @@ class EmailService {
     const ticketCount = tickets.length;
     const eventTitle = firstTicket.eventId?.title || 'Event';
 
-    // Generate email HTML
     const html = templates.paymentConfirmationEmail({ tickets });
 
-    // Dynamic subject based on ticket count
     const subject = ticketCount > 1
       ? `🎟️ Payment Confirmed! Your ${ticketCount} Tickets for ${eventTitle}`
       : `🎟️ Payment Confirmed! Your Ticket for ${eventTitle}`;
 
-    // Plain text fallback
     const text = ticketCount > 1
       ? `Payment Confirmed! Your ${ticketCount} tickets for ${eventTitle} are ready. Check your email for QR codes and PDF attachment.`
       : `Payment Confirmed! Your ticket for ${eventTitle} is ready. Check your email for the QR code and PDF attachment.`;
 
-    // Generate PDF attachment if requested
     let pdfAttachment = null;
     if (attachPDF) {
       try {
@@ -414,21 +413,18 @@ class EmailService {
           email,
           ticketCount
         });
-        // Don't fail the email if PDF generation fails, just log it
       }
     }
 
     try {
       const emailOptions = {
         to: email,
-        from: `${process.env.APP_NAME || 'Jaaiye'}`,
-        bcc: process.env.EMAIL_USER,
         subject,
         html,
-        text
+        text,
+        bcc: process.env.RESEND_FROM_EMAIL || process.env.EMAIL_USER
       };
 
-      // Add PDF attachment if generated
       if (pdfAttachment) {
         emailOptions.attachments = [pdfAttachment];
       }
@@ -446,62 +442,36 @@ class EmailService {
   // Test email configuration
   async testConnection() {
     try {
-      // Recreate transporter to ensure we're testing with current credentials
-      this.transporter = this.createTransporter();
-
-      await this.transporter.verify();
-      logger.info('Email configuration is valid');
+      this.client = this.createClient();
+      const sender = this.resolveSender();
+      await this.client.domains.list();
+      logger.info('Resend configuration is valid');
       return {
         success: true,
-        message: 'Email configuration is valid',
-        email: process.env.EMAIL_USER.includes('@')
-          ? process.env.EMAIL_USER
-          : `${process.env.EMAIL_USER}@gmail.com`
+        message: 'Resend configuration is valid',
+        email: sender.email
       };
     } catch (error) {
-      logger.error('Email configuration test failed', {
-        error: error.message,
-        code: error.code,
-        command: error.command,
-        responseCode: error.responseCode,
-        response: error.response
+      logger.error('Resend configuration test failed', {
+        name: error.name,
+        message: error.message,
+        statusCode: error.statusCode,
+        body: error.response?.body
       });
 
-      let message = 'Email configuration test failed';
-      const troubleshooting = [];
+      let message = 'Resend configuration test failed';
 
-      if (error.code === 'EAUTH' || error.responseCode === 535) {
-        message = 'Email authentication failed';
-        troubleshooting.push(
-          '• Verify EMAIL_USER is the full email address (e.g., yourname@gmail.com)',
-          '• Ensure you\'re using an App Password (16 characters, no spaces)',
-          '• Make sure 2-Step Verification is enabled',
-          '• Generate new App Password: https://myaccount.google.com/apppasswords',
-          '• Check that EMAIL_PASS contains only the app password (no extra characters)'
-        );
-      } else if (error.code === 'ECONNECTION') {
-        message = 'Email connection failed';
-        troubleshooting.push(
-          '• Check your internet connection',
-          '• Verify firewall settings allow SMTP connections',
-          '• Try using a different network'
-        );
-      } else if (error.code === 'EADDRNOTAVAIL') {
-        message = 'Email server unavailable';
-        troubleshooting.push(
-          '• Check your email configuration',
-          '• Verify SMTP server address is correct',
-          '• Try again in a few minutes'
-        );
+      if (error.statusCode === 401) {
+        message = 'Invalid Resend API key';
+      } else if (error.statusCode === 404) {
+        message = 'Resend account not found or domain unavailable';
       }
 
       return {
         success: false,
         message,
         error: error.message,
-        troubleshooting: troubleshooting.length > 0 ? troubleshooting : undefined,
-        code: error.code,
-        responseCode: error.responseCode
+        statusCode: error.statusCode
       };
     }
   }
@@ -509,11 +479,9 @@ class EmailService {
   // Get email configuration info (without sensitive data)
   getConfigInfo() {
     return {
-      hasEmailUser: !!process.env.EMAIL_USER,
-      hasEmailPass: !!process.env.EMAIL_PASS,
-      hasSmtpHost: !!process.env.SMTP_HOST,
-      hasSmtpUser: !!process.env.SMTP_USER,
-      hasSmtpPass: !!process.env.SMTP_PASS,
+      hasResendApiKey: !!process.env.RESEND_API_KEY,
+      hasResendFromEmail: !!process.env.RESEND_FROM_EMAIL,
+      hasResendFromName: !!process.env.RESEND_FROM_NAME,
       appName: process.env.APP_NAME || 'Jaaiye'
     };
   }

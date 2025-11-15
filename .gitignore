@@ -25,3 +25,5 @@ firebase-config/
 Jaaiye_API_Collection.postman_collection.json
 
 scripts/
+
+emails/resend/
